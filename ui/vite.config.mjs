@@ -16,6 +16,10 @@ export default defineConfig({
             resolvers: [PrimeVueResolver()]
         })
     ],
+    build: {
+        outDir: '../Resources',
+        emptyOutDir: true, // also necessary
+    },
     resolve: {
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url))

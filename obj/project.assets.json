@@ -1974,11 +1974,11 @@
   "project": {
     "version": "0.1.0",
     "restore": {
-      "projectUniqueName": "C:\\Work\\reporter\\reporter.csproj",
+      "projectUniqueName": "c:\\Work\\crs\\reporter.csproj",
       "projectName": "reporter",
-      "projectPath": "C:\\Work\\reporter\\reporter.csproj",
+      "projectPath": "c:\\Work\\crs\\reporter.csproj",
       "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-      "outputPath": "C:\\Work\\reporter\\obj\\",
+      "outputPath": "c:\\Work\\crs\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config"

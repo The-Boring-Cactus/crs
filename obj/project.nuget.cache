@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Psp3vxMnh2Y=",
+  "dgSpecHash": "tbv1WmwDxlk=",
   "success": true,
-  "projectFilePath": "C:\\Work\\reporter\\reporter.csproj",
+  "projectFilePath": "c:\\Work\\crs\\reporter.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\acornima\\1.1.1\\acornima.1.1.1.nupkg.sha512",
     "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\cottle\\2.1.0\\cottle.2.1.0.nupkg.sha512",
