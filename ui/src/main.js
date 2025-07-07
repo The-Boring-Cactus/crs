@@ -10,14 +10,14 @@ import ToastService from 'primevue/toastservice';
 import VueExcelEditor from 'vue3-excel-editor'
 
 import { useSocketStoreWithOut } from "@/store/pinia/useSocketStore";
-import { VueNativeSock } from "vue-native-websocket-vue3";
+import  VueNativeSock  from "@/websocket/VueNativeSock";
 
-const piniaSocketStore = useSocketStoreWithOut(app);
+
 
 import '@/assets/styles.scss';
 
 const app = createApp(App);
-
+const piniaSocketStore = useSocketStoreWithOut(app);
 app.use(router);
 app.use(PrimeVue, {
     theme: {

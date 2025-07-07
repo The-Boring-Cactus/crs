@@ -39,6 +39,7 @@ export const useSocketStore = (app: App<Element>) => {
         console.error(event);
       },
       SOCKET_ONMESSAGE(message: any) {
+        console.log(message);
         this.message = message;
       },
       SOCKET_RECONNECT(count: any) {

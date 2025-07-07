@@ -3,6 +3,8 @@
 using GenHTTP.Modules.IO;
 using GenHTTP.Modules.Layouting;
 using GenHTTP.Modules.Websockets;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace reporter;
 
@@ -22,7 +24,13 @@ public static class Project
                                   var client = Guid.NewGuid().ToString();
                                   Console.WriteLine(client);
                                   Console.WriteLine(_AllSockets.Count.ToString());
-                                  socket.Send(client);
+                                  dynamic answer = new JObject();
+                                  answer.TypeMsg ="Welcome";
+                                  answer.TypeAction = "";
+                                  answer.data = client;
+                                  var sz = answer.ToString();
+                                  Console.WriteLine(sz);
+                                  socket.Send(sz);
                                   var s = new Client(socket, client);
                                   _AllSockets.Add(s);
                               })

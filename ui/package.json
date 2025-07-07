@@ -39,7 +39,6 @@
         "vue": "3.x",
         "vue-codemirror": "^6.1.1",
         "vue-grid-layout": "^3.0.0-beta1",
-        "vue-native-websocket-vue3": "^3.1.5",
         "vue-router": "^4.4.0",
         "vue3-excel-editor": "^1.0.60"
     },
