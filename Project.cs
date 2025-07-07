@@ -3,7 +3,6 @@
 using GenHTTP.Modules.IO;
 using GenHTTP.Modules.Layouting;
 using GenHTTP.Modules.Websockets;
-using GenHTTP.Modules.StaticWebsites;
 
 namespace reporter;
 
@@ -13,7 +12,7 @@ public static class Project
 
     public static IHandlerBuilder Setup()
     {
-        var files = Resources.From(ResourceTree.FromDirectory("Resources")); // or FromDirectory("/var/www/")
+        var files = Resources.From(ResourceTree.FromDirectory("Resources")); 
 
         // see https://genhttp.org/documentation/content/frameworks/websockets/
         var socket = Websocket.Create()
@@ -43,7 +42,7 @@ public static class Project
 
         return Layout.Create()
             .Add("/",files)
-            .Add("srv", socket); // ws://localhost:8080/socket/
+            .Add("srv", socket); // ws://localhost:8080/srv/
                     
     }
 

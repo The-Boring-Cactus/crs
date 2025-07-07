@@ -24,9 +24,12 @@ public class Client
         globalVariables = new GlobalVariables();
         statementEvaluator = new StatementEvaluator();
          mapList = new FunctList();
-         testScript = new FunctScript(mapList, statementEvaluator, 0, _uuid, 10, globalVariables, "Test");
+         testScript = new FunctScript(mapList, statementEvaluator, globalVariables);
          testScript.StatusUpdate += TestScriptOnStatusUpdate;
+         
+         
     }
+    
 
     private void TestScriptOnStatusUpdate(object sender, StatusString e)
     {

@@ -71,16 +71,8 @@ namespace FunctEngine
         }
         public event StatusUpdateHandler StatusUpdate;
 
-        public event StatusUpdateHandler SerialUpdate;
-
-        public void UpdateSerial(string serial)
-        {
-            if (this.SerialUpdate != null)
-            {
-                StatusString statusString = new StatusString(serial);
-                this.SerialUpdate(this, statusString);
-            }
-        }
+      
+      
         public void UpdaFunctatusText(string updaFunctring)
         {
 

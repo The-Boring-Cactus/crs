@@ -24,45 +24,21 @@ namespace FunctEngine
         public event StatusUpdateHandler StatusFinish;
         public bool abortRequested = false;
         
-        public int cellN = 0;
-        public string serialno = string.Empty;
-        public string InternalSerial = string.Empty;
-        public string Technician = string.Empty;
-        public FunctScript(FunctList mapList, StatementEvaluator statementEvaluator,  int cellNum, string serialno, int totalcell, GlobalVariables _globalVariables, string technician)
+        public FunctScript(FunctList mapList, StatementEvaluator statementEvaluator,  GlobalVariables _globalVariables)
         {
             globalVariables = _globalVariables;
             varCollection = new VariableCollection(globalVariables);
             mappingList = mapList;
             Funct_status = FunctStatus.NotRun;
             
-            cellN = cellNum;
-
-
-            FunctVariable tsid = new FunctVariable("CELL_ID", VariableType.String, "CELL" + cellN.ToString());
-
-            varCollection.setVariable(tsid);
-
-            FunctVariable tsc = new FunctVariable("RESERVE_CELL_NUM", VariableType.Integer, cellNum);
-            varCollection.setVariable(tsc);
-
-            FunctVariable totsc = new FunctVariable("RESERVE_CELL_TOTAL", VariableType.Integer, totalcell);
-            varCollection.setVariable(totsc);
-
-            this.serialno = serialno;
-            FunctVariable sn = new FunctVariable("SerialNo", VariableType.String, serialno);
-
-            varCollection.setVariable(sn);
+            
             this.statementEvaluator = statementEvaluator;
             varCollection.StatusUpdate += statusUpdate_proc;
-            variableCollection.SerialUpdate += serialUpdate_proc;
-            Technician = technician;
+            
+            
         }
 
-        private void serialUpdate_proc(object sender, StatusString e)
-        {
-            this.Funct_results.InternalSerial = e.status;
-            this.InternalSerial = e.status;
-        }
+        
 
         private void statusUpdate_proc(object sender, StatusString e)
         {
@@ -226,8 +202,7 @@ namespace FunctEngine
             // Now Let's copy the name of the script file.
             Funct_results.FunctScript = scriptName;
 
-            Funct_results.SerialNo = this.serialno;
-            Funct_results.Technician = this.Technician;
+            
             // If not a failure or abort, then generate a pass.
             if ((Funct_results.status != FunctStatus.Fail) && (Funct_status != FunctStatus.Fail) && (Funct_status != FunctStatus.Abort))
             {
@@ -266,31 +241,12 @@ namespace FunctEngine
 
             interpreter.Status = ScriptStatus.Finished;
 
-            if (globalVariables.VariableExists("CELL" + cellN.ToString()))
-            {
-
-                FunctVariable vars = globalVariables.getVariable("CELL" + cellN.ToString());
-
-                vars.Variable = (object)true;
-                globalVariables.SetVariable(vars);
-
-            }
-
+            
             if (this.StatusFinish != null)
             {
                 var ew = new StatusString("Finish");
                 this.StatusFinish(this, ew);
             }
-           
-
-            var json = JsonConvert.SerializeObject(Funct_results);
-            string prettyJson = JToken.Parse(json).ToString(Formatting.Indented);
-            System.IO.Directory.CreateDirectory(@"c:\GoProLogs");
-            string time = DateTime.Now.ToString("yyyyMMddhmmtt");
-            string sn = this.InternalSerial != string.Empty ? InternalSerial : serialno;
-            string logname = $"c:\\GoProLogs\\{sn}-{FunctStatus.ToString()}-{time}.json";
-            File.WriteAllText(logname, prettyJson);
-            return;
         }
        
         /// <summary>

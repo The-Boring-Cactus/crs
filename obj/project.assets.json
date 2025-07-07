@@ -1969,19 +1969,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {}
+    "/home/peyote/.nuget/packages/": {}
   },
   "project": {
     "version": "0.1.0",
     "restore": {
-      "projectUniqueName": "c:\\Work\\crs\\reporter.csproj",
+      "projectUniqueName": "/home/peyote/Documents/GitHub/crs/reporter.csproj",
       "projectName": "reporter",
-      "projectPath": "c:\\Work\\crs\\reporter.csproj",
-      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-      "outputPath": "c:\\Work\\crs\\obj\\",
+      "projectPath": "/home/peyote/Documents/GitHub/crs/reporter.csproj",
+      "packagesPath": "/home/peyote/.nuget/packages/",
+      "outputPath": "/home/peyote/Documents/GitHub/crs/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/peyote/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -2005,7 +2005,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net9.0": {
@@ -2051,12 +2051,18 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.5, 9.0.5]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.106/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -35,9 +35,7 @@
     </div>
     <br/>
   </div>
-   <DataTable :value="products" tableStyle="min-width: 50rem">
-        <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header"></Column>
-    </DataTable>
+    <vue-excel-editor v-model="jsondata" readonly="true" width="100%"/>
 </template>
 
 
@@ -60,169 +58,13 @@ const extensions =  [sql()]
         language: 'sql'
       })
     
-const products = [
-                {
-                    id: '1000',
-                    code: 'f230fh0g3',
-                    name: 'Bamboo Watch',
-                    description: 'Product Description',
-                    image: 'bamboo-watch.jpg',
-                    price: 65,
-                    category: 'Accessories',
-                    quantity: 24,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 5
-                },
-                {
-                    id: '1001',
-                    code: 'nvklal433',
-                    name: 'Black Watch',
-                    description: 'Product Description',
-                    image: 'black-watch.jpg',
-                    price: 72,
-                    category: 'Accessories',
-                    quantity: 61,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 4
-                },
-                {
-                    id: '1002',
-                    code: 'zz21cz3c1',
-                    name: 'Blue Band',
-                    description: 'Product Description',
-                    image: 'blue-band.jpg',
-                    price: 79,
-                    category: 'Fitness',
-                    quantity: 2,
-                    inventoryStatus: 'LOWSTOCK',
-                    rating: 3
-                },
-                {
-                    id: '1003',
-                    code: '244wgerg2',
-                    name: 'Blue T-Shirt',
-                    description: 'Product Description',
-                    image: 'blue-t-shirt.jpg',
-                    price: 29,
-                    category: 'Clothing',
-                    quantity: 25,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 5
-                },
-                {
-                    id: '1004',
-                    code: 'h456wer53',
-                    name: 'Bracelet',
-                    description: 'Product Description',
-                    image: 'bracelet.jpg',
-                    price: 15,
-                    category: 'Accessories',
-                    quantity: 73,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 4
-                },
-                {
-                    id: '1005',
-                    code: 'av2231fwg',
-                    name: 'Brown Purse',
-                    description: 'Product Description',
-                    image: 'brown-purse.jpg',
-                    price: 120,
-                    category: 'Accessories',
-                    quantity: 0,
-                    inventoryStatus: 'OUTOFSTOCK',
-                    rating: 4
-                },
-                {
-                    id: '1006',
-                    code: 'bib36pfvm',
-                    name: 'Chakra Bracelet',
-                    description: 'Product Description',
-                    image: 'chakra-bracelet.jpg',
-                    price: 32,
-                    category: 'Accessories',
-                    quantity: 5,
-                    inventoryStatus: 'LOWSTOCK',
-                    rating: 3
-                },
-                {
-                    id: '1007',
-                    code: 'mbvjkgip5',
-                    name: 'Galaxy Earrings',
-                    description: 'Product Description',
-                    image: 'galaxy-earrings.jpg',
-                    price: 34,
-                    category: 'Accessories',
-                    quantity: 23,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 5
-                },
-                {
-                    id: '1008',
-                    code: 'vbb124btr',
-                    name: 'Game Controller',
-                    description: 'Product Description',
-                    image: 'game-controller.jpg',
-                    price: 99,
-                    category: 'Electronics',
-                    quantity: 2,
-                    inventoryStatus: 'LOWSTOCK',
-                    rating: 4
-                },
-                {
-                    id: '1009',
-                    code: 'cm230f032',
-                    name: 'Gaming Set',
-                    description: 'Product Description',
-                    image: 'gaming-set.jpg',
-                    price: 299,
-                    category: 'Electronics',
-                    quantity: 63,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 3
-                },
-                {
-                    id: '1010',
-                    code: 'plb34234v',
-                    name: 'Gold Phone Case',
-                    description: 'Product Description',
-                    image: 'gold-phone-case.jpg',
-                    price: 24,
-                    category: 'Accessories',
-                    quantity: 0,
-                    inventoryStatus: 'OUTOFSTOCK',
-                    rating: 4
-                },
-                {
-                    id: '1011',
-                    code: '4920nnc2d',
-                    name: 'Green Earbuds',
-                    description: 'Product Description',
-                    image: 'green-earbuds.jpg',
-                    price: 89,
-                    category: 'Electronics',
-                    quantity: 23,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 4
-                },
-                {
-                    id: '1012',
-                    code: '250vm23cc',
-                    name: 'Green T-Shirt',
-                    description: 'Product Description',
-                    image: 'green-t-shirt.jpg',
-                    price: 49,
-                    category: 'Clothing',
-                    quantity: 74,
-                    inventoryStatus: 'INSTOCK',
-                    rating: 5
-                }]
-const columns = [
-    { field: 'code', header: 'Code' },
-    { field: 'name', header: 'Name' },
-    { field: 'category', header: 'Category' },
-    { field: 'quantity', header: 'Quantity' }
-];
+const jsondata = [
+            {user: 'hc', name: 'Harry Cole',    phone: '1-415-2345678', gender: 'M', age: 25, birth: '1997-07-01'},
+            {user: 'sm', name: 'Simon Minolta', phone: '1-123-7675682', gender: 'M', age: 20, birth: '1999-11-12'},
+            {user: 'ra', name: 'Raymond Atom',  phone: '1-456-9981212', gender: 'M', age: 19, birth: '2000-06-11'},
+            {user: 'ag', name: 'Mary George',   phone: '1-556-1245684', gender: 'F', age: 22, birth: '2002-08-01'},
+            {user: 'kl', name: 'Kenny Linus',   phone: '1-891-2345685', gender: 'M', age: 29, birth: '1990-09-01'}
+        ]
 
    
 
