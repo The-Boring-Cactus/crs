@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+
+    
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <ImplicitUsings>true</ImplicitUsings>
+
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Version>0.1.0</Version>
+
+	<ServerGarbageCollection>true</ServerGarbageCollection>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <PackageReference Include="GenHTTP.Core" Version="9.6.0" />
+
+    <PackageReference Include="GenHTTP.Modules.StaticWebsites" Version="9.7.0" />
+
+    <PackageReference Include="GenHTTP.Modules.Websockets" Version="9.6.0" />
+
+    <PackageReference Include="Jint" Version="4.3.0" />
+
+    <PackageReference Include="MathNet.Numerics" Version="6.0.0-beta2" />
+
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+  </ItemGroup>
+
+<ItemGroup>
+        <Content Include="Resources\**">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+</ItemGroup>
+
+<ItemGroup>
+  <ProjectReference Include="..\FunctEngine\FunctEngine.csproj" />
+</ItemGroup>
+
+</Project>

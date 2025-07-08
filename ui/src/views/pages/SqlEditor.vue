@@ -35,7 +35,9 @@
     </div>
     <br/>
   </div>
-    <vue-excel-editor v-model="jsondata" readonly="true" width="100%"/>
+  <div width="100%">
+    <vue-excel-editor v-model="jsondata" readonly no-footer no-header-edit disable-panel-setting disable-panel-filter no-sorting />
+  </div>
 </template>
 
 

@@ -1,4 +1,34 @@
 <template>
+<Drawer v-model:visible="visibleCompo" header="Components" position="right">
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+</Drawer>
+
+        
+    
+<Toolbar>
+    <template #start>
+      
+        <Button icon="pi pi-plus" class="mr-2" severity="secondary" text  @click="visibleCompo = true"/>
+        <Button icon="pi pi-print" class="mr-2" severity="secondary" text />
+        <Button icon="pi pi-upload" severity="secondary" text />
+    </template>
+
+    <template #center>
+        <Inplace>
+            <template #display>
+                {{ MyTitle || 'No Name' }}
+            </template>
+            <template #content="{ closeCallback }">
+                <span class="inline-flex items-center gap-2">
+                    <InputText v-model="MyTitle" autofocus />
+                    <Button icon="pi pi-times" text severity="danger" @click="closeCallback" />
+                </span>
+            </template>
+        </Inplace>
+    </template>
+
+    <template #end> <SplitButton label="Save" :model="items"></SplitButton></template>
+</Toolbar>
   <grid-layout 
     v-model:layout="layout"
     :col-num="12"
@@ -27,27 +57,26 @@
 import GridLayout from '@/components/draggable/GridLayout.vue'
 import GridItem from '@/components/draggable/GridItem.vue'
 import { ref } from 'vue'
+const visibleCompo = ref(false);
+
+const items = ref([
+   {
+        label: 'Update',
+        icon: 'pi pi-refresh'
+    },
+    {
+        label: 'Delete',
+        icon: 'pi pi-times'
+    }
+]);
+
+const MyTitle = ref();
+
 const layout = ref([
     {"x":0,"y":0,"w":2,"h":2,"i":"0", static: false},
     {"x":2,"y":0,"w":2,"h":4,"i":"1", static: false},
     {"x":4,"y":0,"w":2,"h":5,"i":"2", static: false},
-    {"x":6,"y":0,"w":2,"h":3,"i":"3", static: false},
-    {"x":8,"y":0,"w":2,"h":3,"i":"4", static: false},
-    {"x":10,"y":0,"w":2,"h":3,"i":"5", static: false},
-    {"x":0,"y":5,"w":2,"h":5,"i":"6", static: false},
-    {"x":2,"y":5,"w":2,"h":5,"i":"7", static: false},
-    {"x":4,"y":5,"w":2,"h":5,"i":"8", static: false},
-    {"x":6,"y":3,"w":2,"h":4,"i":"9", static: false},
-    {"x":8,"y":4,"w":2,"h":4,"i":"10", static: false},
-    {"x":10,"y":4,"w":2,"h":4,"i":"11", static: false},
-    {"x":0,"y":10,"w":2,"h":5,"i":"12", static: false},
-    {"x":2,"y":10,"w":2,"h":5,"i":"13", static: false},
-    {"x":4,"y":8,"w":2,"h":4,"i":"14", static: false},
-    {"x":6,"y":8,"w":2,"h":4,"i":"15", static: false},
-    {"x":8,"y":10,"w":2,"h":5,"i":"16", static: false},
-    {"x":10,"y":4,"w":2,"h":2,"i":"17", static: false},
-    {"x":0,"y":9,"w":2,"h":3,"i":"18", static: false},
-    {"x":2,"y":6,"w":2,"h":2,"i":"19", static: false}
+    {"x":6,"y":0,"w":2,"h":3,"i":"3", static: false}
 ])
 const itemTitle = (item) => {
   let result = item.i;

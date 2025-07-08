@@ -20,7 +20,7 @@
     import mitt from 'mitt';
     //import elementResizeDetectorMaker from "element-resize-detector";
     //var elementResizeDetectorMaker = require("element-resize-detector");
-
+    // https://grid-layout-plus.netlify.app/example/dynamic-add-remove.html
     import {bottom, compact, getLayoutItem, moveElement, validateLayout, cloneLayout, getAllCollisions} from '@/helpers/utils';
     import {getBreakpointFromWidth, getColsFromBreakpoint, findOrGenerateResponsiveLayout} from "@/helpers/responsiveUtils";
     //var eventBus = require('./eventBus');
