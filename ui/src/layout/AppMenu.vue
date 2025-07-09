@@ -9,66 +9,30 @@ const model = ref([
         items: [{ label: 'Home', icon: 'pi pi-fw pi-home', to: '/' }]
     },
     {
-        label: 'Pages',
+        label: 'Collections',
         icon: 'pi pi-fw pi-briefcase',
-        to: '/pages',
+        
         items: [
             {
-                label: 'SQL Editor',
+                label: 'Datasets',
+                icon: 'pi pi-fw pi-table',
+                to: '/pages/dataset'
+            },
+            {
+                label: 'SQL Querys',
                 icon: 'pi pi-fw pi-database',
                 to: '/pages/sqleditor'
             },
             {
-                label: 'Dashboard',
-                icon: 'pi pi-fw pi-book',
+                label: 'Dashboards',
+                icon: 'pi pi-fw pi-chart-line',
                 to: '/pages/dashboard'
             },
             {
-                label: 'Script Editor',
+                label: 'Scripts',
                 icon: 'pi pi-fw pi-file-edit',
                 to: '/pages/cseditor'
             },
-            {
-                label: 'Landing',
-                icon: 'pi pi-fw pi-globe',
-                to: '/landing'
-            },
-            {
-                label: 'Auth',
-                icon: 'pi pi-fw pi-user',
-                items: [
-                    {
-                        label: 'Login',
-                        icon: 'pi pi-fw pi-sign-in',
-                        to: '/auth/login'
-                    },
-                    {
-                        label: 'Error',
-                        icon: 'pi pi-fw pi-times-circle',
-                        to: '/auth/error'
-                    },
-                    {
-                        label: 'Access Denied',
-                        icon: 'pi pi-fw pi-lock',
-                        to: '/auth/access'
-                    }
-                ]
-            },
-            {
-                label: 'Crud',
-                icon: 'pi pi-fw pi-pencil',
-                to: '/pages/crud'
-            },
-            {
-                label: 'Not Found',
-                icon: 'pi pi-fw pi-exclamation-circle',
-                to: '/pages/notfound'
-            },
-            {
-                label: 'Empty',
-                icon: 'pi pi-fw pi-circle-off',
-                to: '/pages/empty'
-            }
         ]
     }
 ]);

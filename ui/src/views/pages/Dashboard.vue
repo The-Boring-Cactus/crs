@@ -26,8 +26,6 @@
             </template>
         </Inplace>
     </template>
-
-    <template #end> <SplitButton label="Save" :model="items"></SplitButton></template>
 </Toolbar>
   <grid-layout 
     v-model:layout="layout"
@@ -59,16 +57,7 @@ import GridItem from '@/components/draggable/GridItem.vue'
 import { ref } from 'vue'
 const visibleCompo = ref(false);
 
-const items = ref([
-   {
-        label: 'Update',
-        icon: 'pi pi-refresh'
-    },
-    {
-        label: 'Delete',
-        icon: 'pi pi-times'
-    }
-]);
+
 
 const MyTitle = ref();
 

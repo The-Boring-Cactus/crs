@@ -19,6 +19,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/SqlEditor.vue')
                 },
                 {
+                    path: '/pages/dataset',
+                    name: 'dataset',
+                    component: () => import('@/views/pages/Dataset.vue')
+                },
+                {
                     path: '/pages/cseditor',
                     name: 'cseditor',
                     component: () => import('@/views/pages/CsEditor.vue')

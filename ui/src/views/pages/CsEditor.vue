@@ -1,6 +1,27 @@
 <template>
+  <Toolbar>
+    <template #start>
+      
+        <Button icon="pi pi-caret-left" class="mr-2" severity="secondary" text  @click="handleUndo"/>
+        <Button icon="pi pi-caret-right" class="mr-2" severity="secondary" text   @click="handleRedo"/>
+    </template>
+
+    <template #center>
+        <Inplace>
+            <template #display>
+                {{ MyTitle || 'No Name' }}
+            </template>
+            <template #content="{ closeCallback }">
+                <span class="inline-flex items-center gap-2">
+                    <InputText v-model="MyTitle" autofocus />
+                    <Button icon="pi pi-times" text severity="danger" @click="closeCallback" />
+                </span>
+            </template>
+        </Inplace>
+    </template>
+</Toolbar>
   <div class="editor">
-     <Menubar :model="items" />
+     
     <div class="main">
       <codemirror
         v-model="code"
@@ -16,6 +37,8 @@
         :disabled="config.disabled"
         :indent-with-tab="config.indentWithTab"
         :tab-size="config.tabSize"
+        :mode="config.mode"
+        :language="config.language"
         @update="handleStateUpdate"
         @ready="handleReady"
         @focus="log('focus', $event)"
@@ -23,17 +46,7 @@
       />
       
     </div>
-    <div class="footer">
-      
-      <div class="infos">
-        <span class="item">Spaces: {{ config.tabSize }}</span>
-        <span class="item">Length: {{ state.length }}</span>
-        <span class="item">Lines: {{ state.lines }}</span>
-        <span class="item">Cursor: {{ state.cursor }}</span>
-        <span class="item">Selected: {{ state.selected }}</span>
-      </div>
-    </div>
-    <br/>
+   
   </div>
 
 </template>
@@ -45,13 +58,14 @@
   import { redo, undo } from '@codemirror/commands'
   import { Codemirror } from 'vue-codemirror'
   import { csharp } from "@replit/codemirror-lang-csharp";
-
+const MyTitle = ref();
 const log = console.log
 const code =ref('')
 const extensions =  [csharp()]
   const config = reactive({
         disabled: false,
         indentWithTab: true,
+        mode: "javascript",
         tabSize: 1,
         autofocus: true,
         height: '500px',
@@ -99,19 +113,7 @@ const extensions =  [csharp()]
         // log('viewUpdate', viewUpdate)
       }
 
-const items = ref([
-    {
-        label: 'Undo',
-        icon: 'pi pi-chevron-circle-left',
-        command: handleUndo
-    },
-    {
-        label: 'Redo',
-        icon: 'pi pi-chevron-circle-right',
-        command: handleRedo
-    
-    }
-])
+
 
 </script>
 <style lang="scss" scoped>
