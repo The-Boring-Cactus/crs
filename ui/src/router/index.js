@@ -24,6 +24,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/Dataset.vue')
                 },
                 {
+                    path: '/pages/databases',
+                    name: 'databases',
+                    component: () => import('@/views/pages/Databases.vue')
+                },
+                {
                     path: '/pages/cseditor',
                     name: 'cseditor',
                     component: () => import('@/views/pages/CsEditor.vue')

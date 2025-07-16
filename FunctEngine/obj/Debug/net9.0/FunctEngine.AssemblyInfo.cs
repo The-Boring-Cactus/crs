@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FunctEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8cc310e7c89603c0fef6c4d3ed7af765936d1afe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d9d39506b771f4d062e409ed667a69a384ef17b1")]
 [assembly: System.Reflection.AssemblyProductAttribute("FunctEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FunctEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

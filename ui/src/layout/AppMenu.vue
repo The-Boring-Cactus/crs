@@ -16,22 +16,32 @@ const model = ref([
             {
                 label: 'Datasets',
                 icon: 'pi pi-fw pi-table',
-                to: '/pages/dataset'
+                to: '/pages/dataset',
+                tooltip: 'Create/Edit Datasets'
+            },
+            {
+                label: 'Database Connection',
+                icon: 'pi pi-fw pi-server',
+                to: '/pages/databases',
+                tooltip: 'Create/Edit Connections'
             },
             {
                 label: 'SQL Querys',
                 icon: 'pi pi-fw pi-database',
-                to: '/pages/sqleditor'
+                to: '/pages/sqleditor',
+                tooltip: 'Create/Edit SQL Querys'
+            },
+            {
+                label: 'Scripts',
+                icon: 'pi pi-fw pi-code',
+                to: '/pages/cseditor',
+                tooltip: 'Internal Code Editor'
             },
             {
                 label: 'Dashboards',
                 icon: 'pi pi-fw pi-chart-line',
-                to: '/pages/dashboard'
-            },
-            {
-                label: 'Scripts',
-                icon: 'pi pi-fw pi-file-edit',
-                to: '/pages/cseditor'
+                to: '/pages/dashboard',
+                tooltip: 'Create/Edit Dashboards'
             },
         ]
     }

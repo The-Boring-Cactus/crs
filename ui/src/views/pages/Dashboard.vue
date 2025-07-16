@@ -1,6 +1,7 @@
 <template>
-<Drawer v-model:visible="visibleCompo" header="Components" position="right">
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+<Drawer v-model:visible="visibleCompo" header="Elements" position="right">
+     <Button icon="pi pi-upload" severity="secondary" label="Title" text @click="addcomponent('Title')"/>
+
 </Drawer>
 
         
@@ -8,9 +9,9 @@
 <Toolbar>
     <template #start>
       
-        <Button icon="pi pi-plus" class="mr-2" severity="secondary" text  @click="visibleCompo = true"/>
+        <Button icon="pi pi-plus" label="Add Elements" class="mr-2" severity="secondary" text  @click="visibleCompo = true"/>
         <Button icon="pi pi-print" class="mr-2" severity="secondary" text />
-        <Button icon="pi pi-upload" severity="secondary" text />
+        <Button icon="pi pi-upload" severity="secondary" text @click="addcomponent(2)"/>
     </template>
 
     <template #center>
@@ -28,7 +29,7 @@
     </template>
 </Toolbar>
   <grid-layout 
-    v-model:layout="layout"
+    v-model:layout="layout.componentes"
     :col-num="12"
     :row-height="30"
     is-draggable
@@ -37,7 +38,7 @@
     use-css-transforms
   >
     <grid-item 
-      v-for="item in layout"
+      v-for="item in layout.componentes"
       :static="item.static"
       :x="item.x"
       :y="item.y"
@@ -57,16 +58,26 @@ import GridItem from '@/components/draggable/GridItem.vue'
 import { ref } from 'vue'
 const visibleCompo = ref(false);
 
+let layout = ref(
+    {
+        componentes: [
+          {"x":0,"y":0,"w":2,"h":2,"i":"0", static: false},
+        ],
+        formvalues: {
+            name: 'New Form',
+            isGlobal: false
+        }        
+    })
+
 
 
 const MyTitle = ref();
 
-const layout = ref([
-    {"x":0,"y":0,"w":2,"h":2,"i":"0", static: false},
-    {"x":2,"y":0,"w":2,"h":4,"i":"1", static: false},
-    {"x":4,"y":0,"w":2,"h":5,"i":"2", static: false},
-    {"x":6,"y":0,"w":2,"h":3,"i":"3", static: false}
-])
+ const addcomponent = async (type) => {
+  console.log(type);
+  layout.value.componentes.push({"x":0,"y":0,"w":2,"h":2,"i":layout.value.componentes.length, static: false});
+ }
+
 const itemTitle = (item) => {
   let result = item.i;
   if (item.static) {
