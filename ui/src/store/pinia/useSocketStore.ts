@@ -16,7 +16,7 @@ export const useSocketStore = (app: App<Element>) => {
     }),
     actions: {
       SOCKET_ONOPEN(event: any) {
-        console.log("successful websocket connection");
+        //console.log("successful websocket connection");
         app.config.globalProperties.$socket = event.currentTarget;
         this.isConnected = true;
         this.heartBeatTimer = window.setInterval(() => {
@@ -32,18 +32,18 @@ export const useSocketStore = (app: App<Element>) => {
         this.isConnected = false;
         window.clearInterval(this.heartBeatTimer);
         this.heartBeatTimer = 0;
-        console.log("Closed: " + new Date());
-        console.log(event);
+        //console.log("Closed: " + new Date());
+        //console.log(event);
       },
       SOCKET_ONERROR(event: any) {
-        console.error(event);
+        //console.error(event);
       },
       SOCKET_ONMESSAGE(message: any) {
-        console.log(message);
+       // console.log(message);
         this.message = message;
       },
       SOCKET_RECONNECT(count: any) {
-        console.info("Reconecting...", count);
+        //console.info("Reconecting...", count);
       },
       SOCKET_RECONNECT_ERROR() {
         this.reconnectError = true;

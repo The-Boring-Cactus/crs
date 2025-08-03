@@ -1,12 +1,10 @@
 <template>
-  <Toolbar>
-    <template #start>
-      
-        <Button icon="pi pi-caret-left" class="mr-2" severity="secondary" text  @click="handleUndo"/>
-        <Button icon="pi pi-caret-right" class="mr-2" severity="secondary" text   @click="handleRedo"/>
-    </template>
-
-    <template #center>
+    <Toolbar>
+        <template #start>
+            <Button icon="pi pi-caret-left" class="mr-2" severity="secondary" text @click="handleUndo" />
+            <Button icon="pi pi-caret-right" class="mr-2" severity="secondary" text @click="handleRedo" />
+        </template>
+        <template #center>
         <Inplace>
             <template #display>
                 {{ MyTitle || 'No Name' }}
@@ -18,13 +16,13 @@
                 </span>
             </template>
         </Inplace>
-    </template>
-</Toolbar>
-  <div class="editor">
-    <div class="main">
-      <codemirror
-        v-model="code"
-        :style="{
+        </template>
+    </Toolbar>
+    <div class="editor">
+        <div class="main">
+            <codemirror
+                v-model="code"
+                :style="{
           width: '100%',
           height: config.height,
           backgroundColor: '#fff',
@@ -36,97 +34,89 @@
         :disabled="config.disabled"
         :indent-with-tab="config.indentWithTab"
         :tab-size="config.tabSize"
-        :mode="config.mode"
-        :language="config.language"
         @update="handleStateUpdate"
         @ready="handleReady"
         @focus="log('focus', $event)"
         @blur="log('blur', $event)"
-      />
-      
+            />
+        </div>
     </div>
-    
-    
-  </div>
-  <div width="100%">
-    <vue-excel-editor v-model="jsondata" readonly no-footer no-header-edit disable-panel-setting disable-panel-filter no-sorting />
-  </div>
+    <div style="width: 100%">
+        <vue-excel-editor v-model="jsondata" readonly no-footer no-header-edit disable-panel-setting disable-panel-filter no-sorting />
+    </div>
 </template>
 
-
 <script setup>
-  import { defineComponent, reactive, shallowRef, computed, watch, onMounted, ref } from 'vue'
-  import { EditorView, ViewUpdate } from '@codemirror/view'
-  import { redo, undo } from '@codemirror/commands'
-  import { Codemirror } from 'vue-codemirror'
-  import { sql } from '@codemirror/lang-sql'
+import { reactive, shallowRef, ref } from 'vue';
+import { redo, undo } from '@codemirror/commands';
+import { Codemirror } from 'vue-codemirror';
+import { sql } from '@codemirror/lang-sql';
+
+// State
 const MyTitle = ref();
-const log = console.log
-const code =ref('')
-const extensions =  [sql()]
-  const config = reactive({
-        disabled: false,
-        mode: "text/x-sql",
-        indentWithTab: true,
-        tabSize: 1,
-        autofocus: true,
-        height: '200px',
-        language: 'sql'
-      })
-    
+const code = ref('');
+const cmView = shallowRef();
+const config = reactive({
+    disabled: false,
+    indentWithTab: true,
+    tabSize: 1,
+    autofocus: true,
+    height: '200px'
+});
 const jsondata = [
-            {c0: '',c1: '', c2: '',    c3: '', c4: '', c5: '', c6: ''},
-            {c0: '',c1: '', c2: '',    c3: '', c4: '', c5: '', c6: ''},
-            {c0: '',c1: '', c2: '',    c3: '', c4: '', c5: '', c6: ''},
-            {c0: '',c1: '', c2: '',    c3: '', c4: '', c5: '', c6: ''},
-            {c0: '',c1: '', c2: '',    c3: '', c4: '', c5: '', c6: ''},
-            {c0: '',c1: '', c2: '',    c3: '', c4: '', c5: '', c6: ''},
-            {c0: '',c1: '', c2: '',    c3: '', c4: '', c5: '', c6: ''}
-        ]
+    { c0: '', c1: '', c2: '', c3: '', c4: '', c5: '', c6: '' },
+    { c0: '', c1: '', c2: '', c3: '', c4: '', c5: '', c6: '' },
+    { c0: '', c1: '', c2: '', c3: '', c4: '', c5: '', c6: '' },
+    { c0: '', c1: '', c2: '', c3: '', c4: '', c5: '', c6: '' },
+    { c0: '', c1: '', c2: '', c3: '', c4: '', c5: '', c6: '' },
+    { c0: '', c1: '', c2: '', c3: '', c4: '', c5: '', c6: '' },
+    { c0: '', c1: '', c2: '', c3: '', c4: '', c5: '', c6: '' }
+];
 
-   
+// This state is updated but not displayed. It can be used for debugging or status bars.
+const state = reactive({
+    lines: null,
+    cursor: null,
+    selected: null,
+    length: null
+});
 
-      const cmView = shallowRef({EditorView})
-      const handleReady = ({ view }) => {
-        cmView.value = view
-      }
+// Constants
+const log = console.log;
+const extensions = [sql()];
 
-      const handleUndo = () => {
-        undo({
-          state: cmView.value.state,
-          dispatch: cmView.value.dispatch
-        })
-      }
+// Handlers
+const handleReady = ({ view }) => {
+    cmView.value = view;
+};
 
-      const handleRedo = () => {
-        redo({
-          state: cmView.value.state,
-          dispatch: cmView.value.dispatch
-        })
-      }
+const handleUndo = () => {
+    if (!cmView.value) return;
+    undo({
+        state: cmView.value.state,
+        dispatch: cmView.value.dispatch
+    });
+};
 
-      const state = reactive({
-        lines: null,
-        cursor: null,
-        selected: null,
-        length: null 
-      })
+const handleRedo = () => {
+    if (!cmView.value) return;
+    redo({
+        state: cmView.value.state,
+        dispatch: cmView.value.dispatch
+    });
+};
 
-      const handleStateUpdate = (viewUpdate) => {
-        // selected
-        const ranges = viewUpdate.state.selection.ranges
-        state.selected = ranges.reduce((plus, range) => plus + range.to - range.from, 0)
-        state.cursor = ranges[0].anchor
-        // length
-        state.length = viewUpdate.state.doc.length
-        state.lines = viewUpdate.state.doc.lines
-        // log('viewUpdate', viewUpdate)
-      }
-
+const handleStateUpdate = (viewUpdate) => {
+    // Update selection, cursor, and document information
+    const ranges = viewUpdate.state.selection.ranges;
+    state.selected = ranges.reduce((plus, range) => plus + range.to - range.from, 0);
+    state.cursor = ranges[0].anchor;
+    state.length = viewUpdate.state.doc.length;
+    state.lines = viewUpdate.state.doc.lines;
+    // log('viewUpdate', viewUpdate)
+};
 </script>
 <style lang="scss" scoped>
- 
-
   .editor {
 
     .main {

@@ -30,8 +30,8 @@
 </Toolbar>
   <grid-layout 
     v-model:layout="layout.componentes"
-    :col-num="12"
-    :row-height="30"
+    :col-num="15"
+    :row-height="40"
     is-draggable
     is-resizable
     vertical-compact
@@ -47,7 +47,18 @@
       :i="item.i"
       :key="item.i"
     >
-      <span class="text">{{itemTitle(item)}}</span>
+      <Inplace v-if="item.type === 'Texto'" class="center">
+        
+            <template #display>
+                {{ item.value || 'Click to Edit' }}
+            </template>
+            <template #content="{ closeCallback }">
+                <span class="inline-flex items-center gap-1">
+                    <InputText v-model="item.value" autofocus />
+                    <Button icon="pi pi-times" text severity="danger" @click="closeCallback" />
+                </span>
+            </template>
+        </Inplace>
     </grid-item>
   </grid-layout>
 </template>
@@ -61,7 +72,7 @@ const visibleCompo = ref(false);
 let layout = ref(
     {
         componentes: [
-          {"x":0,"y":0,"w":2,"h":2,"i":"0", static: false},
+          {"x":6,"y":0,"w":3,"h":1,"i":"0", static: false, type:"Texto", value:""},
         ],
         formvalues: {
             name: 'New Form',
@@ -75,7 +86,7 @@ const MyTitle = ref();
 
  const addcomponent = async (type) => {
   console.log(type);
-  layout.value.componentes.push({"x":0,"y":0,"w":2,"h":2,"i":layout.value.componentes.length, static: false});
+  layout.value.componentes.push({"x":1,"y":0,"w":2,"h":2,"i":layout.value.componentes.length, static: false, type:"Texto", value:""});
  }
 
 const itemTitle = (item) => {
@@ -92,7 +103,7 @@ const itemTitle = (item) => {
 }
 .vue-grid-item:not(.vue-grid-placeholder) {
   background: #ffffff;
-  border: 1px solid black;
+  border: 1px dashed rgb(189, 188, 188);
 }
 .vue-grid-item .resizing {
   opacity: 0.9;
@@ -100,8 +111,8 @@ const itemTitle = (item) => {
 .vue-grid-item .static {
   background: rgb(255, 255, 255);
 }
-.vue-grid-item .text {
-  font-size: 24px;
+.vue-grid-item .center {
+  
   text-align: center;
   position: absolute;
   top: 0;
@@ -109,8 +120,6 @@ const itemTitle = (item) => {
   left: 0;
   right: 0;
   margin: auto;
-  height: 100%;
-  width: 100%;
 }
 .vue-grid-item .no-drag {
   height: 100%;

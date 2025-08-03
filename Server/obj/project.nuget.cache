@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "7qxiDWriUl8=",
+  "dgSpecHash": "bopsU2N56MM=",
   "success": true,
   "projectFilePath": "/home/peyote/Documents/GitHub/crs/Server/Server.csproj",
   "expectedPackageFiles": [
@@ -35,7 +35,7 @@
     "/home/peyote/.nuget/packages/system.text.json/9.0.2/system.text.json.9.0.2.nupkg.sha512",
     "/home/peyote/.nuget/packages/yamldotnet/16.3.0/yamldotnet.16.3.0.nupkg.sha512",
     "/home/peyote/.nuget/packages/zstdsharp.port/0.8.4/zstdsharp.port.0.8.4.nupkg.sha512",
-    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.5/microsoft.aspnetcore.app.ref.9.0.5.nupkg.sha512"
+    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.7/microsoft.aspnetcore.app.ref.9.0.7.nupkg.sha512"
   ],
   "logs": []
 }

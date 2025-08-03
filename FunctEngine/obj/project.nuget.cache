@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "me1zXscHYGQ=",
+  "dgSpecHash": "R1HzK2tDxNo=",
   "success": true,
   "projectFilePath": "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj",
   "expectedPackageFiles": [
@@ -12,7 +12,7 @@
     "/home/peyote/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
     "/home/peyote/.nuget/packages/system.collections.immutable/9.0.0/system.collections.immutable.9.0.0.nupkg.sha512",
     "/home/peyote/.nuget/packages/system.reflection.metadata/9.0.0/system.reflection.metadata.9.0.0.nupkg.sha512",
-    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.5/microsoft.aspnetcore.app.ref.9.0.5.nupkg.sha512"
+    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.7/microsoft.aspnetcore.app.ref.9.0.7.nupkg.sha512"
   ],
   "logs": []
 }

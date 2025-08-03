@@ -1,12 +1,16 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
+import {userStoreMe} from "@/store/userStore";
+
+
 const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
             path: '/',
             component: AppLayout,
+            meta: { requiresAuth: true },
             children: [
                 {
                     path: '/',
@@ -82,6 +86,25 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Error.vue')
         }
     ]
+});
+
+
+router.beforeEach((to, from, next) => {
+    // Comprueba si la ruta a la que se intenta acceder requiere autenticación
+    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+
+    // Aquí asumimos que guardas un token en localStorage al iniciar sesión
+    const isAuthenticated = localStorage.getItem('user-token');
+
+    const userStore = userStoreMe();
+    //console.log(userStore);
+    if (requiresAuth && !userStore.auth) {
+        // Si la ruta requiere autenticación y el usuario no está autenticado, redirige a la página de login
+        next({ name: 'login' });
+    } else {
+        // De lo contrario, permite la navegación
+        next();
+    }
 });
 
 export default router;

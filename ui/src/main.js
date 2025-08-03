@@ -12,12 +12,15 @@ import VueExcelEditor from 'vue3-excel-editor'
 import { useSocketStoreWithOut } from "@/store/pinia/useSocketStore";
 import  VueNativeSock  from "@/websocket/VueNativeSock";
 
+import {userStoreMe} from "@/store/userStore";
 
 
 import '@/assets/styles.scss';
 
 const app = createApp(App);
 const piniaSocketStore = useSocketStoreWithOut(app);
+
+
 app.use(router);
 app.use(PrimeVue, {
     theme: {
@@ -27,6 +30,7 @@ app.use(PrimeVue, {
         }
     }
 });
+
 app.use(
     VueNativeSock,
   'ws://localhost:8080/srv/',
@@ -39,6 +43,7 @@ app.use(
       reconnectionDelay: 3000
   }
 );
+const userStore = userStoreMe();
 app.use(ToastService);
 app.use(ConfirmationService);
 app.use(VueExcelEditor)

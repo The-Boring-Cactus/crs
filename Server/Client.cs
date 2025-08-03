@@ -43,6 +43,21 @@ public class Client
     public void OnMessage(string message)
     {
         dynamic payload = JObject.Parse(message);
+       
+            if (payload.type == "login")
+            {
+                
+                dynamic answer = new JObject();
+                answer.TypeMsg ="Login";
+                answer.data = new JObject();
+                answer.data.level="Admin";
+                answer.data.auth = true;
+                var sz = answer.ToString();
+                
+                
+                Message(sz);
+            }
+       
     }
     public void Message (string message)
     {
