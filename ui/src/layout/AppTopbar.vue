@@ -14,7 +14,7 @@ const { toggleMenu} = useLayout();
 const exit = async () => {
         userStore.setCurr(false,'','');
         await nextTick();
-        await  router.push({ path: '/'})
+        await  router.push({ path: '/auth/login', replace: true })
         console.log("Save");
       }
 

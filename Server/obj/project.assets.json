@@ -553,6 +553,20 @@
           "lib/net9.0/ZstdSharp.dll": {}
         }
       },
+      "CoreFunctions/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "FunctEngine": "1.0.0",
+          "MathNet.Numerics": "6.0.0-beta2"
+        },
+        "compile": {
+          "bin/placeholder/CoreFunctions.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/CoreFunctions.dll": {}
+        }
+      },
       "FunctEngine/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
@@ -1981,6 +1995,11 @@
         "zstdsharp.port.nuspec"
       ]
     },
+    "CoreFunctions/1.0.0": {
+      "type": "project",
+      "path": "../CoreFunctions/CoreFunctions.csproj",
+      "msbuildProject": "../CoreFunctions/CoreFunctions.csproj"
+    },
     "FunctEngine/1.0.0": {
       "type": "project",
       "path": "../FunctEngine/FunctEngine.csproj",
@@ -1989,6 +2008,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
+      "CoreFunctions >= 1.0.0",
       "FunctEngine >= 1.0.0",
       "GenHTTP.Core >= 9.6.0",
       "GenHTTP.Modules.StaticWebsites >= 9.7.0",
@@ -2024,6 +2044,9 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
+            "/home/peyote/Documents/GitHub/crs/CoreFunctions/CoreFunctions.csproj": {
+              "projectPath": "/home/peyote/Documents/GitHub/crs/CoreFunctions/CoreFunctions.csproj"
+            },
             "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj": {
               "projectPath": "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj"
             }

@@ -244,7 +244,7 @@ namespace FunctEngine
             
             if (this.StatusFinish != null)
             {
-                var ew = new StatusString("Finish");
+                var ew = new StatusString(Funct_results.status.ToString());
                 this.StatusFinish(this, ew);
             }
         }

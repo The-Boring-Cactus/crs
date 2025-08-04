@@ -1,0 +1,16 @@
+/home/peyote/Documents/GitHub/crs/CoreFunctions/bin/Debug/net9.0/CoreFunctions.deps.json
+/home/peyote/Documents/GitHub/crs/CoreFunctions/bin/Debug/net9.0/CoreFunctions.dll
+/home/peyote/Documents/GitHub/crs/CoreFunctions/bin/Debug/net9.0/CoreFunctions.pdb
+/home/peyote/Documents/GitHub/crs/CoreFunctions/bin/Debug/net9.0/FunctEngine.dll
+/home/peyote/Documents/GitHub/crs/CoreFunctions/bin/Debug/net9.0/FunctEngine.pdb
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.csproj.AssemblyReference.cache
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.AssemblyInfoInputs.cache
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.AssemblyInfo.cs
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.csproj.CoreCompileInputs.cache
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.sourcelink.json
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunc.62E56EEE.Up2Date
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.dll
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/refint/CoreFunctions.dll
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/CoreFunctions.pdb
+/home/peyote/Documents/GitHub/crs/CoreFunctions/obj/Debug/net9.0/ref/CoreFunctions.dll

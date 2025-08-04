@@ -73,7 +73,7 @@ namespace FunctEngine
 
       
       
-        public void UpdaFunctatusText(string updaFunctring)
+        public void UpdaFunctStusText(string updaFunctring)
         {
 
             FunctVariable variable1 = this.getVariable("FunctStatus");

@@ -1,0 +1,13 @@
+/home/peyote/Documents/GitHub/crs/Connectors/bin/Debug/net9.0/Connectors.deps.json
+/home/peyote/Documents/GitHub/crs/Connectors/bin/Debug/net9.0/Connectors.dll
+/home/peyote/Documents/GitHub/crs/Connectors/bin/Debug/net9.0/Connectors.pdb
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.csproj.AssemblyReference.cache
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.AssemblyInfoInputs.cache
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.AssemblyInfo.cs
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.csproj.CoreCompileInputs.cache
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.sourcelink.json
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.dll
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/refint/Connectors.dll
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.pdb
+/home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/ref/Connectors.dll

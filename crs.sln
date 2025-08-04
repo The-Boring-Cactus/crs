@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Connectors", "Connectors\Connectors.csproj", "{251182CE-F43D-40DC-BF62-FD94A04EC89A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreFunctions", "CoreFunctions\CoreFunctions.csproj", "{847F9F0C-4CA3-4FBF-BD87-8184799641A6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{251182CE-F43D-40DC-BF62-FD94A04EC89A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{251182CE-F43D-40DC-BF62-FD94A04EC89A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{251182CE-F43D-40DC-BF62-FD94A04EC89A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{847F9F0C-4CA3-4FBF-BD87-8184799641A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{847F9F0C-4CA3-4FBF-BD87-8184799641A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{847F9F0C-4CA3-4FBF-BD87-8184799641A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{847F9F0C-4CA3-4FBF-BD87-8184799641A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

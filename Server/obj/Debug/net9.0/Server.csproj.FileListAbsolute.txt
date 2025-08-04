@@ -69,3 +69,5 @@
 /home/peyote/Documents/GitHub/crs/Server/obj/Debug/net9.0/Server.pdb
 /home/peyote/Documents/GitHub/crs/Server/obj/Debug/net9.0/Server.genruntimeconfig.cache
 /home/peyote/Documents/GitHub/crs/Server/obj/Debug/net9.0/ref/Server.dll
+/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/CoreFunctions.dll
+/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/CoreFunctions.pdb

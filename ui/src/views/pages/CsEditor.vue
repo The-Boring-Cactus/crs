@@ -1,8 +1,10 @@
 <template>
+          <Toast />
     <Toolbar>
         <template #start>
             <Button icon="pi pi-caret-left" class="mr-2" severity="secondary" text @click="handleUndo" />
             <Button icon="pi pi-caret-right" class="mr-2" severity="secondary" text @click="handleRedo" />
+            <Button icon="pi pi-save" class="mr-2" severity="secondary" text @click="handleSave" />
         </template>
         <template #center>
         <Inplace>
@@ -18,6 +20,7 @@
         </Inplace>
         </template>
     </Toolbar>
+    
     <div class="editor">
         <div class="main">
             <codemirror v-model="code" :style="{
@@ -39,6 +42,12 @@
             />
         </div>
     </div>
+    <div class="card flex flex-wrap justify-center items-end gap-4">
+    <FloatLabel variant="in">
+            <Textarea id="over_label" v-model="debugText" rows="5" cols="150" style="resize: none" />
+            <label for="in_label">Debug Status</label>
+        </FloatLabel>
+        </div>
 </template>
 
 <script setup>
@@ -46,6 +55,13 @@ import { reactive, shallowRef, ref } from 'vue';
 import { redo, undo } from '@codemirror/commands';
 import { Codemirror } from 'vue-codemirror';
 import { csharp } from '@replit/codemirror-lang-csharp';
+import { getCurrentInstance } from 'vue';
+import { useToast } from "primevue/usetoast";
+const toast = useToast();
+
+const debugText = ref('');
+
+const { proxy } = getCurrentInstance();
 
 // State
 const MyTitle = ref();
@@ -58,6 +74,20 @@ const config = reactive({
     autofocus: true,
     height: '500px'
 });
+
+proxy.$socket.onmessage =  (data) => {
+  const payload = JSON.parse(data.data);
+  console.log(payload);
+  if(payload.TypeMsg=="FinishCode"){
+    if(payload.status==="Fail"){
+        toast.add({ severity: 'error', summary: 'Error', detail: 'An error occurred', life: 3000 });
+    }
+  }
+  if(payload.TypeMsg=="Debug"){
+    debugText.value = debugText.value + '\n' + payload.data;
+  }
+}
+
 
 // This state is updated but not displayed. It can be used for debugging or status bars.
 const state = reactive({
@@ -74,6 +104,15 @@ const extensions = [csharp()];
 // Handlers
 const handleReady = ({ view }) => {
     cmView.value = view;
+};
+
+const handleSave = () => {
+    debugText.value ='';
+     proxy.$socket.sendObj({
+          type: "CodeScript",
+          data: code.value,
+          name: MyTitle.value
+        });
 };
 
 const handleUndo = () => {
@@ -103,39 +142,5 @@ const handleStateUpdate = (viewUpdate) => {
 };
 </script>
 <style lang="scss" scoped>
-  .editor {
 
-    .main {
-      display: flex;
-      width: 100%;
-
-      .code {
-        width: 30%;
-        height: 100px;
-        margin: 0;
-        padding: 0.4em;
-        overflow: scroll;
-        font-family: monospace;
-      }
-    }
-
-    .footer {
-      height: 1rem;
-      padding: 0 1em;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 90%;
-      background-color: white;
-
-      
-      .infos {
-        .item {
-          margin-left: 1em;
-          display: inline-block;
-          font-feature-settings: 'tnum';
-        }
-      }
-    }
-  }
 </style>

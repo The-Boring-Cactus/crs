@@ -22,15 +22,23 @@ public class Client
     {
         this.socket = socket;
         uuid = _uuid;
+        mapList = new FunctList();
         globalVariables = new GlobalVariables();
         statementEvaluator = new StatementEvaluator();
-         mapList = new FunctList();
-         testScript = new FunctScript(mapList, statementEvaluator, globalVariables);
-         testScript.StatusUpdate += TestScriptOnStatusUpdate;
-         
-         
+        testScript = new FunctScript(mapList, statementEvaluator, globalVariables);
+        testScript.StatusUpdate += TestScriptOnStatusUpdate;
+        testScript.StatusFinish += TestScriptOnStatusFinish;
+
     }
-    
+    private void TestScriptOnStatusFinish(object sender, StatusString e)
+    {
+        dynamic answer = new JObject();
+        answer.TypeMsg ="FinishCode";
+        answer.status = e.status;
+        answer.data = JObject.FromObject(testScript.FunctResultsList);
+        var sz = answer.ToString();
+        Message(sz);
+    }
     private void TestScriptOnStatusUpdate(object sender, StatusString e)
     {
         dynamic answer = new JObject();
@@ -43,21 +51,32 @@ public class Client
     public void OnMessage(string message)
     {
         dynamic payload = JObject.Parse(message);
-       
-            if (payload.type == "login")
-            {
-                
+        string type = payload.type;
+        switch (type)
+        {
+            case "Login" :
                 dynamic answer = new JObject();
-                answer.TypeMsg ="Login";
+                answer.TypeMsg = "Login";
                 answer.data = new JObject();
-                answer.data.level="Admin";
+                answer.data.level = "Admin";
                 answer.data.auth = true;
                 var sz = answer.ToString();
-                
-                
-                Message(sz);
-            }
-       
+                Message(sz); 
+                break;
+            case "CodeScript":
+                globalVariables = new GlobalVariables();
+                statementEvaluator = new StatementEvaluator();
+                testScript = new FunctScript(mapList, statementEvaluator, globalVariables);
+                testScript.StatusUpdate += TestScriptOnStatusUpdate;
+                testScript.StatusFinish += TestScriptOnStatusFinish;
+                List<CompilerError> compilerErrors = new List<CompilerError>();
+                string script = payload.data;
+                string name = payload.name;
+                bool isok = testScript.InitializeScript(script, name, ref compilerErrors);
+                testScript.StartFunct();
+                break;
+            
+        }
     }
     public void Message (string message)
     {

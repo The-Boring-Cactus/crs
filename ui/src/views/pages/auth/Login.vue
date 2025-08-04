@@ -27,7 +27,7 @@ proxy.$socket.onmessage =  (data) => {
 
 const handleReady = () => {
         proxy.$socket.sendObj({
-          type: "login"
+          type: "Login"
         });
         loading.value = true;
         
