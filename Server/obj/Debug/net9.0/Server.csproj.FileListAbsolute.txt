@@ -69,5 +69,8 @@
 /home/peyote/Documents/GitHub/crs/Server/obj/Debug/net9.0/Server.pdb
 /home/peyote/Documents/GitHub/crs/Server/obj/Debug/net9.0/Server.genruntimeconfig.cache
 /home/peyote/Documents/GitHub/crs/Server/obj/Debug/net9.0/ref/Server.dll
-/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/CoreFunctions.dll
-/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/CoreFunctions.pdb
+/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/Antlr4.Runtime.Standard.dll
+/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/MathFunctions.dll
+/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/StringUtilities.dll
+/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/MathFunctions.pdb
+/home/peyote/Documents/GitHub/crs/Server/bin/Debug/net9.0/StringUtilities.pdb

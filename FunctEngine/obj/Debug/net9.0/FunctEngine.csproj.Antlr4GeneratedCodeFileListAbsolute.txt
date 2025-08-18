@@ -1,0 +1,6 @@
+/home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngineLexer.cs
+/home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngineParser.cs
+/home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngineListener.cs
+/home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngineBaseListener.cs
+/home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngineVisitor.cs
+/home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngineBaseVisitor.cs

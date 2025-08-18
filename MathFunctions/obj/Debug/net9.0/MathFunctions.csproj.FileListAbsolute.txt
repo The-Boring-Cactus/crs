@@ -1,0 +1,16 @@
+/home/peyote/Documents/GitHub/crs/MathFunctions/bin/Debug/net9.0/MathFunctions.deps.json
+/home/peyote/Documents/GitHub/crs/MathFunctions/bin/Debug/net9.0/MathFunctions.dll
+/home/peyote/Documents/GitHub/crs/MathFunctions/bin/Debug/net9.0/MathFunctions.pdb
+/home/peyote/Documents/GitHub/crs/MathFunctions/bin/Debug/net9.0/FunctEngine.dll
+/home/peyote/Documents/GitHub/crs/MathFunctions/bin/Debug/net9.0/FunctEngine.pdb
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.csproj.AssemblyReference.cache
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.AssemblyInfoInputs.cache
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.AssemblyInfo.cs
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.csproj.CoreCompileInputs.cache
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.sourcelink.json
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunc.A73B07B0.Up2Date
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.dll
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/refint/MathFunctions.dll
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/MathFunctions.pdb
+/home/peyote/Documents/GitHub/crs/MathFunctions/obj/Debug/net9.0/ref/MathFunctions.dll

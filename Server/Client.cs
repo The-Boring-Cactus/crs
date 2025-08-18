@@ -11,34 +11,19 @@ namespace Server;
 
 public class Client
 {
-    private GlobalVariables globalVariables ;
+
     public IWebsocketConnection socket;
     
-    private StatementEvaluator statementEvaluator;
-    private FunctList mapList;
-    private FunctScript testScript ;
+    
     public string uuid ;
     public Client (IWebsocketConnection socket, string _uuid)
     {
         this.socket = socket;
         uuid = _uuid;
-        mapList = new FunctList();
-        globalVariables = new GlobalVariables();
-        statementEvaluator = new StatementEvaluator();
-        testScript = new FunctScript(mapList, statementEvaluator, globalVariables);
-        testScript.StatusUpdate += TestScriptOnStatusUpdate;
-        testScript.StatusFinish += TestScriptOnStatusFinish;
-
+        
+     
     }
-    private void TestScriptOnStatusFinish(object sender, StatusString e)
-    {
-        dynamic answer = new JObject();
-        answer.TypeMsg ="FinishCode";
-        answer.status = e.status;
-        answer.data = JObject.FromObject(testScript.FunctResultsList);
-        var sz = answer.ToString();
-        Message(sz);
-    }
+   
     private void TestScriptOnStatusUpdate(object sender, StatusString e)
     {
         dynamic answer = new JObject();
@@ -64,16 +49,13 @@ public class Client
                 Message(sz); 
                 break;
             case "CodeScript":
-                globalVariables = new GlobalVariables();
-                statementEvaluator = new StatementEvaluator();
-                testScript = new FunctScript(mapList, statementEvaluator, globalVariables);
-                testScript.StatusUpdate += TestScriptOnStatusUpdate;
-                testScript.StatusFinish += TestScriptOnStatusFinish;
-                List<CompilerError> compilerErrors = new List<CompilerError>();
+                var interpreter = new RuntimeInterpreter();
+                interpreter.LoadExternalFunctions("MathFunctions.dll");
+                interpreter.LoadExternalFunctions("StringUtilities.dll");
+                interpreter.StatusUpdate += TestScriptOnStatusUpdate;
                 string script = payload.data;
-                string name = payload.name;
-                bool isok = testScript.InitializeScript(script, name, ref compilerErrors);
-                testScript.StartFunct();
+                interpreter.Execute(script);
+                
                 break;
             
         }

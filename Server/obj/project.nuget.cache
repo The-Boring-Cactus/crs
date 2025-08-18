@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "bnrzPXGZVYQ=",
+  "dgSpecHash": "gCiEVKSpK4o=",
   "success": true,
   "projectFilePath": "/home/peyote/Documents/GitHub/crs/Server/Server.csproj",
   "expectedPackageFiles": [
     "/home/peyote/.nuget/packages/acornima/1.1.1/acornima.1.1.1.nupkg.sha512",
+    "/home/peyote/.nuget/packages/antlr4.runtime.standard/4.6.0/antlr4.runtime.standard.4.6.0.nupkg.sha512",
     "/home/peyote/.nuget/packages/cottle/2.1.0/cottle.2.1.0.nupkg.sha512",
     "/home/peyote/.nuget/packages/fleck/1.2.0/fleck.1.2.0.nupkg.sha512",
     "/home/peyote/.nuget/packages/genhttp.api/9.7.0/genhttp.api.9.7.0.nupkg.sha512",
@@ -37,5 +38,18 @@
     "/home/peyote/.nuget/packages/zstdsharp.port/0.8.4/zstdsharp.port.0.8.4.nupkg.sha512",
     "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.7/microsoft.aspnetcore.app.ref.9.0.7.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "Package 'Antlr4.Runtime.Standard 4.6.0' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.",
+      "projectPath": "/home/peyote/Documents/GitHub/crs/Server/Server.csproj",
+      "warningLevel": 1,
+      "filePath": "/home/peyote/Documents/GitHub/crs/Server/Server.csproj",
+      "libraryId": "Antlr4.Runtime.Standard",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
 }

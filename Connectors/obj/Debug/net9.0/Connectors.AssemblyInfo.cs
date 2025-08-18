@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Connectors")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+51ac15ad2acd6221842c6fa4a3b94d61824740d0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9bdf2a66cba3fcd1d98b2f7fe7345c3472e292ff")]
 [assembly: System.Reflection.AssemblyProductAttribute("Connectors")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Connectors")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

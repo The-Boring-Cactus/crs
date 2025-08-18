@@ -1,0 +1,12 @@
+/home/peyote/Documents/GitHub/crs/StringUtilities/bin/Debug/net9.0/StringUtilities.deps.json
+/home/peyote/Documents/GitHub/crs/StringUtilities/bin/Debug/net9.0/StringUtilities.dll
+/home/peyote/Documents/GitHub/crs/StringUtilities/bin/Debug/net9.0/StringUtilities.pdb
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.AssemblyInfoInputs.cache
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.AssemblyInfo.cs
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.csproj.CoreCompileInputs.cache
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.sourcelink.json
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.dll
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/refint/StringUtilities.dll
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.pdb
+/home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/ref/StringUtilities.dll

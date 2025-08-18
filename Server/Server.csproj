@@ -42,8 +42,9 @@
 </ItemGroup>
 
 <ItemGroup>
-  <ProjectReference Include="..\CoreFunctions\CoreFunctions.csproj" />
+  <ProjectReference Include="..\MathFunctions\MathFunctions.csproj" />
   <ProjectReference Include="..\FunctEngine\FunctEngine.csproj" />
+  <ProjectReference Include="..\StringUtilities\StringUtilities.csproj" />
 </ItemGroup>
 
 </Project>
