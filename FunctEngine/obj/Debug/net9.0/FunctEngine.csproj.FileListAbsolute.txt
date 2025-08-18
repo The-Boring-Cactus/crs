@@ -11,3 +11,16 @@
 /home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngine.AssemblyInfo.cs
 /home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngine.csproj.CoreCompileInputs.cache
 /home/peyote/Documents/GitHub/crs/FunctEngine/obj/Debug/net9.0/FunctEngine.sourcelink.json
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.csproj.AssemblyReference.cache
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.GeneratedMSBuildEditorConfig.editorconfig
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.AssemblyInfoInputs.cache
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.AssemblyInfo.cs
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.csproj.CoreCompileInputs.cache
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.sourcelink.json
+F:\Reportes\crs\FunctEngine\bin\Debug\net9.0\FunctEngine.deps.json
+F:\Reportes\crs\FunctEngine\bin\Debug\net9.0\FunctEngine.dll
+F:\Reportes\crs\FunctEngine\bin\Debug\net9.0\FunctEngine.pdb
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.dll
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\refint\FunctEngine.dll
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\FunctEngine.pdb
+F:\Reportes\crs\FunctEngine\obj\Debug\net9.0\ref\FunctEngine.dll

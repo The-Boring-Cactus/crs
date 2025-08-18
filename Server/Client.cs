@@ -49,9 +49,9 @@ public class Client
                 Message(sz); 
                 break;
             case "CodeScript":
-                var interpreter = new RuntimeInterpreter();
-                interpreter.LoadExternalFunctions("MathFunctions.dll");
-                interpreter.LoadExternalFunctions("StringUtilities.dll");
+                var interpreter = new CodeEngine();
+                interpreter.LoadExternalDll("MathFunctions.dll");
+                interpreter.LoadExternalDll("StringUtilities.dll");
                 interpreter.StatusUpdate += TestScriptOnStatusUpdate;
                 string script = payload.data;
                 interpreter.Execute(script);

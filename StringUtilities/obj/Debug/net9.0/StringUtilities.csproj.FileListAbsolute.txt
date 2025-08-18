@@ -10,3 +10,15 @@
 /home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/refint/StringUtilities.dll
 /home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/StringUtilities.pdb
 /home/peyote/Documents/GitHub/crs/StringUtilities/obj/Debug/net9.0/ref/StringUtilities.dll
+F:\Reportes\crs\StringUtilities\bin\Debug\net9.0\StringUtilities.deps.json
+F:\Reportes\crs\StringUtilities\bin\Debug\net9.0\StringUtilities.dll
+F:\Reportes\crs\StringUtilities\bin\Debug\net9.0\StringUtilities.pdb
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.GeneratedMSBuildEditorConfig.editorconfig
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.AssemblyInfoInputs.cache
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.AssemblyInfo.cs
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.csproj.CoreCompileInputs.cache
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.sourcelink.json
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.dll
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\refint\StringUtilities.dll
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.pdb
+F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\ref\StringUtilities.dll
