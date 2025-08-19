@@ -50,8 +50,8 @@ public class Client
                 break;
             case "CodeScript":
                 var interpreter = new CodeEngine();
-                interpreter.LoadExternalDll("MathFunctions.dll");
-                interpreter.LoadExternalDll("StringUtilities.dll");
+                //interpreter.LoadExternalDll("MathFunctions.dll");
+                //interpreter.LoadExternalDll("StringUtilities.dll");
                 interpreter.StatusUpdate += TestScriptOnStatusUpdate;
                 string script = payload.data;
                 interpreter.Execute(script);

@@ -6,73 +6,85 @@ using System.Threading.Tasks;
 
 namespace FunctEngine
 {
-    public abstract class Statement { }
-    public abstract class Expression { }
+    public abstract class ASTNode { }
 
-    // Statements
-    public class ExpressionStatement : Statement
+    public class ProgramNode : ASTNode
     {
-        public Expression Expression { get; set; }
+        public List<ASTNode> Statements { get; set; } = new List<ASTNode>();
     }
 
-    public class VariableDeclaration : Statement
+    public class VarDeclarationNode : ASTNode
     {
         public string Name { get; set; }
-        public Expression Initializer { get; set; }
+        public ASTNode Value { get; set; }
     }
 
-    public class ForStatement : Statement
+    public class AssignmentNode : ASTNode
     {
-        public Statement Initializer { get; set; }
-        public Expression Condition { get; set; }
-        public Expression Increment { get; set; }
-        public List<Statement> Body { get; set; } = new List<Statement>();
+        public string Name { get; set; }
+        public ASTNode Value { get; set; }
     }
 
-    public class WhileStatement : Statement
+    public class FunctionCallNode : ASTNode
     {
-        public Expression Condition { get; set; }
-        public List<Statement> Body { get; set; } = new List<Statement>();
+        public string Name { get; set; }
+        public List<ASTNode> Arguments { get; set; } = new List<ASTNode>();
     }
 
-    // Expressions
-    public class LiteralExpression : Expression
+    public class NumberNode : ASTNode
     {
-        public object Value { get; set; }
+        public double Value { get; set; }
     }
 
-    public class IdentifierExpression : Expression
+    public class StringNode : ASTNode
+    {
+        public string Value { get; set; }
+    }
+
+    public class BooleanNode : ASTNode
+    {
+        public bool Value { get; set; }
+    }
+
+    public class IdentifierNode : ASTNode
     {
         public string Name { get; set; }
     }
 
-    public class BinaryExpression : Expression
+    public class ArrayAccessNode : ASTNode
     {
-        public Expression Left { get; set; }
+        public string ArrayName { get; set; }
+        public ASTNode Index { get; set; }
+    }
+
+    public class BinaryOpNode : ASTNode
+    {
+        public ASTNode Left { get; set; }
         public string Operator { get; set; }
-        public Expression Right { get; set; }
+        public ASTNode Right { get; set; }
     }
 
-    public class CallExpression : Expression
+    public class UnaryOpNode : ASTNode
     {
-        public string FunctionName { get; set; }
-        public List<Expression> Arguments { get; set; } = new List<Expression>();
+        public string Operator { get; set; }
+        public ASTNode Operand { get; set; }
     }
 
-    public class AssignmentExpression : Expression
+    public class IfNode : ASTNode
     {
-        public string Variable { get; set; }
-        public Expression Value { get; set; }
+        public ASTNode Condition { get; set; }
+        public ASTNode ThenBranch { get; set; }
+        public ASTNode ElseBranch { get; set; }
     }
 
-    public class ArrayExpression : Expression
+    public class WhileNode : ASTNode
     {
-        public List<Expression> Elements { get; set; } = new List<Expression>();
+        public ASTNode Condition { get; set; }
+        public ASTNode Body { get; set; }
     }
 
-    public class ArrayAccessExpression : Expression
+    public class BlockNode : ASTNode
     {
-        public Expression Array { get; set; }
-        public Expression Index { get; set; }
+        public List<ASTNode> Statements { get; set; } = new List<ASTNode>();
     }
 }

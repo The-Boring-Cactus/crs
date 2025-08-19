@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\codeengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\client.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\client.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\statementexecutor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\statementexecutor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -15,52 +19,12 @@
       "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\parser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\client.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\client.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\ast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\ast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\tokenizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\tokenizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\databasemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\databasemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\functionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\functionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\expressionevaluator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\expressionevaluator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\databasefunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\databasefunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\statisticsfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\statisticsfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\stringfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\stringfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\mathfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\mathfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\arrayfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\arrayfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\basicfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\basicfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|f:\\reportes\\crs\\functengine\\ast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\ast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -70,190 +34,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 14,
+          "SelectedChildIndex": 0,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Client.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Client.cs",
-              "RelativeDocumentMoniker": "Server\\Client.cs",
-              "ToolTip": "F:\\Reportes\\crs\\Server\\Client.cs",
-              "RelativeToolTip": "Server\\Client.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAkwDgAAAAQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:56:44.687Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "DatabaseFunctions.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\DatabaseFunctions.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\DatabaseFunctions.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\DatabaseFunctions.cs",
-              "RelativeToolTip": "FunctEngine\\DatabaseFunctions.cs",
-              "ViewState": "AgIAAEcAAAAAAAAAAAAYwHUAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:55:17.792Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "StatisticsFunctions.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\StatisticsFunctions.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\StatisticsFunctions.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\StatisticsFunctions.cs",
-              "RelativeToolTip": "FunctEngine\\StatisticsFunctions.cs",
-              "ViewState": "AgIAAFUAAAAAAAAAAAAAwI4AAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:54:41.217Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "StringFunctions.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\StringFunctions.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\StringFunctions.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\StringFunctions.cs",
-              "RelativeToolTip": "FunctEngine\\StringFunctions.cs",
-              "ViewState": "AgIAADwAAAAAAAAAAAA2wGgAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:54:12.057Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "MathFunctions.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\MathFunctions.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\MathFunctions.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\MathFunctions.cs",
-              "RelativeToolTip": "FunctEngine\\MathFunctions.cs",
-              "ViewState": "AgIAAEAAAAAAAAAAAAA2wG4AAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:53:47.752Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "ArrayFunctions.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\ArrayFunctions.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\ArrayFunctions.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\ArrayFunctions.cs",
-              "RelativeToolTip": "FunctEngine\\ArrayFunctions.cs",
-              "ViewState": "AgIAADUAAAAAAAAAAAAswHAAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:53:18.833Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "BasicFunctions.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\BasicFunctions.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\BasicFunctions.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\BasicFunctions.cs",
-              "RelativeToolTip": "FunctEngine\\BasicFunctions.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAkwD0AAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:52:54.315Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "ExpressionEvaluator.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\ExpressionEvaluator.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\ExpressionEvaluator.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\ExpressionEvaluator.cs",
-              "RelativeToolTip": "FunctEngine\\ExpressionEvaluator.cs",
-              "ViewState": "AgIAACIAAAAAAAAAAAAkwDcAAAAvAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:51:04.077Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "StatementExecutor.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\StatementExecutor.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\StatementExecutor.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\StatementExecutor.cs",
-              "RelativeToolTip": "FunctEngine\\StatementExecutor.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:50:18.345Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Parser.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\Parser.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\Parser.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\Parser.cs",
-              "RelativeToolTip": "FunctEngine\\Parser.cs",
-              "ViewState": "AgIAABwAAAAAAAAAAAAmwCMAAAAQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:49:16.585Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "AST.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\AST.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\AST.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\AST.cs",
-              "RelativeToolTip": "FunctEngine\\AST.cs",
-              "ViewState": "AgIAABEAAAAAAAAAAAA7wEwAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:36:24.954Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Tokenizer.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\Tokenizer.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\Tokenizer.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\Tokenizer.cs",
-              "RelativeToolTip": "FunctEngine\\Tokenizer.cs",
-              "ViewState": "AgIAACcAAAAAAAAAAAAAAEkAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:35:44.073Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "DatabaseManager.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\DatabaseManager.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\DatabaseManager.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\DatabaseManager.cs",
-              "RelativeToolTip": "FunctEngine\\DatabaseManager.cs",
-              "ViewState": "AgIAABYAAAAAAAAAAAAgwBUAAAA5AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:08:17.317Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "FunctionManager.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\FunctionManager.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\FunctionManager.cs",
-              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\FunctionManager.cs",
-              "RelativeToolTip": "FunctEngine\\FunctionManager.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAgwDYAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:06:12.701Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -262,9 +44,74 @@
               "RelativeDocumentMoniker": "FunctEngine\\CodeEngine.cs",
               "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\CodeEngine.cs",
               "RelativeToolTip": "FunctEngine\\CodeEngine.cs",
-              "ViewState": "AgIAAB8AAAAAAAAAAAA9wDQAAAAbAAAAAAAAAA==",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAwAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-18T21:01:09.449Z",
+              "WhenOpened": "2025-08-19T19:27:36.717Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "StatementExecutor.cs",
+              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\StatementExecutor.cs",
+              "RelativeDocumentMoniker": "FunctEngine\\StatementExecutor.cs",
+              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\StatementExecutor.cs",
+              "RelativeToolTip": "FunctEngine\\StatementExecutor.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAUwC8AAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-19T19:08:17.032Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AST.cs",
+              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\AST.cs",
+              "RelativeDocumentMoniker": "FunctEngine\\AST.cs",
+              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\AST.cs",
+              "RelativeToolTip": "FunctEngine\\AST.cs",
+              "ViewState": "AgIAADQAAAAAAAAAAAAgwFMAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-19T18:23:14.714Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Tokenizer.cs",
+              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\Tokenizer.cs",
+              "RelativeDocumentMoniker": "FunctEngine\\Tokenizer.cs",
+              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\Tokenizer.cs",
+              "RelativeToolTip": "FunctEngine\\Tokenizer.cs",
+              "ViewState": "AgIAAMgAAAAAAAAAAAAwwPkAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-19T16:24:58.414Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Client.cs",
+              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Client.cs",
+              "RelativeDocumentMoniker": "Server\\Client.cs",
+              "ToolTip": "F:\\Reportes\\crs\\Server\\Client.cs",
+              "RelativeToolTip": "Server\\Client.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAEAnwDYAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-19T16:06:05.203Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Parser.cs",
+              "DocumentMoniker": "F:\\Reportes\\crs\\FunctEngine\\Parser.cs",
+              "RelativeDocumentMoniker": "FunctEngine\\Parser.cs",
+              "ToolTip": "F:\\Reportes\\crs\\FunctEngine\\Parser.cs",
+              "RelativeToolTip": "FunctEngine\\Parser.cs",
+              "ViewState": "AgIAAC4BAAAAAAAAAAAIwDoBAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-18T21:49:16.585Z",
               "EditorCaption": ""
             }
           ]

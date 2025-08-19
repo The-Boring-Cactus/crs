@@ -59,7 +59,7 @@ namespace FunctEngine
             var ast = parser.Parse();
 
             var executor = new StatementExecutor(variables, functionManager);
-            executor.ExecuteStatements(ast);
+            executor.ExecuteStatements(ast.Statements);
         }
 
         public void Dispose()
