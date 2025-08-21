@@ -12,6 +12,11 @@ namespace FunctEngine
     {
         private readonly Dictionary<string, IDbConnection> connections = new Dictionary<string, IDbConnection>();
         private readonly Dictionary<string, IDbTransaction> transactions = new Dictionary<string, IDbTransaction>();
+        private readonly CodeEngine engine;
+        public DatabaseManager(CodeEngine codeEngine)
+        {
+            engine = codeEngine;
+        }
 
         public bool ConnectPostgres(string connectionName, string connectionString)
         {
@@ -20,12 +25,12 @@ namespace FunctEngine
                 var connection = new NpgsqlConnection(connectionString);
                 connection.Open();
                 connections[connectionName] = connection;
-                Console.WriteLine($"Conectado a PostgreSQL: {connectionName}");
+                engine.PrintCore($"Conectado a PostgreSQL: {connectionName}");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error conectando a PostgreSQL {connectionName}: {ex.Message}");
+                engine.PrintCore($"Error conectando a PostgreSQL {connectionName}: {ex.Message}");
                 return false;
             }
         }
@@ -37,12 +42,12 @@ namespace FunctEngine
                 var connection = new SqlConnection(connectionString);
                 connection.Open();
                 connections[connectionName] = connection;
-                Console.WriteLine($"Conectado a SQL Server: {connectionName}");
+                engine.PrintCore($"Conectado a SQL Server: {connectionName}");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error conectando a SQL Server {connectionName}: {ex.Message}");
+                engine.PrintCore($"Error conectando a SQL Server {connectionName}: {ex.Message}");
                 return false;
             }
         }
@@ -56,12 +61,12 @@ namespace FunctEngine
                     connections[connectionName].Close();
                     connections[connectionName].Dispose();
                     connections.Remove(connectionName);
-                    Console.WriteLine($"Desconectado de: {connectionName}");
+                    engine.PrintCore($"Desconectado de: {connectionName}");
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error desconectando {connectionName}: {ex.Message}");
+                    engine.PrintCore($"Error desconectando {connectionName}: {ex.Message}");
                     return false;
                 }
             }
@@ -72,7 +77,7 @@ namespace FunctEngine
         {
             if (!connections.ContainsKey(connectionName))
             {
-                Console.WriteLine($"Conexión no encontrada: {connectionName}");
+                engine.PrintCore($"Conexión no encontrada: {connectionName}");
                 return new List<object>();
             }
 
@@ -116,7 +121,7 @@ namespace FunctEngine
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error ejecutando query en {connectionName}: {ex.Message}");
+                engine.PrintCore($"Error ejecutando query en {connectionName}: {ex.Message}");
                 return new List<object>();
             }
         }
@@ -125,7 +130,7 @@ namespace FunctEngine
         {
             if (!connections.ContainsKey(connectionName))
             {
-                Console.WriteLine($"Conexión no encontrada: {connectionName}");
+                engine.PrintCore($"Conexión no encontrada: {connectionName}");
                 return 0;
             }
 
@@ -156,7 +161,7 @@ namespace FunctEngine
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error ejecutando comando en {connectionName}: {ex.Message}");
+                engine.PrintCore($"Error ejecutando comando en {connectionName}: {ex.Message}");
                 return 0;
             }
         }
@@ -165,7 +170,7 @@ namespace FunctEngine
         {
             if (!connections.ContainsKey(connectionName))
             {
-                Console.WriteLine($"Conexión no encontrada: {connectionName}");
+                engine.PrintCore($"Conexión no encontrada: {connectionName}");
                 return null;
             }
 
@@ -197,7 +202,7 @@ namespace FunctEngine
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error ejecutando scalar en {connectionName}: {ex.Message}");
+                engine.PrintCore($"Error ejecutando scalar en {connectionName}: {ex.Message}");
                 return null;
             }
         }
@@ -206,7 +211,7 @@ namespace FunctEngine
         {
             if (!connections.ContainsKey(connectionName))
             {
-                Console.WriteLine($"Conexión no encontrada: {connectionName}");
+                engine.PrintCore($"Conexión no encontrada: {connectionName}");
                 return false;
             }
 
@@ -219,7 +224,7 @@ namespace FunctEngine
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error iniciando transacción en {connectionName}: {ex.Message}");
+                engine.PrintCore($"Error iniciando transacción en {connectionName}: {ex.Message}");
                 return false;
             }
         }
@@ -237,7 +242,7 @@ namespace FunctEngine
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error confirmando transacción en {connectionName}: {ex.Message}");
+                    engine.PrintCore($"Error confirmando transacción en {connectionName}: {ex.Message}");
                     return false;
                 }
             }
@@ -257,7 +262,7 @@ namespace FunctEngine
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error revirtiendo transacción en {connectionName}: {ex.Message}");
+                    engine.PrintCore($"Error revirtiendo transacción en {connectionName}: {ex.Message}");
                     return false;
                 }
             }

@@ -83,8 +83,21 @@ namespace FunctEngine
         public ASTNode Body { get; set; }
     }
 
+    public class ForNode : ASTNode
+    {
+        public ASTNode Init { get; set; }
+        public ASTNode Condition { get; set; }
+        public ASTNode Update { get; set; }
+        public ASTNode Body { get; set; }
+    }
+
     public class BlockNode : ASTNode
     {
         public List<ASTNode> Statements { get; set; } = new List<ASTNode>();
+    }
+
+    public class ExpressionStatementNode : ASTNode
+    {
+        public ASTNode Expression { get; set; }
     }
 }

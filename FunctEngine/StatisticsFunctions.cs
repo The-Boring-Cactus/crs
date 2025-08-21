@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace FunctEngine
 {
-    public class StatisticsFunctions
+    
+    public class StatisticsFunctions(CodeEngine engine)
     {
         public object Mean(object[] args)
         {
@@ -140,5 +141,102 @@ namespace FunctEngine
             }
             return numbers;
         }
+        /// <summary>
+        /// Imprime el histograma en formato de texto simple
+        /// </summary>
+        public object PrintHistogram(object[] args)
+        {
+            List<StatsHelper.Bin> histograma = (List<StatsHelper.Bin>)args[0];
+            int anchoMaximo = args[1] == null ? 50 : Convert.ToInt32(args[1]);
+                
+            if (histograma == null || histograma.Count == 0)
+                return null;
+        
+            int maxFrecuencia = histograma.Max(b => b.Frecuencia);
+        
+            engine.PrintCore("\nHistograma:");
+            engine.PrintCore(new string('-', 60));
+        
+            foreach (var bin in histograma)
+            {
+                int anchoBarra = maxFrecuencia > 0 
+                    ? (int)((double)bin.Frecuencia / maxFrecuencia * anchoMaximo) 
+                    : 0;
+            
+                string barra = new string('█', anchoBarra);
+                engine.PrintCore($"{bin.LimiteInferior,8:F2} - {bin.LimiteSuperior,8:F2} | {barra} {bin.Frecuencia}");
+            }
+
+            return null;
+        }
+        // <summary>
+        /// Calcula un histograma a partir de una lista de valores doubles
+        /// </summary>
+        /// <param name="datos">Lista de valores double para crear el histograma</param>
+        /// <param name="numeroBins">Número de bins (intervalos) deseados</param>
+        /// <returns>Lista de bins con sus frecuencias</returns>
+        public object CreateHistogram(object[] args)
+        {
+            List<double> datos =args[0] as List<double>;
+            int numeroBins = args[1] is int ? (int)args[1] : 0;
+            if (datos == null || datos.Count == 0)
+                throw new ArgumentException("La lista de datos no puede estar vacía");
+        
+            if (numeroBins <= 0)
+                throw new ArgumentException("El número de bins debe ser mayor que cero");
+        
+            // Encontrar valores mínimo y máximo
+            double min = datos.Min();
+            double max = datos.Max();
+        
+            // Si todos los valores son iguales
+            if (min == max)
+            {
+                return new List<StatsHelper.Bin> 
+                { 
+                    new StatsHelper.Bin 
+                    { 
+                        LimiteInferior = min - 0.5, 
+                        LimiteSuperior = max + 0.5, 
+                        Frecuencia = datos.Count 
+                    } 
+                };
+            }
+        
+            // Calcular el ancho de cada bin
+            double anchoBin = (max - min) / numeroBins;
+        
+            // Inicializar los bins
+            List<StatsHelper.Bin> histograma = new List<StatsHelper.Bin>();
+            for (int i = 0; i < numeroBins; i++)
+            {
+                histograma.Add(new StatsHelper.Bin
+                {
+                    LimiteInferior = min + (i * anchoBin),
+                    LimiteSuperior = min + ((i + 1) * anchoBin),
+                    Frecuencia = 0
+                });
+            }
+        
+            // Ajustar el límite superior del último bin para incluir el valor máximo
+            histograma[numeroBins - 1].LimiteSuperior = max + double.Epsilon;
+        
+            // Contar frecuencias
+            foreach (double valor in datos)
+            {
+                // Encontrar el bin correspondiente
+                for (int i = 0; i < numeroBins; i++)
+                {
+                    if (valor >= histograma[i].LimiteInferior && valor < histograma[i].LimiteSuperior)
+                    {
+                        histograma[i].Frecuencia++;
+                        break;
+                    }
+                }
+            }
+        
+            return histograma;
+        }
+        
     }
 }

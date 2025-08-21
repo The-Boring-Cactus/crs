@@ -2742,40 +2742,32 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "/home/peyote/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj",
+      "projectUniqueName": "/home/peyote/Documents/GitHub/crs/MathFunctions/MathFunctions.csproj",
       "projectName": "MathFunctions",
-      "projectPath": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj",
-      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-      "outputPath": "F:\\Reportes\\crs\\MathFunctions\\obj\\",
+      "projectPath": "/home/peyote/Documents/GitHub/crs/MathFunctions/MathFunctions.csproj",
+      "packagesPath": "/home/peyote/.nuget/packages/",
+      "outputPath": "/home/peyote/Documents/GitHub/crs/MathFunctions/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/home/peyote/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-              "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+            "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj": {
+              "projectPath": "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj"
             }
           }
         }
@@ -2790,7 +2782,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net9.0": {
@@ -2812,12 +2804,18 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.7, 9.0.7]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.108/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

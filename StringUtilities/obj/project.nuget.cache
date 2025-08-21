@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "BtygAl2q9bM=",
+  "dgSpecHash": "QotKDzQbtBs=",
   "success": true,
-  "projectFilePath": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "/home/peyote/Documents/GitHub/crs/StringUtilities/StringUtilities.csproj",
+  "expectedPackageFiles": [
+    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.7/microsoft.aspnetcore.app.ref.9.0.7.nupkg.sha512"
+  ],
   "logs": []
 }

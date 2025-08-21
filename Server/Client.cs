@@ -60,7 +60,8 @@ public class Client
             
         }
     }
-    public void Message (string message)
+
+    private void Message (string message)
     {
         socket.Send(message);
     }

@@ -20,7 +20,7 @@ namespace FunctEngine
         public CodeEngine()
         {
             functionManager = new FunctionManager(variables, counters, this);
-            databaseManager = new DatabaseManager();
+            databaseManager = new DatabaseManager(this);
             functionManager.SetDatabaseManager(databaseManager);
             functionManager.InitializeBuiltInFunctions();
         }
@@ -29,8 +29,16 @@ namespace FunctEngine
         public int TotalWordsProcessed => totalWordsProcessed;
         public int TotalTextsAnalyzed => totalTextsAnalyzed;
 
-        public Action<object, StatusString> StatusUpdate { get; set; }
-
+        public event StatusUpdateHandler StatusUpdate;
+        
+        public void PrintCore(string msg)
+        {
+            if(StatusUpdate != null)
+            {
+                var e = new StatusString(msg);
+                StatusUpdate(this, e);
+            }
+        }
         public void IncrementTextStats(int words)
         {
             totalWordsProcessed += words;
@@ -56,7 +64,7 @@ namespace FunctEngine
             var tokens = tokenizer.Tokenize(code);
 
             var parser = new Parser(tokens);
-            var ast = parser.Parse();
+            var ast = parser.Parse(this);
 
             var executor = new StatementExecutor(variables, functionManager);
             executor.ExecuteStatements(ast.Statements);

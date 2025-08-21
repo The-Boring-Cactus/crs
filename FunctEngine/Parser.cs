@@ -10,6 +10,7 @@ namespace FunctEngine
 {
     public class Parser
     {
+        private CodeEngine engine;
         private List<Token> tokens;
         private int position;
 
@@ -19,17 +20,18 @@ namespace FunctEngine
             this.position = 0;
         }
 
-        public ProgramNode Parse()
+        public ProgramNode Parse(CodeEngine engine)
         {
+            this.engine = engine;
             var program = new ProgramNode();
-
+            
             while (!IsAtEnd())
             {
                 var stmt = ParseStatement();
                 if (stmt != null)
                     program.Statements.Add(stmt);
             }
-
+            
             return program;
         }
 
@@ -39,22 +41,27 @@ namespace FunctEngine
             {
                 return ParseVarDeclaration();
             }
-
+            
             if (Match(TokenType.Keyword, "if"))
             {
                 return ParseIfStatement();
             }
-
+            
             if (Match(TokenType.Keyword, "while"))
             {
                 return ParseWhileStatement();
             }
-
+            
+            if (Match(TokenType.Keyword, "for"))
+            {
+                return ParseForStatement();
+            }
+            
             if (Match(TokenType.LeftBrace))
             {
                 return ParseBlock();
             }
-
+            
             if (Peek().Type == TokenType.Identifier)
             {
                 var next = PeekNext();
@@ -63,10 +70,10 @@ namespace FunctEngine
                     return ParseAssignment();
                 }
             }
-
+            
             var expression = ParseExpression();
             Consume(TokenType.Semicolon, "Expected ';' after expression");
-            return expression;
+            return new ExpressionStatementNode { Expression = expression };
         }
 
         private VarDeclarationNode ParseVarDeclaration()
@@ -75,7 +82,7 @@ namespace FunctEngine
             Consume(TokenType.Equals, "Expected '=' in variable declaration");
             var value = ParseExpression();
             Consume(TokenType.Semicolon, "Expected ';' after variable declaration");
-
+            
             return new VarDeclarationNode { Name = name, Value = value };
         }
 
@@ -85,7 +92,7 @@ namespace FunctEngine
             Consume(TokenType.Equals, "Expected '=' in assignment");
             var value = ParseExpression();
             Consume(TokenType.Semicolon, "Expected ';' after assignment");
-
+            
             return new AssignmentNode { Name = name, Value = value };
         }
 
@@ -94,15 +101,15 @@ namespace FunctEngine
             Consume(TokenType.LeftParen, "Expected '(' after 'if'");
             var condition = ParseExpression();
             Consume(TokenType.RightParen, "Expected ')' after if condition");
-
+            
             var thenBranch = ParseStatement();
             ASTNode elseBranch = null;
-
+            
             if (Match(TokenType.Keyword, "else"))
             {
                 elseBranch = ParseStatement();
             }
-
+            
             return new IfNode { Condition = condition, ThenBranch = thenBranch, ElseBranch = elseBranch };
         }
 
@@ -111,21 +118,128 @@ namespace FunctEngine
             Consume(TokenType.LeftParen, "Expected '(' after 'while'");
             var condition = ParseExpression();
             Consume(TokenType.RightParen, "Expected ')' after while condition");
-
+            
             var body = ParseStatement();
-
+            
             return new WhileNode { Condition = condition, Body = body };
+        }
+
+        private ForNode ParseForStatement()
+        {
+            Consume(TokenType.LeftParen, "Expected '(' after 'for'");
+            
+            // Parse initialization
+            ASTNode init = null;
+            if (!Check(TokenType.Semicolon) && !Check(TokenType.Comma))
+            {
+                if (Match(TokenType.Keyword, "var"))
+                {
+                    var name = Consume(TokenType.Identifier, "Expected variable name").Value;
+                    Consume(TokenType.Equals, "Expected '=' in variable declaration");
+                    var value = ParseExpression();
+                    init = new VarDeclarationNode { Name = name, Value = value };
+                }
+                else
+                {
+                    // Could be an assignment or expression
+                    init = ParseExpression();
+                }
+            }
+            
+            // Accept either comma or semicolon as separator
+            if (!Match(TokenType.Comma))
+                Match(TokenType.Semicolon);
+            
+            // Parse condition
+            ASTNode condition = null;
+            if (!Check(TokenType.Semicolon) && !Check(TokenType.Comma))
+            {
+                condition = ParseExpression();
+            }
+            
+            // Accept either comma or semicolon as separator
+            if (!Match(TokenType.Comma))
+                Match(TokenType.Semicolon);
+            
+            // Parse update expression
+            ASTNode update = null;
+            if (!Check(TokenType.RightParen))
+            {
+                // Check if it's an assignment or increment/decrement
+                if (Peek().Type == TokenType.Identifier)
+                {
+                    var savedPosition = position;
+                    var name = Advance().Value;
+                    
+                    if (Match(TokenType.Plus) && Match(TokenType.Plus))
+                    {
+                        // i++ becomes i = i + 1
+                        update = new AssignmentNode 
+                        { 
+                            Name = name, 
+                            Value = new BinaryOpNode 
+                            { 
+                                Left = new IdentifierNode { Name = name },
+                                Operator = "+",
+                                Right = new NumberNode { Value = 1 }
+                            }
+                        };
+                    }
+                    else if (Match(TokenType.Minus) && Match(TokenType.Minus))
+                    {
+                        // i-- becomes i = i - 1
+                        update = new AssignmentNode 
+                        { 
+                            Name = name, 
+                            Value = new BinaryOpNode 
+                            { 
+                                Left = new IdentifierNode { Name = name },
+                                Operator = "-",
+                                Right = new NumberNode { Value = 1 }
+                            }
+                        };
+                    }
+                    else if (Match(TokenType.Equals))
+                    {
+                        // Regular assignment like i = i + 1
+                        var value = ParseExpression();
+                        update = new AssignmentNode { Name = name, Value = value };
+                    }
+                    else
+                    {
+                        // Not an assignment or increment, go back and parse as expression
+                        position = savedPosition;
+                        update = ParseExpression();
+                    }
+                }
+                else
+                {
+                    update = ParseExpression();
+                }
+            }
+            
+            Consume(TokenType.RightParen, "Expected ')' after for clauses");
+            
+            var body = ParseStatement();
+            
+            return new ForNode 
+            { 
+                Init = init, 
+                Condition = condition ?? new BooleanNode { Value = true }, 
+                Update = update, 
+                Body = body 
+            };
         }
 
         private BlockNode ParseBlock()
         {
             var block = new BlockNode();
-
+            
             while (!Check(TokenType.RightBrace) && !IsAtEnd())
             {
                 block.Statements.Add(ParseStatement());
             }
-
+            
             Consume(TokenType.RightBrace, "Expected '}' after block");
             return block;
         }
@@ -138,85 +252,85 @@ namespace FunctEngine
         private ASTNode ParseLogicalOr()
         {
             var expr = ParseLogicalAnd();
-
+            
             while (Match(TokenType.Or))
             {
                 var op = Previous().Value;
                 var right = ParseLogicalAnd();
                 expr = new BinaryOpNode { Left = expr, Operator = op, Right = right };
             }
-
+            
             return expr;
         }
 
         private ASTNode ParseLogicalAnd()
         {
             var expr = ParseEquality();
-
+            
             while (Match(TokenType.And))
             {
                 var op = Previous().Value;
                 var right = ParseEquality();
                 expr = new BinaryOpNode { Left = expr, Operator = op, Right = right };
             }
-
+            
             return expr;
         }
 
         private ASTNode ParseEquality()
         {
             var expr = ParseRelational();
-
+            
             while (Match(TokenType.EqualEqual) || Match(TokenType.NotEqual))
             {
                 var op = Previous().Value;
                 var right = ParseRelational();
                 expr = new BinaryOpNode { Left = expr, Operator = op, Right = right };
             }
-
+            
             return expr;
         }
 
         private ASTNode ParseRelational()
         {
             var expr = ParseAdditive();
-
-            while (Match(TokenType.Less) || Match(TokenType.LessEqual) ||
+            
+            while (Match(TokenType.Less) || Match(TokenType.LessEqual) || 
                    Match(TokenType.Greater) || Match(TokenType.GreaterEqual))
             {
                 var op = Previous().Value;
                 var right = ParseAdditive();
                 expr = new BinaryOpNode { Left = expr, Operator = op, Right = right };
             }
-
+            
             return expr;
         }
 
         private ASTNode ParseAdditive()
         {
             var expr = ParseMultiplicative();
-
+            
             while (Match(TokenType.Plus) || Match(TokenType.Minus))
             {
                 var op = Previous().Value;
                 var right = ParseMultiplicative();
                 expr = new BinaryOpNode { Left = expr, Operator = op, Right = right };
             }
-
+            
             return expr;
         }
 
         private ASTNode ParseMultiplicative()
         {
             var expr = ParseUnary();
-
+            
             while (Match(TokenType.Star) || Match(TokenType.Slash) || Match(TokenType.Percent))
             {
                 var op = Previous().Value;
                 var right = ParseUnary();
                 expr = new BinaryOpNode { Left = expr, Operator = op, Right = right };
             }
-
+            
             return expr;
         }
 
@@ -228,7 +342,7 @@ namespace FunctEngine
                 var expr = ParseUnary();
                 return new UnaryOpNode { Operator = op, Operand = expr };
             }
-
+            
             return ParsePrimary();
         }
 
@@ -238,33 +352,33 @@ namespace FunctEngine
             {
                 return new BooleanNode { Value = true };
             }
-
+            
             if (Match(TokenType.False))
             {
                 return new BooleanNode { Value = false };
             }
-
+            
             if (Match(TokenType.Number))
             {
                 return new NumberNode { Value = double.Parse(Previous().Value) };
             }
-
+            
             if (Match(TokenType.String))
             {
                 return new StringNode { Value = Previous().Value };
             }
-
+            
             if (Match(TokenType.LeftParen))
             {
                 var expr = ParseExpression();
                 Consume(TokenType.RightParen, "Expected ')' after expression");
                 return expr;
             }
-
+            
             if (Match(TokenType.Identifier))
             {
                 var name = Previous().Value;
-
+                
                 if (Match(TokenType.LeftParen))
                 {
                     return ParseFunctionCall(name);
@@ -275,17 +389,17 @@ namespace FunctEngine
                     Consume(TokenType.RightBracket, "Expected ']' after array index");
                     return new ArrayAccessNode { ArrayName = name, Index = index };
                 }
-
+                
                 return new IdentifierNode { Name = name };
             }
-
+            engine.PrintCore($"Unexpected token: {Peek().Value} at line {Peek().Line}");
             throw new Exception($"Unexpected token: {Peek().Value} at line {Peek().Line}");
         }
 
         private FunctionCallNode ParseFunctionCall(string name)
         {
             var node = new FunctionCallNode { Name = name };
-
+            
             if (!Check(TokenType.RightParen))
             {
                 do
@@ -293,7 +407,7 @@ namespace FunctEngine
                     node.Arguments.Add(ParseExpression());
                 } while (Match(TokenType.Comma));
             }
-
+            
             Consume(TokenType.RightParen, "Expected ')' after function arguments");
             return node;
         }
@@ -345,6 +459,7 @@ namespace FunctEngine
         private Token Consume(TokenType type, string message)
         {
             if (Check(type)) return Advance();
+            engine.PrintCore($"{message} at line {Peek().Line}, column {Peek().Column}");
             throw new Exception($"{message} at line {Peek().Line}, column {Peek().Column}");
         }
     }

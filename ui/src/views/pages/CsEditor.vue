@@ -42,12 +42,15 @@
             />
         </div>
     </div>
-    <div class="card flex flex-wrap justify-center items-end gap-4">
-    <FloatLabel variant="in">
-            <Textarea id="over_label" v-model="debugText" rows="5" cols="150" style="resize: none" />
-            <label for="in_label">Debug Status</label>
-        </FloatLabel>
-        </div>
+    <br/>
+    <Card role="region" class="m-0">
+    <template #title>Debug</template>
+    <template #content>
+        <Textarea  v-model="debugText" rows="5" cols="200" autoResize/>
+    </template>
+    </Card>
+
+
 </template>
 
 <script setup>

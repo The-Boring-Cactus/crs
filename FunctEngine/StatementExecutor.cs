@@ -32,7 +32,7 @@ namespace FunctEngine
             {
                 case VarDeclarationNode varDecl:
                     var value = Evaluate(varDecl.Value);
-                    variables[varDecl.Name] = value;
+                    variables[varDecl.Name] =value;
                     return value;
 
                 case AssignmentNode assignment:
@@ -82,6 +82,22 @@ namespace FunctEngine
                     }
                     return null;
 
+                case ForNode forNode:
+                    // Execute initialization
+                    if (forNode.Init != null)
+                        Evaluate(forNode.Init);
+                    
+                    // Execute loop
+                    while (ConvertToBool(Evaluate(forNode.Condition)))
+                    {
+                        Evaluate(forNode.Body);
+                        
+                        // Execute update expression
+                        if (forNode.Update != null)
+                            Evaluate(forNode.Update);
+                    }
+                    return null;
+
                 case BlockNode block:
                     foreach (var stmt in block.Statements)
                     {
@@ -89,58 +105,62 @@ namespace FunctEngine
                     }
                     return null;
 
+                case ExpressionStatementNode exprStmt:
+                    return Evaluate(exprStmt.Expression);
+
                 default:
                     throw new Exception($"Unknown node type: {node.GetType().Name}");
             }
         }
+
         private object EvaluateBinaryOp(BinaryOpNode node)
         {
             var left = Evaluate(node.Left);
             var right = Evaluate(node.Right);
-
+            
             switch (node.Operator)
             {
                 case "+":
                     if (left is string || right is string)
                         return left.ToString() + right.ToString();
                     return Convert.ToDouble(left) + Convert.ToDouble(right);
-
+                    
                 case "-":
                     return Convert.ToDouble(left) - Convert.ToDouble(right);
-
+                    
                 case "*":
                     return Convert.ToDouble(left) * Convert.ToDouble(right);
-
+                    
                 case "/":
                     return Convert.ToDouble(left) / Convert.ToDouble(right);
-
+                    
                 case "%":
                     return Convert.ToDouble(left) % Convert.ToDouble(right);
-
+                    
                 case "==":
                     return AreEqual(left, right);
-
+                    
                 case "!=":
                     return !AreEqual(left, right);
-
+                    
                 case "<":
                     return Convert.ToDouble(left) < Convert.ToDouble(right);
-
+                    
                 case "<=":
                     return Convert.ToDouble(left) <= Convert.ToDouble(right);
-
+                    
                 case ">":
                     return Convert.ToDouble(left) > Convert.ToDouble(right);
-
+                    
                 case ">=":
                     return Convert.ToDouble(left) >= Convert.ToDouble(right);
-
+                    
                 case "&&":
                     return ConvertToBool(left) && ConvertToBool(right);
-
+                    
                 case "||":
                     return ConvertToBool(left) || ConvertToBool(right);
-
+                    
                 default:
                     throw new Exception($"Unknown binary operator: {node.Operator}");
             }
@@ -149,15 +169,15 @@ namespace FunctEngine
         private object EvaluateUnaryOp(UnaryOpNode node)
         {
             var operand = Evaluate(node.Operand);
-
+            
             switch (node.Operator)
             {
                 case "!":
                     return !ConvertToBool(operand);
-
+                    
                 case "-":
                     return -Convert.ToDouble(operand);
-
+                    
                 default:
                     throw new Exception($"Unknown unary operator: {node.Operator}");
             }
@@ -167,16 +187,16 @@ namespace FunctEngine
         {
             if (left == null && right == null) return true;
             if (left == null || right == null) return false;
-
+            
             if (left is bool && right is bool)
                 return (bool)left == (bool)right;
-
+            
             if (left is string && right is string)
                 return (string)left == (string)right;
-
+            
             if (IsNumeric(left) && IsNumeric(right))
                 return Convert.ToDouble(left) == Convert.ToDouble(right);
-
+            
             return left.Equals(right);
         }
 

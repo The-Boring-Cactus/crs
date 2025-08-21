@@ -17,7 +17,8 @@ namespace FunctEngine
 
         public object Print(object[] args)
         {
-            Console.WriteLine(args.Length > 0 ? args[0]?.ToString() ?? "" : "");
+           
+            engine.PrintCore(args.Length > 0 ? args[0]?.ToString() ?? "" : "");
             return null;
         }
 
@@ -53,10 +54,10 @@ namespace FunctEngine
 
         public object GetTextStats(object[] args)
         {
-            Console.WriteLine($"=== ESTADÍSTICAS DE TEXTO ===");
-            Console.WriteLine($"Textos analizados: {engine.TotalTextsAnalyzed}");
-            Console.WriteLine($"Total de palabras procesadas: {engine.TotalWordsProcessed}");
-            Console.WriteLine($"Promedio de palabras por texto: {(engine.TotalTextsAnalyzed > 0 ? (double)engine.TotalWordsProcessed / engine.TotalTextsAnalyzed : 0):F2}");
+            engine.PrintCore($"=== ESTADÍSTICAS DE TEXTO ===");
+            engine.PrintCore($"Textos analizados: {engine.TotalTextsAnalyzed}");
+            engine.PrintCore($"Total de palabras procesadas: {engine.TotalWordsProcessed}");
+            engine.PrintCore($"Promedio de palabras por texto: {(engine.TotalTextsAnalyzed > 0 ? (double)engine.TotalWordsProcessed / engine.TotalTextsAnalyzed : 0):F2}");
             return null;
         }
     }

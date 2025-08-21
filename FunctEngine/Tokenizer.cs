@@ -28,17 +28,23 @@ namespace FunctEngine
         public int Column { get; set; }
     }
 
+
     public class Tokenizer
     {
         private string input;
-        private int position=0;
+        private int position;
         private int line = 1;
         private int column = 1;
 
-        public List<Token> Tokenize(string code)
+        public Tokenizer()
         {
-            this.input = code;
+            
+            this.position = 0;
+        }
 
+        public List<Token> Tokenize(string input_)
+        {
+            this.input = input_;
             var tokens = new List<Token>();
 
             while (position < input.Length)
@@ -54,6 +60,7 @@ namespace FunctEngine
             tokens.Add(new Token { Type = TokenType.EOF, Line = line, Column = column });
             return tokens;
         }
+
         private void SkipWhitespaceAndComments()
         {
             while (position < input.Length)
@@ -69,6 +76,7 @@ namespace FunctEngine
                     {
                         column++;
                     }
+
                     position++;
                 }
                 else if (position < input.Length - 1 && input[position] == '/' && input[position + 1] == '/')
@@ -141,8 +149,10 @@ namespace FunctEngine
             {
                 case '(': return new Token { Type = TokenType.LeftParen, Value = "(", Line = line, Column = startCol };
                 case ')': return new Token { Type = TokenType.RightParen, Value = ")", Line = line, Column = startCol };
-                case '[': return new Token { Type = TokenType.LeftBracket, Value = "[", Line = line, Column = startCol };
-                case ']': return new Token { Type = TokenType.RightBracket, Value = "]", Line = line, Column = startCol };
+                case '[':
+                    return new Token { Type = TokenType.LeftBracket, Value = "[", Line = line, Column = startCol };
+                case ']':
+                    return new Token { Type = TokenType.RightBracket, Value = "]", Line = line, Column = startCol };
                 case '{': return new Token { Type = TokenType.LeftBrace, Value = "{", Line = line, Column = startCol };
                 case '}': return new Token { Type = TokenType.RightBrace, Value = "}", Line = line, Column = startCol };
                 case ',': return new Token { Type = TokenType.Comma, Value = ",", Line = line, Column = startCol };
@@ -161,6 +171,7 @@ namespace FunctEngine
 
             throw new Exception($"Unexpected character '{ch}' at line {line}, column {startCol}");
         }
+
         private Token ReadString(char quote)
         {
             var sb = new StringBuilder();
@@ -189,6 +200,7 @@ namespace FunctEngine
                 {
                     sb.Append(input[position]);
                 }
+
                 position++;
                 column++;
             }
@@ -216,7 +228,6 @@ namespace FunctEngine
 
             return new Token { Type = TokenType.Number, Value = sb.ToString(), Line = line, Column = startCol };
         }
-
 
         private Token ReadIdentifier()
         {

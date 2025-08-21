@@ -34,7 +34,7 @@ namespace FunctEngine
             var arrayFunctions = new ArrayFunctions();
             var mathFunctions = new MathFunctions();
             var stringFunctions = new StringFunctions();
-            var statisticsFunctions = new StatisticsFunctions();
+            var statisticsFunctions = new StatisticsFunctions(engine);
             var basicFunctions = new BasicFunctions(engine);
             var databaseFunctions = new DatabaseFunctions(databaseManager);
 
@@ -139,6 +139,8 @@ namespace FunctEngine
             builtInFunctions["Quartile"] = statisticsFunctions.Quartile;
             builtInFunctions["Correlation"] = statisticsFunctions.Correlation;
             builtInFunctions["ZScore"] = statisticsFunctions.ZScore;
+            builtInFunctions["PrintHistogram"] = statisticsFunctions.PrintHistogram;
+            builtInFunctions["CreateHistogram"] = statisticsFunctions.CreateHistogram;
         }
 
         private void RegisterDatabaseFunctions(DatabaseFunctions databaseFunctions)
