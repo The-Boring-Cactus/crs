@@ -7,18 +7,21 @@ export const userStoreMe = defineStore({
       
       authv: false,
       namev: '',
-      levelv: ''
+      levelv: '',
+      functionsv: []
     }),
     getters: {
         auth: (state) => state.authv,
         name: (state) => state.namev,
-        level: (state) => state.levelv
+        level: (state) => state.levelv,
+        functions: (state) => state.functionsv
     },
     actions: {
-      setCurr(auth: boolean, name: string, level: string) {
+      setCurr(auth: boolean, name: string, level: string, functions: string[]) {
         this.authv = auth;
         this.namev = name;
         this.levelv = level;
+        this.functionsv = functions;
       }
     }
   });

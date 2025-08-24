@@ -22,15 +22,14 @@ const loading = ref(false);
 var { proxy } = getCurrentInstance();
 
 proxy.$socket.onmessage =  (data) => {
-    console.log(data.data);
     const responseHandler = new ServerResponse();
 
     var response = responseHandler.analizeMessage(JSON.parse(data.data));
-
+    console.log(response);
   loading.value = false;
   if(response.Type=="Response" || response.Status=="Success"){
     toast.add({ severity: 'Success', summary: 'OK', detail: 'Welcome', life: 3000 });
-    userStore.setCurr(true,'User','admin');
+    userStore.setCurr(true,'User','admin', response.Data.Functions);
     router.push({ path: '/', replace: true })
   }
 }

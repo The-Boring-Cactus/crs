@@ -2,8 +2,6 @@
           <Toast />
     <Toolbar>
         <template #start>
-            <Button icon="pi pi-caret-left" class="mr-2" severity="secondary" text @click="handleUndo" />
-            <Button icon="pi pi-caret-right" class="mr-2" severity="secondary" text @click="handleRedo" />
             <Button icon="pi pi-save" class="mr-2" severity="secondary" text @click="handleSave" />
         </template>
         <template #center>
@@ -23,23 +21,13 @@
     
     <div class="editor">
         <div class="main">
-            <codemirror v-model="code" :style="{
-          width: '100%',
-          height: config.height,
-          backgroundColor: '#fff',
-          color: '#333'
-        }"
-        placeholder="Please enter the code."
-        :extensions="extensions"
-        :autofocus="config.autofocus"
-        :disabled="config.disabled"
-        :indent-with-tab="config.indentWithTab"
-        :tab-size="config.tabSize"
-        @update="handleStateUpdate"
-        @ready="handleReady"
-        @focus="log('focus', $event)"
-        @blur="log('blur', $event)"
-            />
+            <CodeMirrorEditor 
+            :initial-code="code" 
+            :code-functions="codeFunctions"
+            :initial-language="'csharp'"
+            @update:code="handleCodeChange"
+            @language-changed="handleLanguageChange"
+        />
         </div>
     </div>
     <br/>
@@ -54,12 +42,13 @@
 </template>
 
 <script setup>
-import { reactive, shallowRef, ref } from 'vue';
-import { redo, undo } from '@codemirror/commands';
-import { Codemirror } from 'vue-codemirror';
-import { csharp } from '@replit/codemirror-lang-csharp';
+import { shallowRef, ref } from 'vue';
 import { getCurrentInstance } from 'vue';
 import { useToast } from "primevue/usetoast";
+import CodeMirrorEditor from "@/components/CodeMirrorEditor.vue";
+
+import {userStoreMe} from "@/store/userStore";
+
 
 import {WebSocketMessageClient} from "@/websocket/WebSocketMessageClient";
 import {ServerResponse} from "@/websocket/ServerResponse";
@@ -74,18 +63,14 @@ const { proxy } = getCurrentInstance();
 
 const client = new WebSocketMessageClient(proxy.$socket);
 
+const userStore = userStoreMe();
 
 // State
 const MyTitle = ref();
 const code = ref('');
-const cmView = shallowRef();
-const config = reactive({
-    disabled: false,
-    indentWithTab: true,
-    tabSize: 1,
-    autofocus: true,
-    height: '500px'
-});
+
+const codeFunctions = ref(userStore.functions);
+
 
 proxy.$socket.onmessage =  (data) => {
   const payload = JSON.parse(data.data);
@@ -101,24 +86,11 @@ proxy.$socket.onmessage =  (data) => {
 }
 
 
-// This state is updated but not displayed. It can be used for debugging or status bars.
-const state = reactive({
-    lines: null,
-    cursor: null,
-    selected: null,
-    length: null
-});
 
-// Constants
-const log = console.log
-const extensions = [csharp()];
 
-// Handlers
-const handleReady = ({ view }) => {
-    cmView.value = view;
-};
 
 const handleSave = () => {
+     console.log('Content:', code.value)
     debugText.value ='';
      proxy.$socket.sendObj({
           type: "CodeScript",
@@ -127,31 +99,16 @@ const handleSave = () => {
         });
 };
 
-const handleUndo = () => {
-    if (!cmView.value) return;
-    undo({
-        state: cmView.value.state,
-        dispatch: cmView.value.dispatch
-    });
+const handleCodeChange = (newCode) => {
+    code.value = newCode;
+  
 };
 
-const handleRedo = () => {
-    if (!cmView.value) return;
-    redo({
-        state: cmView.value.state,
-        dispatch: cmView.value.dispatch
-    });
-};
+const handleLanguageChange = (language) => {
+     console.log('Lenguaje cambiado a:', language)
+}
 
-const handleStateUpdate = (viewUpdate) => {
-    // Update selection, cursor, and document information
-    const ranges = viewUpdate.state.selection.ranges;
-    state.selected = ranges.reduce((plus, range) => plus + range.to - range.from, 0);
-    state.cursor = ranges[0].anchor;
-    state.length = viewUpdate.state.doc.length;
-    state.lines = viewUpdate.state.doc.lines;
-    // log('viewUpdate', viewUpdate)
-};
+
 </script>
 <style lang="scss" scoped>
 

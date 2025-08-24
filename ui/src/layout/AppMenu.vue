@@ -9,6 +9,16 @@ const model = ref([
         items: [{ label: 'Home', icon: 'pi pi-fw pi-home', to: '/' }]
     },
     {
+        label: 'Admin',
+        items: [
+            {
+                label: 'Database Connection',
+                icon: 'pi pi-fw pi-server',
+                to: '/pages/databases',
+                tooltip: 'Create/Edit Connections'
+            }]
+    },
+    {
         label: 'Collections',
         icon: 'pi pi-fw pi-briefcase',
         
@@ -18,12 +28,6 @@ const model = ref([
                 icon: 'pi pi-fw pi-table',
                 to: '/pages/dataset',
                 tooltip: 'Create/Edit Datasets'
-            },
-            {
-                label: 'Database Connection',
-                icon: 'pi pi-fw pi-server',
-                to: '/pages/databases',
-                tooltip: 'Create/Edit Connections'
             },
             {
                 label: 'SQL Querys',

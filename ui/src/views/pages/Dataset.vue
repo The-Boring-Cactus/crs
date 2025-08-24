@@ -1,15 +1,8 @@
 <template>
   <Toolbar>
     <template #start>
-      <Button icon="pi pi-th-large" label="New Data" class="mr-2" severity="secondary" text   @click="newDoc"/>  
-      <Button icon="pi pi-save" label="Save Data" class="mr-2" severity="secondary" text   @click="datasave"/>
-      <Button icon="pi pi-arrow-circle-right"  label="Add New Column"  class="mr-2" severity="secondary" text  @click="createnewCol"/>
-      <Button icon="pi pi-arrow-circle-down" label="Add New Row" class="mr-2" severity="secondary" text   @click="createnewRow"/>
-        
-    </template>
-
-    <template #center>
-        <Inplace  v-tooltip="'Change Name'" >
+      Name: 
+       <Inplace  v-tooltip="'Click to Change'" >
             <template #display >
                 {{ MyTitle || 'No Name' }}
             </template>
@@ -19,11 +12,21 @@
                     <Button icon="pi pi-times" text severity="danger" @click="closeCallback" />
                 </span>
             </template>
-        </Inplace>
+        </Inplace>    
+      <Menubar :model="items" />
     </template>
+
+    
 </Toolbar>
   <div width="100%">
-    <vue-excel-editor v-if="renderComponent" v-model="jsondata"  no-footer  no-header-edit />
+    <vue-excel-editor v-if="renderComponent" v-model="jsondata"  :no-footer="true" :no-paging="true"
+    :no-num-col="false"
+    :allow-add-col="false"
+    :no-finding="true"
+    :no-sorting="false"
+    :no-filtering="true"
+    :disable-panel-setting="true"
+    :no-header-edit="true" />
   </div>
 </template>
 
@@ -31,9 +34,54 @@
 <script setup>
   import { nextTick, ref } from 'vue'
 import { getCurrentInstance } from 'vue'
+
+
 const instance = getCurrentInstance();
 
 const MyTitle = ref();
+
+const items = ref([
+    {
+        label: 'File',
+        icon: 'pi pi-file',
+        items: [
+            {
+                label: 'Clear Data',
+                icon: 'pi pi-plus',
+                command: () => {
+                    newDoc();
+                }
+            },
+            {
+                label: 'Save',
+                icon: 'pi pi-save',
+                command: () => {
+                   datasave();
+                }
+            }
+        ]
+    },
+    {
+        label: 'Data Options',
+        icon: 'pi pi-pencil',
+        items: [
+            {
+                label: 'Add new column',
+                icon: 'pi pi-plus',
+                command: () => {
+                    createnewCol();
+                }
+            },
+            {
+                label: 'Add new row',
+                icon: 'pi pi-plus',
+                command: () => {
+                   createnewRow();
+                }
+            }
+        ]
+    }
+]);
 
 function addProperties(data, newProperties) {
   data.forEach(item => {

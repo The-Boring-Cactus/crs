@@ -8,8 +8,8 @@ namespace FunctEngine
 {
     public class CodeEngine : IDisposable
     {
-        private readonly Dictionary<string, object> variables = new Dictionary<string, object>();
-        private readonly Dictionary<string, int> counters = new Dictionary<string, int>();
+        private Dictionary<string, object> variables = new Dictionary<string, object>();
+        private Dictionary<string, int> counters = new Dictionary<string, int>();
         private readonly FunctionManager functionManager;
         private readonly DatabaseManager databaseManager;
 
@@ -17,6 +17,10 @@ namespace FunctEngine
         private int totalWordsProcessed = 0;
         private int totalTextsAnalyzed = 0;
 
+        public List<string> GetFunctions()
+        {
+            return functionManager.GetFunctionNames();
+        }
         public CodeEngine()
         {
             functionManager = new FunctionManager(variables, counters, this);
@@ -60,6 +64,8 @@ namespace FunctEngine
         // Parsear y ejecutar el código
         public void Execute(string code)
         {
+            variables = new Dictionary<string, object>();
+            counters = new Dictionary<string, int>();
             var tokenizer = new Tokenizer();
             var tokens = tokenizer.Tokenize(code);
 

@@ -24,6 +24,14 @@ namespace FunctEngine
             this.engine = engine;
         }
 
+        public List<string> GetFunctionNames()
+        {
+            List<string> functionNames = new List<string>();
+            
+            functionNames.AddRange(builtInFunctions.Keys);
+            functionNames.AddRange(externalFunctions.Keys);
+            return functionNames;
+        }
         public void SetDatabaseManager(DatabaseManager dbManager)
         {
             this.databaseManager = dbManager;

@@ -9,7 +9,7 @@ public class Client
 {
 
     public IWebsocketConnection Socket;
-
+    private CodeEngine interpreter = new CodeEngine();
     private WebSocketMessageClient _clientMsg;
     public string Uuid ;
     public Client (IWebsocketConnection socket, string uuid)
@@ -25,7 +25,7 @@ public class Client
         _clientMsg.DataMessageReceived += DataMessage;
         _clientMsg.HeartbeatMessageReceived += HeartbeatMessage;
         _clientMsg.ErrorOccurred += ErrorOccurred;
-
+        interpreter.StatusUpdate += TestScriptOnStatusUpdate; 
     }
 
     private void HeartbeatMessage(object sender, MessageReceivedEventArgs e)
@@ -69,6 +69,7 @@ public class Client
          data.Uuid = Uuid;
          data.Menu = new JObject();
          data.Menu.Header = "";
+         data.Functions = new JArray(   interpreter.GetFunctions());
         ResponseMessage responde = new ResponseMessage
         {
             Status = MessageStatus.Success,

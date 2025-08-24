@@ -1,5 +1,5 @@
 <script setup>
-  import { nextTick } from 'vue'
+  import { nextTick, ref, computed } from 'vue'
 import { useLayout } from '@/layout/composables/layout';
 import AppConfigurator from './AppConfigurator.vue';
 import {userStoreMe} from "@/store/userStore";
@@ -10,13 +10,14 @@ const userStore = userStoreMe();
 
 const { toggleMenu} = useLayout();
 
-
+const selectedCategory = ref(null)
 const exit = async () => {
         userStore.setCurr(false,'','');
         await nextTick();
         await  router.push({ path: '/auth/login', replace: true })
         console.log("Save");
       }
+
 
 
 </script>
@@ -33,6 +34,7 @@ const exit = async () => {
                 <span>ReportFlow</span>
             </router-link>
         </div>
+
 
         <div class="layout-topbar-actions">
             <div class="layout-config-menu">
