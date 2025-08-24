@@ -1,13 +1,17 @@
 import { App } from "vue";
 import { defineStore } from "pinia";
 import { setupStore } from "@/store/pinia/store";
-import { SocketStore } from "@/type/PiniaType";
+import { SocketStore, Message, MessageEnvelope } from "@/type/PiniaType";
+
+
+ 
+
+
 
 export const useSocketStore = (app: App<Element>) => {
   return defineStore({
     id: "socket",
     state: (): SocketStore => ({
-      
       isConnected: false,
       message: "",
       reconnectError: false,
@@ -20,12 +24,22 @@ export const useSocketStore = (app: App<Element>) => {
         app.config.globalProperties.$socket = event.currentTarget;
         this.isConnected = true;
         this.heartBeatTimer = window.setInterval(() => {
-          const message = "Live";
+          const iddata = 'client_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+
+          const message2: Message = {
+            id: iddata,
+            Status: 'Alive',
+            timestamp: new Date().toISOString(),
+            senderId: iddata
+          } as Message;
+
+          const envelope: MessageEnvelope = {
+            type: 'Heartbeat'.toLowerCase(),
+            data: message2,
+            timestamp: message2.timestamp
+          };
           this.isConnected &&
-            app.config.globalProperties.$socket.sendObj({
-              code: 200,
-              msg: message
-            });
+            app.config.globalProperties.$socket.sendObj(envelope);
         }, this.heartBeatInterval);
       },
       SOCKET_ONCLOSE(event: any) {

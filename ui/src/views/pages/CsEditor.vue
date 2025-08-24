@@ -60,11 +60,20 @@ import { Codemirror } from 'vue-codemirror';
 import { csharp } from '@replit/codemirror-lang-csharp';
 import { getCurrentInstance } from 'vue';
 import { useToast } from "primevue/usetoast";
+
+import {WebSocketMessageClient} from "@/websocket/WebSocketMessageClient";
+import {ServerResponse} from "@/websocket/ServerResponse";
+
+
+
 const toast = useToast();
 
 const debugText = ref('');
 
 const { proxy } = getCurrentInstance();
+
+const client = new WebSocketMessageClient(proxy.$socket);
+
 
 // State
 const MyTitle = ref();

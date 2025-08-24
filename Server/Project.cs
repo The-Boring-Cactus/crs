@@ -1,4 +1,5 @@
-﻿using GenHTTP.Api.Content;
+﻿using System.Text.Json;
+using GenHTTP.Api.Content;
 
 using GenHTTP.Modules.IO;
 using GenHTTP.Modules.Layouting;
@@ -27,6 +28,12 @@ public static class Project
                                   answer.TypeMsg ="Welcome";
                                   answer.TypeAction = "";
                                   answer.data = client;
+
+                                  AuthenticationMessage ss = new AuthenticationMessage();
+
+                                  string ssJ = JsonSerializer.Serialize(ss);
+                                  Console.WriteLine(ssJ);
+                                  
                                   var sz = answer.ToString();
                                   Console.WriteLine(sz);
                                   socket.Send(sz);
@@ -35,15 +42,13 @@ public static class Project
                               })
                               .OnClose((socket) =>
                               {
-                                  Console.WriteLine("Close!");
-                                  var s = _AllSockets.FirstOrDefault(s => s.socket == socket);
+                                  var s = _AllSockets.FirstOrDefault(s => s.Socket == socket);
                                   _AllSockets.Remove(s );
                               })
                               .OnMessage((socket, message) =>
                               {
-                                  Console.WriteLine(socket);
-                                  Console.WriteLine(message);
-                                  var s = _AllSockets.FirstOrDefault(s => s.socket == socket);
+                                  
+                                  var s = _AllSockets.FirstOrDefault(s => s.Socket == socket);
                                   s.OnMessage(message);
                               });
 

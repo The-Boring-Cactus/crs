@@ -1,29 +1,85 @@
 ﻿using FunctEngine;
-using GenHTTP.Api.Content;
-using GenHTTP.Api.Protocol;
-using GenHTTP.Modules.IO;
-using GenHTTP.Modules.StaticWebsites;
 using GenHTTP.Modules.Websockets;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Server;
 
 public class Client
 {
 
-    public IWebsocketConnection socket;
-    
-    
-    public string uuid ;
-    public Client (IWebsocketConnection socket, string _uuid)
+    public IWebsocketConnection Socket;
+
+    private WebSocketMessageClient _clientMsg;
+    public string Uuid ;
+    public Client (IWebsocketConnection socket, string uuid)
     {
-        this.socket = socket;
-        uuid = _uuid;
-        
-     
+        this.Socket = socket;
+        Uuid = uuid;
+        _clientMsg = new WebSocketMessageClient(this.Socket);
+        _clientMsg.AuthenticationMessageReceived += AuthenticationMessage;  
+        _clientMsg.CommandMessageReceived += CommandMessage;
+        _clientMsg.TextMessageReceived += TextMessage;
+        _clientMsg.NotificationMessageReceived += NotificationMessage;
+        _clientMsg.ErrorMessageReceived += ErrorMessage;
+        _clientMsg.DataMessageReceived += DataMessage;
+        _clientMsg.HeartbeatMessageReceived += HeartbeatMessage;
+        _clientMsg.ErrorOccurred += ErrorOccurred;
+
     }
-   
+
+    private void HeartbeatMessage(object sender, MessageReceivedEventArgs e)
+    {
+        // Not to process
+    }
+
+    private void DataMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void ErrorMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void NotificationMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void TextMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void CommandMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+    
+    private void ErrorOccurred(object sender, Exception e)
+    {
+        Console.WriteLine(e.Message);
+    }
+
+    private void AuthenticationMessage(object sender, MessageReceivedEventArgs e)
+    {
+        dynamic data = new JObject();
+         data.Uuid = Uuid;
+         data.Menu = new JObject();
+         data.Menu.Header = "";
+        ResponseMessage responde = new ResponseMessage
+        {
+            Status = MessageStatus.Success,
+            ErrorMessage ="",
+            Data = data
+        };
+
+        string msg = JsonConvert.SerializeObject(responde);
+        Message(msg);
+    }
+    
     private void TestScriptOnStatusUpdate(object sender, StatusString e)
     {
         dynamic answer = new JObject();
@@ -33,8 +89,12 @@ public class Client
         Message(sz);
     }
 
-    public void OnMessage(string message)
+    public void OnMessage(string json)
     {
+        
+        _clientMsg.ReceiveMsg(json);
+        
+      /*  
         dynamic payload = JObject.Parse(message);
         string type = payload.type;
         switch (type)
@@ -58,11 +118,12 @@ public class Client
                 
                 break;
             
-        }
+        }*/
+      
     }
-
+   
     private void Message (string message)
     {
-        socket.Send(message);
+        Socket.Send(message);
     }
 }

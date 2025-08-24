@@ -4,10 +4,16 @@ import { getCurrentInstance } from 'vue'
 import {userStoreMe} from "@/store/userStore";
 import { useRouter } from 'vue-router'
 import { useToast } from "primevue/usetoast";
+import {WebSocketMessageClient} from "@/websocket/WebSocketMessageClient";
+import {ServerResponse} from "@/websocket/ServerResponse";
+
+
 const toast = useToast();
 
 const router = useRouter()
 const userStore = userStoreMe();
+
+
 const loging = ref('');
 const password = ref('');
 const loading = ref(false);
@@ -16,19 +22,24 @@ const loading = ref(false);
 var { proxy } = getCurrentInstance();
 
 proxy.$socket.onmessage =  (data) => {
-  const payload = JSON.parse(data.data);
+    console.log(data.data);
+    const responseHandler = new ServerResponse();
+
+    var response = responseHandler.analizeMessage(JSON.parse(data.data));
+
   loading.value = false;
-  if(payload.TypeMsg=="Login"){
+  if(response.Type=="Response" || response.Status=="Success"){
     toast.add({ severity: 'Success', summary: 'OK', detail: 'Welcome', life: 3000 });
-    userStore.setCurr(payload.data.auth,loging.value,payload.data.level);
+    userStore.setCurr(true,'User','admin');
     router.push({ path: '/', replace: true })
   }
 }
 
+const client = new WebSocketMessageClient(proxy.$socket);
+
 const handleReady = () => {
-        proxy.$socket.sendObj({
-          type: "Login"
-        });
+
+        client.sendAuthentication(loging.value, password.value);
         loading.value = true;
         
       }
