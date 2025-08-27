@@ -19,9 +19,13 @@
 
   <ItemGroup>
 
+    <PackageReference Include="Dapper" Version="2.1.66" />
+
     <PackageReference Include="GenHTTP.Core" Version="9.6.0" />
 
     <PackageReference Include="GenHTTP.Modules.StaticWebsites" Version="9.7.0" />
+
+    <PackageReference Include="GenHTTP.Modules.Webservices" Version="9.8.0" />
 
     <PackageReference Include="GenHTTP.Modules.Websockets" Version="9.6.0" />
 
@@ -31,7 +35,13 @@
 
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
 
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0-preview.7.25380.108" />
+
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+    <PackageReference Include="RocksDbNative" Version="6.2.2" />
+
+    <PackageReference Include="RocksDbSharp" Version="6.2.2" />
 
   </ItemGroup>
 

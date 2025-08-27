@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "NqdNdUElRAk=",
+  "dgSpecHash": "b5vwBI2TCNs=",
   "success": true,
   "projectFilePath": "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj",
   "expectedPackageFiles": [
@@ -43,7 +43,7 @@
     "/home/peyote/.nuget/packages/system.security.cryptography.pkcs/9.0.4/system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
     "/home/peyote/.nuget/packages/system.security.cryptography.protecteddata/9.0.4/system.security.cryptography.protecteddata.9.0.4.nupkg.sha512",
     "/home/peyote/.nuget/packages/system.text.json/9.0.5/system.text.json.9.0.5.nupkg.sha512",
-    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.7/microsoft.aspnetcore.app.ref.9.0.7.nupkg.sha512"
+    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.8/microsoft.aspnetcore.app.ref.9.0.8.nupkg.sha512"
   ],
   "logs": []
 }

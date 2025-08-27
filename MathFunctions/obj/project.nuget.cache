@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Rd2S2D95SY8=",
+  "dgSpecHash": "hQZ55Ex+ROA=",
   "success": true,
   "projectFilePath": "/home/peyote/Documents/GitHub/crs/MathFunctions/MathFunctions.csproj",
   "expectedPackageFiles": [
@@ -44,7 +44,7 @@
     "/home/peyote/.nuget/packages/system.security.cryptography.pkcs/9.0.4/system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
     "/home/peyote/.nuget/packages/system.security.cryptography.protecteddata/9.0.4/system.security.cryptography.protecteddata.9.0.4.nupkg.sha512",
     "/home/peyote/.nuget/packages/system.text.json/9.0.5/system.text.json.9.0.5.nupkg.sha512",
-    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.7/microsoft.aspnetcore.app.ref.9.0.7.nupkg.sha512"
+    "/home/peyote/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.8/microsoft.aspnetcore.app.ref.9.0.8.nupkg.sha512"
   ],
   "logs": []
 }
