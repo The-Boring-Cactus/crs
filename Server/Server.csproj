@@ -21,15 +21,15 @@
 
     <PackageReference Include="Dapper" Version="2.1.66" />
 
-    <PackageReference Include="GenHTTP.Core" Version="9.6.0" />
+    <PackageReference Include="GenHTTP.Core" Version="9.8.0" />
 
-    <PackageReference Include="GenHTTP.Modules.StaticWebsites" Version="9.7.0" />
+    <PackageReference Include="GenHTTP.Modules.StaticWebsites" Version="9.8.0" />
 
     <PackageReference Include="GenHTTP.Modules.Webservices" Version="9.8.0" />
 
-    <PackageReference Include="GenHTTP.Modules.Websockets" Version="9.6.0" />
+    <PackageReference Include="GenHTTP.Modules.Websockets" Version="9.8.0" />
 
-    <PackageReference Include="Jint" Version="4.3.0" />
+    <PackageReference Include="Jint" Version="4.4.1" />
 
     <PackageReference Include="MathNet.Numerics" Version="6.0.0-beta2" />
 

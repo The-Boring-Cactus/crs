@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net9.0": {
-      "Acornima/1.1.1": {
+      "Acornima/1.2.0": {
         "type": "package",
         "compile": {
           "lib/net8.0/Acornima.dll": {
@@ -96,23 +96,23 @@
           }
         }
       },
-      "GenHTTP.Core/9.6.0": {
+      "GenHTTP.Core/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Engine.Internal": "9.6.0",
-          "GenHTTP.Modules.Basics": "9.6.0",
-          "GenHTTP.Modules.Layouting": "9.6.0",
-          "GenHTTP.Modules.Practices": "9.6.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Engine.Internal": "9.8.0",
+          "GenHTTP.Modules.Basics": "9.8.0",
+          "GenHTTP.Modules.Layouting": "9.8.0",
+          "GenHTTP.Modules.Practices": "9.8.0"
         }
       },
-      "GenHTTP.Engine.Internal/9.6.0": {
+      "GenHTTP.Engine.Internal/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Engine.Shared": "9.6.0",
-          "GenHTTP.Modules.IO": "9.6.0",
-          "System.IO.Pipelines": "9.0.1"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Engine.Shared": "9.8.0",
+          "GenHTTP.Modules.IO": "9.8.0",
+          "System.IO.Pipelines": "9.0.6"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Engine.Internal.dll": {
@@ -125,17 +125,21 @@
           }
         }
       },
-      "GenHTTP.Engine.Shared/9.6.0": {
+      "GenHTTP.Engine.Shared/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Modules.ErrorHandling": "9.6.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Modules.ErrorHandling": "9.8.0"
         },
         "compile": {
-          "lib/net9.0/GenHTTP.Engine.Shared.dll": {}
+          "lib/net9.0/GenHTTP.Engine.Shared.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/net9.0/GenHTTP.Engine.Shared.dll": {}
+          "lib/net9.0/GenHTTP.Engine.Shared.dll": {
+            "related": ".xml"
+          }
         }
       },
       "GenHTTP.Modules.Basics/9.8.0": {
@@ -155,11 +159,11 @@
           }
         }
       },
-      "GenHTTP.Modules.ClientCaching/9.6.0": {
+      "GenHTTP.Modules.ClientCaching/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Modules.Basics": "9.6.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Modules.Basics": "9.8.0"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.ClientCaching.dll": {
@@ -172,11 +176,11 @@
           }
         }
       },
-      "GenHTTP.Modules.Compression/9.6.0": {
+      "GenHTTP.Modules.Compression/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "ZstdSharp.Port": "0.8.4"
+          "GenHTTP.Api": "9.8.0",
+          "ZstdSharp.Port": "0.8.5"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.Compression.dll": {
@@ -207,12 +211,12 @@
           }
         }
       },
-      "GenHTTP.Modules.ErrorHandling/9.6.0": {
+      "GenHTTP.Modules.ErrorHandling/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Modules.Conversion": "9.6.0",
-          "GenHTTP.Modules.Pages": "9.6.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Modules.Conversion": "9.8.0",
+          "GenHTTP.Modules.Pages": "9.8.0"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.ErrorHandling.dll": {
@@ -259,13 +263,13 @@
           }
         }
       },
-      "GenHTTP.Modules.Pages/9.6.0": {
+      "GenHTTP.Modules.Pages/9.8.0": {
         "type": "package",
         "dependencies": {
           "Cottle": "2.1.0",
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Modules.Basics": "9.6.0",
-          "GenHTTP.Modules.IO": "9.6.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Modules.Basics": "9.8.0",
+          "GenHTTP.Modules.IO": "9.8.0"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.Pages.dll": {
@@ -278,14 +282,14 @@
           }
         }
       },
-      "GenHTTP.Modules.Practices/9.6.0": {
+      "GenHTTP.Modules.Practices/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Modules.ClientCaching": "9.6.0",
-          "GenHTTP.Modules.Compression": "9.6.0",
-          "GenHTTP.Modules.IO": "9.6.0",
-          "GenHTTP.Modules.Security": "9.6.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Modules.ClientCaching": "9.8.0",
+          "GenHTTP.Modules.Compression": "9.8.0",
+          "GenHTTP.Modules.IO": "9.8.0",
+          "GenHTTP.Modules.Security": "9.8.0"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.Practices.dll": {
@@ -316,11 +320,11 @@
           }
         }
       },
-      "GenHTTP.Modules.Security/9.6.0": {
+      "GenHTTP.Modules.Security/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.6.0",
-          "GenHTTP.Modules.Basics": "9.6.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Modules.Basics": "9.8.0"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.Security.dll": {
@@ -333,11 +337,11 @@
           }
         }
       },
-      "GenHTTP.Modules.StaticWebsites/9.7.0": {
+      "GenHTTP.Modules.StaticWebsites/9.8.0": {
         "type": "package",
         "dependencies": {
-          "GenHTTP.Api": "9.7.0",
-          "GenHTTP.Modules.IO": "9.7.0"
+          "GenHTTP.Api": "9.8.0",
+          "GenHTTP.Modules.IO": "9.8.0"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.StaticWebsites.dll": {
@@ -371,11 +375,11 @@
           }
         }
       },
-      "GenHTTP.Modules.Websockets/9.6.0": {
+      "GenHTTP.Modules.Websockets/9.8.0": {
         "type": "package",
         "dependencies": {
           "Fleck": "1.2.0",
-          "GenHTTP.Api": "9.6.0"
+          "GenHTTP.Api": "9.8.0"
         },
         "compile": {
           "lib/net9.0/GenHTTP.Modules.Websockets.dll": {
@@ -388,10 +392,10 @@
           }
         }
       },
-      "Jint/4.3.0": {
+      "Jint/4.4.1": {
         "type": "package",
         "dependencies": {
-          "Acornima": "1.1.1"
+          "Acornima": "1.2.0"
         },
         "compile": {
           "lib/net8.0/Jint.dll": {
@@ -1770,7 +1774,7 @@
           "lib/netstandard1.3/System.IO.FileSystem.Primitives.dll": {}
         }
       },
-      "System.IO.Pipelines/9.0.1": {
+      "System.IO.Pipelines/9.0.6": {
         "type": "package",
         "compile": {
           "lib/net9.0/System.IO.Pipelines.dll": {
@@ -2628,7 +2632,7 @@
           }
         }
       },
-      "ZstdSharp.Port/0.8.4": {
+      "ZstdSharp.Port/0.8.5": {
         "type": "package",
         "compile": {
           "lib/net9.0/ZstdSharp.dll": {}
@@ -2680,20 +2684,18 @@
     }
   },
   "libraries": {
-    "Acornima/1.1.1": {
-      "sha512": "+ul3wnGmz+e845O8pKzA4NVuRiYvPXlVn+5vgQTN7zmBi/VAgV6aAyBtjBkv1tLKUUFCZS6cPJtRPLOQ1D9XHw==",
+    "Acornima/1.2.0": {
+      "sha512": "pT3kn/WrVzz4NmrzN5zOAVDOK2VuQFJ7VivKviKmKbbzppMVEToEvnAaVhxerXclptvjpBUudhOwUtDsRjrMYQ==",
       "type": "package",
-      "path": "acornima/1.1.1",
+      "path": "acornima/1.2.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "acornima.1.1.1.nupkg.sha512",
+        "acornima.1.2.0.nupkg.sha512",
         "acornima.nuspec",
         "lib/net462/Acornima.dll",
         "lib/net462/Acornima.xml",
-        "lib/net6.0/Acornima.dll",
-        "lib/net6.0/Acornima.xml",
         "lib/net8.0/Acornima.dll",
         "lib/net8.0/Acornima.xml",
         "lib/netstandard2.0/Acornima.dll",
@@ -2810,28 +2812,28 @@
         "lib/net9.0/GenHTTP.Api.xml"
       ]
     },
-    "GenHTTP.Core/9.6.0": {
-      "sha512": "2SYoQ2ZcL4gbCq8GEqXCk9HO5qTLpCw71RqRE/bjNPhi8gqwDe/qF4yarAVLs1ZVveGEEo2NNPBWM6FjhGwJnA==",
+    "GenHTTP.Core/9.8.0": {
+      "sha512": "UaA1WTHG3Mxho3ZyJGvApRlgUf3gPhloX/FkS4SMJrrbBOTCN1QpX0XN4RflHhnvX98jVaGlTST2ANGdDIFZdA==",
       "type": "package",
-      "path": "genhttp.core/9.6.0",
+      "path": "genhttp.core/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.core.9.6.0.nupkg.sha512",
+        "genhttp.core.9.8.0.nupkg.sha512",
         "genhttp.core.nuspec",
         "images/icon.png"
       ]
     },
-    "GenHTTP.Engine.Internal/9.6.0": {
-      "sha512": "4qnpzMZuV0T9bqCZ86wejK70Nmmgn5+oEF13PGNDVl2IYtmD+oqvpYd2BHQjrtKYsD5i8PpMSbD6WS7yzSISqQ==",
+    "GenHTTP.Engine.Internal/9.8.0": {
+      "sha512": "Bff//QkpyRx7KXAYqMzOawN8nX8/6dR5rfEA3NohMZQ0MuP5mh7s+IZ+oMLybF/JQw/LpiYjkk3g2IV6wPUlvA==",
       "type": "package",
-      "path": "genhttp.engine.internal/9.6.0",
+      "path": "genhttp.engine.internal/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.engine.internal.9.6.0.nupkg.sha512",
+        "genhttp.engine.internal.9.8.0.nupkg.sha512",
         "genhttp.engine.internal.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Engine.Internal.dll",
@@ -2840,17 +2842,21 @@
         "lib/net9.0/GenHTTP.Engine.Internal.xml"
       ]
     },
-    "GenHTTP.Engine.Shared/9.6.0": {
-      "sha512": "WLz2io5iNr4r+RLEPCJU2kgJPO42FrB1vTyikMX20N6/g/gRFPCamyBI3bEqsB/Uy2lIe13HvlPEIJmwbQNUWg==",
+    "GenHTTP.Engine.Shared/9.8.0": {
+      "sha512": "PI2SQ/lhJGOIBC3rN8RB3e0G4c1oVvGlW1QriUOZZk5UV3LXkbXtI1OlJoDtvfggysB/xRUDQR7Lv9Iki5W4nA==",
       "type": "package",
-      "path": "genhttp.engine.shared/9.6.0",
+      "path": "genhttp.engine.shared/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "genhttp.engine.shared.9.6.0.nupkg.sha512",
+        "LICENSE",
+        "genhttp.engine.shared.9.8.0.nupkg.sha512",
         "genhttp.engine.shared.nuspec",
+        "icon.png",
         "lib/net8.0/GenHTTP.Engine.Shared.dll",
-        "lib/net9.0/GenHTTP.Engine.Shared.dll"
+        "lib/net8.0/GenHTTP.Engine.Shared.xml",
+        "lib/net9.0/GenHTTP.Engine.Shared.dll",
+        "lib/net9.0/GenHTTP.Engine.Shared.xml"
       ]
     },
     "GenHTTP.Modules.Basics/9.8.0": {
@@ -2870,15 +2876,15 @@
         "lib/net9.0/GenHTTP.Modules.Basics.xml"
       ]
     },
-    "GenHTTP.Modules.ClientCaching/9.6.0": {
-      "sha512": "+shqjXjrEi5lofhpx1Rxvwg9K7kEt1kSWQDD7c6IbXn2LgnBWupmS5nHgDIzfDj/YHbDVbxqXZfPdbU6WOVY7w==",
+    "GenHTTP.Modules.ClientCaching/9.8.0": {
+      "sha512": "bwgt88lNo4mBf1K+YFTprLR3XyZL7z1DR7nuR4uKg6iE3AxvAD31LJ+3FsTD7UDaOCl6aAeihIjoxE97YHE1fg==",
       "type": "package",
-      "path": "genhttp.modules.clientcaching/9.6.0",
+      "path": "genhttp.modules.clientcaching/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.clientcaching.9.6.0.nupkg.sha512",
+        "genhttp.modules.clientcaching.9.8.0.nupkg.sha512",
         "genhttp.modules.clientcaching.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.ClientCaching.dll",
@@ -2887,15 +2893,15 @@
         "lib/net9.0/GenHTTP.Modules.ClientCaching.xml"
       ]
     },
-    "GenHTTP.Modules.Compression/9.6.0": {
-      "sha512": "r01avLs3VYrtxCz4ah+v0m6U94RkLEGl9XMRD4cFav9xAHbXdK9XkOHnabn3wqmXH/BUesjNEkk98/hMb8C3UA==",
+    "GenHTTP.Modules.Compression/9.8.0": {
+      "sha512": "wxljf+z1cgtZWhe4w7jhkOgjZ9a+nk7+7DSIG4czjejJHCiu4X4fDUp6X9xQyWvjGo5OF3xT1xrmJGRTXITxXg==",
       "type": "package",
-      "path": "genhttp.modules.compression/9.6.0",
+      "path": "genhttp.modules.compression/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.compression.9.6.0.nupkg.sha512",
+        "genhttp.modules.compression.9.8.0.nupkg.sha512",
         "genhttp.modules.compression.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.Compression.dll",
@@ -2921,15 +2927,15 @@
         "lib/net9.0/GenHTTP.Modules.Conversion.xml"
       ]
     },
-    "GenHTTP.Modules.ErrorHandling/9.6.0": {
-      "sha512": "3OohwuNsWonc8nKfgxItd8IC8y8+1w5BqMvPeFWlCb6g8/HjvkTeQ7Leho/bJf4g55w/6TN/aUBkBcwjPYnYdQ==",
+    "GenHTTP.Modules.ErrorHandling/9.8.0": {
+      "sha512": "GE3KEAdScL9pg8vg8ox3sjV0BTKJaawpJpqPtW/usj9HysLc8W3JrEgQ4Ib3KBF6KmJ5e6Tey+9fcDIP1tKwbw==",
       "type": "package",
-      "path": "genhttp.modules.errorhandling/9.6.0",
+      "path": "genhttp.modules.errorhandling/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.errorhandling.9.6.0.nupkg.sha512",
+        "genhttp.modules.errorhandling.9.8.0.nupkg.sha512",
         "genhttp.modules.errorhandling.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.ErrorHandling.dll",
@@ -2972,15 +2978,15 @@
         "lib/net9.0/GenHTTP.Modules.Layouting.xml"
       ]
     },
-    "GenHTTP.Modules.Pages/9.6.0": {
-      "sha512": "i6Vs3HAcyUVPwLx+h+HowIGzPkTGTsZHkMjg8H7Qk5aFJutrbaLSFSQJiXj8rRU/I8QaiG7yeAcHt9GLunoOqg==",
+    "GenHTTP.Modules.Pages/9.8.0": {
+      "sha512": "e+8UlcSGbCI/1xUQrdLTVuvd6rZw/moT+5Q+bIsfPd/Ji3WV9q2ejlNvLaNgFKGabIITxApyMm4fd0J9cTZWXQ==",
       "type": "package",
-      "path": "genhttp.modules.pages/9.6.0",
+      "path": "genhttp.modules.pages/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.pages.9.6.0.nupkg.sha512",
+        "genhttp.modules.pages.9.8.0.nupkg.sha512",
         "genhttp.modules.pages.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.Pages.dll",
@@ -2989,15 +2995,15 @@
         "lib/net9.0/GenHTTP.Modules.Pages.xml"
       ]
     },
-    "GenHTTP.Modules.Practices/9.6.0": {
-      "sha512": "AnqiJ4nZ5schwQbqFdJxi872G2tWxddsn/i+QW+HsjnVEOgXoXaaSUKncnJPss5E5RI3fYMvYT4ynelFZ23a6w==",
+    "GenHTTP.Modules.Practices/9.8.0": {
+      "sha512": "40Rs1OnJcJqMx5iY7UZQwhHdeYvbsomebwYOXMMvwzItsd3ML7DpF8qZnl4vJyxsEU6k8ERsOtdCtOWHhMRmrQ==",
       "type": "package",
-      "path": "genhttp.modules.practices/9.6.0",
+      "path": "genhttp.modules.practices/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.practices.9.6.0.nupkg.sha512",
+        "genhttp.modules.practices.9.8.0.nupkg.sha512",
         "genhttp.modules.practices.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.Practices.dll",
@@ -3023,15 +3029,15 @@
         "lib/net9.0/GenHTTP.Modules.Reflection.xml"
       ]
     },
-    "GenHTTP.Modules.Security/9.6.0": {
-      "sha512": "Ax1mQtIOd+SUONsXjP6Uq7yVXQWOZGPF4hrL50dV8Me8OAS+M0d6j6qB+u7O+XwQNoevqJotwi0Ql9jvgIXEAA==",
+    "GenHTTP.Modules.Security/9.8.0": {
+      "sha512": "Ycwb0VEMaDdb0e4GAyDQZ1ZQWz3p6HobAQYgxrBwU2MMCfG4H7VM6JbELGD//cQrHlHWCLs3AThA5WwT8Y8u0g==",
       "type": "package",
-      "path": "genhttp.modules.security/9.6.0",
+      "path": "genhttp.modules.security/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.security.9.6.0.nupkg.sha512",
+        "genhttp.modules.security.9.8.0.nupkg.sha512",
         "genhttp.modules.security.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.Security.dll",
@@ -3040,15 +3046,15 @@
         "lib/net9.0/GenHTTP.Modules.Security.xml"
       ]
     },
-    "GenHTTP.Modules.StaticWebsites/9.7.0": {
-      "sha512": "nIfCDsmyTsBgn5dh0g8+Y6dbfHOqrUaoAwyG0D/i4i1AYocFzmePtJ6Gl1VrpiRmzpwCG6vUECEW8i1laJ2LkA==",
+    "GenHTTP.Modules.StaticWebsites/9.8.0": {
+      "sha512": "nIlXz7vvU9+1N5BCIPIRALZFuT6ookhHxYZv73huiSq7ZyB8YLJ3un7Gg/UpIpAdxQK+fij5KTvLxUxOl6ADtA==",
       "type": "package",
-      "path": "genhttp.modules.staticwebsites/9.7.0",
+      "path": "genhttp.modules.staticwebsites/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.staticwebsites.9.7.0.nupkg.sha512",
+        "genhttp.modules.staticwebsites.9.8.0.nupkg.sha512",
         "genhttp.modules.staticwebsites.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.StaticWebsites.dll",
@@ -3074,15 +3080,15 @@
         "lib/net9.0/GenHTTP.Modules.Webservices.xml"
       ]
     },
-    "GenHTTP.Modules.Websockets/9.6.0": {
-      "sha512": "rbaExvLTi1c4UU2K6FZpWH8DOIwYxnoxijLRN5vaYtUKsTwtlRqTzMO5MUiqU7bUS8wsu9cuGLfD4EgdPlZgnA==",
+    "GenHTTP.Modules.Websockets/9.8.0": {
+      "sha512": "0fKMZx5rkyEVbVzHU27Fst13XEhR3l18niFx4KHjnKzf81kN2OA21OfGDFGGaitZ6yAy7EhYaYyoU1zTSCL86A==",
       "type": "package",
-      "path": "genhttp.modules.websockets/9.6.0",
+      "path": "genhttp.modules.websockets/9.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "genhttp.modules.websockets.9.6.0.nupkg.sha512",
+        "genhttp.modules.websockets.9.8.0.nupkg.sha512",
         "genhttp.modules.websockets.nuspec",
         "icon.png",
         "lib/net8.0/GenHTTP.Modules.Websockets.dll",
@@ -3091,15 +3097,15 @@
         "lib/net9.0/GenHTTP.Modules.Websockets.xml"
       ]
     },
-    "Jint/4.3.0": {
-      "sha512": "7F7QXqgKYSwhVZjK2GoYQyMpyWOk57wTVanSlrrWeXp6lnVI+Jbsrd/RMrUGCLSaFd0Z/QcLySyO5VmlECyFDw==",
+    "Jint/4.4.1": {
+      "sha512": "hb1cQygDKGJblgw82YMkaEpPbIy+YHMUtx1ab+cUMwTRkRXcY8JK7YkJ5F/jPMNInTcFPOfVJZ5VfspsjXp2xQ==",
       "type": "package",
-      "path": "jint/4.3.0",
+      "path": "jint/4.4.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "jint.4.3.0.nupkg.sha512",
+        "jint.4.4.1.nupkg.sha512",
         "jint.nuspec",
         "lib/net462/Jint.dll",
         "lib/net462/Jint.xml",
@@ -6193,10 +6199,10 @@
         "system.io.filesystem.primitives.nuspec"
       ]
     },
-    "System.IO.Pipelines/9.0.1": {
-      "sha512": "uXf5o8eV/gtzDQY4lGROLFMWQvcViKcF8o4Q6KpIOjloAQXrnscQSu6gTxYJMHuNJnh7szIF9AzkaEq+zDLoEg==",
+    "System.IO.Pipelines/9.0.6": {
+      "sha512": "0nlr0reXrRmkZNKifKqh2DgGhQgfkT7Qa3gQxIn/JI7/y3WDiTz67M+Sq3vFhUqcG8O5zVrpqHvIHeGPGUBsEw==",
       "type": "package",
-      "path": "system.io.pipelines/9.0.1",
+      "path": "system.io.pipelines/9.0.6",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -6216,7 +6222,7 @@
         "lib/net9.0/System.IO.Pipelines.xml",
         "lib/netstandard2.0/System.IO.Pipelines.dll",
         "lib/netstandard2.0/System.IO.Pipelines.xml",
-        "system.io.pipelines.9.0.1.nupkg.sha512",
+        "system.io.pipelines.9.0.6.nupkg.sha512",
         "system.io.pipelines.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -8532,10 +8538,10 @@
         "yamldotnet.nuspec"
       ]
     },
-    "ZstdSharp.Port/0.8.4": {
-      "sha512": "eieSXq3kakCUXbgdxkKaRqWS6hF0KBJcqok9LlDCs60GOyrynLvPOcQ0pRw7shdPF7lh/VepJ9cP9n9HHc759g==",
+    "ZstdSharp.Port/0.8.5": {
+      "sha512": "TR4j17WeVSEb3ncgL2NqlXEqcy04I+Kk9CaebNDplUeL8XOgjkZ7fP4Wg4grBdPLIqsV86p2QaXTkZoRMVOsew==",
       "type": "package",
-      "path": "zstdsharp.port/0.8.4",
+      "path": "zstdsharp.port/0.8.5",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -8548,7 +8554,7 @@
         "lib/netcoreapp3.1/ZstdSharp.dll",
         "lib/netstandard2.0/ZstdSharp.dll",
         "lib/netstandard2.1/ZstdSharp.dll",
-        "zstdsharp.port.0.8.4.nupkg.sha512",
+        "zstdsharp.port.0.8.5.nupkg.sha512",
         "zstdsharp.port.nuspec"
       ]
     },
@@ -8572,11 +8578,11 @@
     "net9.0": [
       "Dapper >= 2.1.66",
       "FunctEngine >= 1.0.0",
-      "GenHTTP.Core >= 9.6.0",
-      "GenHTTP.Modules.StaticWebsites >= 9.7.0",
+      "GenHTTP.Core >= 9.8.0",
+      "GenHTTP.Modules.StaticWebsites >= 9.8.0",
       "GenHTTP.Modules.Webservices >= 9.8.0",
-      "GenHTTP.Modules.Websockets >= 9.6.0",
-      "Jint >= 4.3.0",
+      "GenHTTP.Modules.Websockets >= 9.8.0",
+      "Jint >= 4.4.1",
       "MathFunctions >= 1.0.0",
       "MathNet.Numerics >= 6.0.0-beta2",
       "Microsoft.CodeAnalysis.CSharp >= 4.14.0",
@@ -8588,38 +8594,46 @@
     ]
   },
   "packageFolders": {
-    "/home/peyote/.nuget/packages/": {}
+    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "0.1.0",
     "restore": {
-      "projectUniqueName": "/home/peyote/Documents/GitHub/crs/Server/Server.csproj",
+      "projectUniqueName": "F:\\Reportes\\crs\\Server\\Server.csproj",
       "projectName": "Server",
-      "projectPath": "/home/peyote/Documents/GitHub/crs/Server/Server.csproj",
-      "packagesPath": "/home/peyote/.nuget/packages/",
-      "outputPath": "/home/peyote/Documents/GitHub/crs/Server/obj/",
+      "projectPath": "F:\\Reportes\\crs\\Server\\Server.csproj",
+      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
+      "outputPath": "F:\\Reportes\\crs\\Server\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/peyote/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj": {
-              "projectPath": "/home/peyote/Documents/GitHub/crs/FunctEngine/FunctEngine.csproj"
+            "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
+              "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
             },
-            "/home/peyote/Documents/GitHub/crs/MathFunctions/MathFunctions.csproj": {
-              "projectPath": "/home/peyote/Documents/GitHub/crs/MathFunctions/MathFunctions.csproj"
+            "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj": {
+              "projectPath": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj"
             },
-            "/home/peyote/Documents/GitHub/crs/StringUtilities/StringUtilities.csproj": {
-              "projectPath": "/home/peyote/Documents/GitHub/crs/StringUtilities/StringUtilities.csproj"
+            "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj": {
+              "projectPath": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj"
             }
           }
         }
@@ -8634,7 +8648,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -8646,11 +8660,11 @@
           },
           "GenHTTP.Core": {
             "target": "Package",
-            "version": "[9.6.0, )"
+            "version": "[9.8.0, )"
           },
           "GenHTTP.Modules.StaticWebsites": {
             "target": "Package",
-            "version": "[9.7.0, )"
+            "version": "[9.8.0, )"
           },
           "GenHTTP.Modules.Webservices": {
             "target": "Package",
@@ -8658,11 +8672,11 @@
           },
           "GenHTTP.Modules.Websockets": {
             "target": "Package",
-            "version": "[9.6.0, )"
+            "version": "[9.8.0, )"
           },
           "Jint": {
             "target": "Package",
-            "version": "[4.3.0, )"
+            "version": "[4.4.1, )"
           },
           "MathNet.Numerics": {
             "target": "Package",
@@ -8700,18 +8714,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[9.0.8, 9.0.8]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.109/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
