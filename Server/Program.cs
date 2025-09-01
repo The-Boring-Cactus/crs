@@ -14,7 +14,7 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var cache = new ReportsCache("./reports-cache");
+        var cache = new ReportsCache("reports-cache.db");
         var dataSource = new DataSourceManager(cache);
         var authService = new AuthService(cache);
         var reportsService = new UserReportsService(cache, dataSource);
@@ -46,8 +46,8 @@ internal class Program
                    .Handler(
                        Layout.Create()
                            .Add(CorsPolicy.Permissive())
+                           .Add("/srv", websocketHandler)
                            .Add(new AuthMiddleware(authService))
-                           .Add("ws", websocketHandler)
                            .Add("api/auth", ServiceResource.From(authController))
                            .Add("api/reports", ServiceResource.From(reportsController))
                            .Add("/", files))

@@ -12,7 +12,7 @@ namespace FunctEngine
         private Dictionary<string, int> counters = new Dictionary<string, int>();
         private readonly FunctionManager functionManager;
         private readonly DatabaseManager databaseManager;
-
+        public string connectionId = string.Empty;
         // Variables para estadísticas de texto
         private int totalWordsProcessed = 0;
         private int totalTextsAnalyzed = 0;
@@ -21,12 +21,13 @@ namespace FunctEngine
         {
             return functionManager.GetFunctionNames();
         }
-        public CodeEngine()
+        public CodeEngine(string connectionId)
         {
             functionManager = new FunctionManager(variables, counters, this);
             databaseManager = new DatabaseManager(this);
             functionManager.SetDatabaseManager(databaseManager);
             functionManager.InitializeBuiltInFunctions();
+            this.connectionId = connectionId;
         }
 
         // Propiedades públicas para acceso a estadísticas
@@ -39,7 +40,7 @@ namespace FunctEngine
         {
             if(StatusUpdate != null)
             {
-                var e = new StatusString(msg);
+                var e = new StatusString(msg, connectionId);
                 StatusUpdate(this, e);
             }
         }

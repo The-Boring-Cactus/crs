@@ -75,9 +75,51 @@ public class AuthMiddleware : IConcern
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask<IResponse> HandleAsync(IRequest request)
+    public async ValueTask<IResponse> HandleAsync(IRequest request)
     {
-        throw new NotImplementedException();
+        var publicPaths = new[] { "/api/auth/login", "/api/auth/register", "/api/reports/public", "/" };
+        var requestPath = request.Target.Path.ToString();
+
+        if (publicPaths.Any(path => requestPath.StartsWith(path, StringComparison.OrdinalIgnoreCase)))
+        {
+            return request.Respond().Status(ResponseStatus.Ok).Build(); 
+        }
+
+        // Verificar token de autorización
+        if (!request.Headers.TryGetValue("Authorization", out var authHeader) ||
+            string.IsNullOrEmpty(authHeader) ||
+            !authHeader.StartsWith("Bearer "))
+        {
+            return request.Respond()
+                         .Status(ResponseStatus.Unauthorized)
+                         .Content("{\"message\":\"Authorization header required\"}")
+                         .Type(ContentType.ApplicationJson)
+                         .Build();
+        }
+
+        var token = authHeader.Substring("Bearer ".Length).Trim();
+        if (!await _authService.ValidateTokenAsync(token))
+        {
+            return request.Respond()
+                         .Status(ResponseStatus.Unauthorized)
+                         .Content("{\"message\":\"Invalid or expired token\"}")
+                         .Type(ContentType.ApplicationJson)
+                         .Build();
+        }
+
+        // Agregar userId al request para uso posterior
+        var userId = _authService.GetUserIdFromToken(token);
+        if (request.Properties != null)
+        {
+            request.Properties["UserId"] = userId;
+        }
+
+        if (!((IDictionary)request.Headers).IsReadOnly)
+        {
+            ((IDictionary)request.Headers).Add("X-User-Id", userId);
+        }
+
+        return request.Respond().Status(ResponseStatus.Ok).Build();
     }
 
     public IHandler Content { get; }

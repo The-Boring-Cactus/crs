@@ -1,5 +1,6 @@
 
 
+using FunctEngine;
 using GenHTTP.Modules.Websockets;
 using System.Net.WebSockets;
 
@@ -13,4 +14,5 @@ public class ConnectionInfo
     public IWebsocketConnection WebSocket { get; set; }
     public CancellationTokenSource CancellationTokenSource { get; set; }
     public WebSocketMessageClient WebSocketMessageClient { get; set; }
+    public CodeEngine interpreter { get; set; }
 }

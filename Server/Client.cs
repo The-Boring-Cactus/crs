@@ -9,7 +9,7 @@ public class Client
 {
 
     public IWebsocketConnection Socket;
-    private CodeEngine interpreter = new CodeEngine();
+    private CodeEngine interpreter = new CodeEngine("");
     private WebSocketMessageClient _clientMsg;
     public string Uuid ;
     public Client (IWebsocketConnection socket, string uuid)

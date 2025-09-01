@@ -1,7 +1,14 @@
+using FunctEngine;
 using GenHTTP.Api.Protocol;
 using GenHTTP.Modules.Websockets;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Server.Helpers;
+using System;
 using System.Collections.Concurrent;
+using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using System.Text;
 
 
@@ -33,8 +40,19 @@ public class WebSocketManager
             ConnectedAt = DateTime.UtcNow,
             WebSocket = socket,
             CancellationTokenSource = cancellationTokenSource,
-            WebSocketMessageClient = new WebSocketMessageClient(socket)
+            WebSocketMessageClient = new WebSocketMessageClient(socket),
+            interpreter = new CodeEngine(connectionId)
         };
+
+        connectionInfo.WebSocketMessageClient.AuthenticationMessageReceived += AuthenticationMessage;
+        connectionInfo.WebSocketMessageClient.CommandMessageReceived += CommandMessage;
+        connectionInfo.WebSocketMessageClient.TextMessageReceived += TextMessage;
+        connectionInfo.WebSocketMessageClient.NotificationMessageReceived += NotificationMessage;
+        connectionInfo.WebSocketMessageClient.ErrorMessageReceived += ErrorMessage;
+        connectionInfo.WebSocketMessageClient.DataMessageReceived += DataMessage;
+        connectionInfo.WebSocketMessageClient.HeartbeatMessageReceived += HeartbeatMessage;
+        connectionInfo.WebSocketMessageClient.ErrorOccurred += ErrorOccurred;
+        connectionInfo.interpreter.StatusUpdate += TestScriptOnStatusUpdate;
 
         if (!_connections.TryAdd(connectionId, connectionInfo))
         {
@@ -45,12 +63,7 @@ public class WebSocketManager
 
         try
         {
-            await SendMessageAsync(connectionInfo, new WebSocketMessage
-            {
-                Type = "connection_established",
-                Data = new { connectionId, connectedAt = DateTime.UtcNow },
-                RequestId = "system"
-            });
+            await SendMessageAsync(connectionInfo, new HeartbeatMessage(), socket);
 
           
         }
@@ -64,7 +77,73 @@ public class WebSocketManager
         }
     }
 
+    private void TestScriptOnStatusUpdate(object sender, StatusString e)
+    {
+        dynamic answer = new JObject();
+        answer.TypeMsg = "Debug";
+        answer.data = e.status; ;
+        var sz = answer.ToString();
+        
+    }
 
+    private void HeartbeatMessage(object sender, MessageReceivedEventArgs e)
+    {
+        IWebsocketConnection socket = e.WebSocket;
+        ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
+
+        using var _ = SendMessageAsync(connectionInfo, new HeartbeatMessage(), socket);
+    }
+
+    private void DataMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void ErrorMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void NotificationMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void TextMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void CommandMessage(object sender, MessageReceivedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void ErrorOccurred(object sender, Exception e)
+    {
+        Console.WriteLine(e.Message);
+    }
+
+    private void AuthenticationMessage(object sender, MessageReceivedEventArgs e)
+    {
+        IWebsocketConnection socket = e.WebSocket;
+        ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
+
+        dynamic data = new JObject();
+        data.Uuid = connectionInfo.ConnectionId;
+        data.Menu = new JObject();
+        data.Menu.Header = "";
+        data.Functions = new JArray(connectionInfo.interpreter.GetFunctions());
+        ResponseMessage responde = new ResponseMessage
+        {
+            Status = MessageStatus.Success,
+            ErrorMessage = "",
+            Data = data
+        };
+
+
+        using var _ = SendMessageAsync(connectionInfo, responde, socket);
+    }
 
     public async Task ProcessIncomingMessageAsync(IWebsocketConnection socket, string messageJson)
     {
@@ -73,136 +152,33 @@ public class WebSocketManager
         // Esta lógica interna no cambia, sigue siendo perfectamente válida.
         try
         {
-           
+            connectionInfo.WebSocketMessageClient.ReceiveMsg(messageJson);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error processing incoming message: {ex.Message}");
-            await SendErrorMessageAsync(connectionInfo, socket);
+
+            ErrorMessage errorMessage = new ErrorMessage()
+            {
+                ErrorCode = "401",
+                ErrorDescription = ex.Message,
+                ErrorDetails = ex.StackTrace
+            };
+
+            await SendMessageAsync(connectionInfo, errorMessage, socket);
         }
     }
 
     // El resto de los métodos (HandleAuthenticationAsync, HandleReportExecutionAsync, etc.) no necesitan cambios.
     // ...
 
-    private async Task SendMessageAsync(ConnectionInfo connectionInfo, WebSocketMessage message)
+    private async Task SendMessageAsync(ConnectionInfo connectionInfo, BaseMessage message, IWebsocketConnection socket)
     {
-        
+        string msg = JsonConvert.SerializeObject(message);
+        await socket.Send(msg);
     }
 
-    //private async Task HandleAuthenticationAsync(ConnectionInfo connectionInfo, WebSocketMessage message)
-    //{
-    //    try
-    //    {
-    //        var authData = JsonSerializer.Deserialize<JsonElement>(message.Data.ToString());
-    //        var token = authData.GetProperty("token").GetString();
-
-    //        if (await _authService.ValidateTokenAsync(token))
-    //        {
-    //            var userId = _authService.GetUserIdFromToken(token);
-    //            connectionInfo.UserId = userId;
-
-    //            await SendMessageAsync(connectionInfo, new WebSocketMessage
-    //            {
-    //                Type = "authentication_success",
-    //                Data = new { userId, authenticatedAt = DateTime.UtcNow },
-    //                RequestId = message.RequestId
-    //            });
-    //        }
-    //        else
-    //        {
-    //            await SendErrorMessageAsync(connectionInfo, "Invalid token", message.RequestId);
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        await SendErrorMessageAsync(connectionInfo, $"Authentication error: {ex.Message}", message.RequestId);
-    //    }
-    //}
-
-    //private async Task HandleReportExecutionAsync(ConnectionInfo connectionInfo, WebSocketMessage message, CancellationToken cancellationToken)
-    //{
-    //    if (string.IsNullOrEmpty(connectionInfo.UserId))
-    //    {
-    //        await SendErrorMessageAsync(connectionInfo, "Not authenticated", message.RequestId);
-    //        return;
-    //    }
-
-    //    try
-    //    {
-    //        var executionData = JsonSerializer.Deserialize<QueryExecutionRequest>(message.Data.ToString(), _jsonOptions);
-
-    //        // Crear progress reporter que envía updates via WebSocket
-    //        var progress = new Progress<QueryExecutionStatus>(status =>
-    //        {
-    //            status.RequestId = executionData.RequestId;
-    //            _ = SendMessageAsync(connectionInfo, new WebSocketMessage
-    //            {
-    //                Type = "execution_progress",
-    //                Data = status,
-    //                RequestId = executionData.RequestId
-    //            });
-    //        });
-
-    //        // Ejecutar reporte de forma asíncrona
-    //        _ = Task.Run(async () =>
-    //        {
-    //            try
-    //            {
-    //                var result = await _reportsService.ExecuteReportWithProgressAsync(
-    //                    connectionInfo.UserId,
-    //                    executionData.ReportId,
-    //                    executionData.ForceRefresh,
-    //                    progress,
-    //                    cancellationToken
-    //                );
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                await SendErrorMessageAsync(connectionInfo, $"Execution failed: {ex.Message}", executionData.RequestId);
-    //            }
-    //        }, cancellationToken);
-
-    //        await SendMessageAsync(connectionInfo, new WebSocketMessage
-    //        {
-    //            Type = "execution_started",
-    //            Data = new { requestId = executionData.RequestId, reportId = executionData.ReportId },
-    //            RequestId = executionData.RequestId
-    //        });
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        await SendErrorMessageAsync(connectionInfo, $"Error starting execution: {ex.Message}", message.RequestId);
-    //    }
-    //}
-
-    //private async Task HandleCancelExecutionAsync(ConnectionInfo connectionInfo, WebSocketMessage message)
-    //{
-    //    try
-    //    {
-    //        connectionInfo.CancellationTokenSource.Cancel();
-
-    //        await SendMessageAsync(connectionInfo, new WebSocketMessage
-    //        {
-    //            Type = "execution_cancelled",
-    //            Data = new { cancelledAt = DateTime.UtcNow },
-    //            RequestId = message.RequestId
-    //        });
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        await SendErrorMessageAsync(connectionInfo, $"Error cancelling execution: {ex.Message}", message.RequestId);
-    //    }
-    //}
-    //private async Task SendErrorMessageAsync(ConnectionInfo connectionInfo, string errorMessage, string requestId)
-    //{
-    //    await SendMessageAsync(connectionInfo, new WebSocketMessage
-    //    {
-    //        Type = "error",
-    //        Data = new { error = errorMessage, timestamp = DateTime.UtcNow },
-    //        RequestId = requestId
-    //    });
-    //}
+    
 
     public int GetConnectionCount() => _connections.Count;
 

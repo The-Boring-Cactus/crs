@@ -3,20 +3,12 @@
   "WorkspaceRootPath": "F:\\Reportes\\crs\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\core\\websocketmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\core\\websocketmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\core\\connectioninfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\core\\connectioninfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\client.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\client.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\core\\authmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\core\\authmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,58 +18,32 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ConnectionInfo.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Core\\ConnectionInfo.cs",
-              "RelativeDocumentMoniker": "Server\\Core\\ConnectionInfo.cs",
-              "ToolTip": "F:\\Reportes\\crs\\Server\\Core\\ConnectionInfo.cs",
-              "RelativeToolTip": "Server\\Core\\ConnectionInfo.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAgAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-29T21:00:14.065Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Client.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Client.cs",
-              "RelativeDocumentMoniker": "Server\\Client.cs",
-              "ToolTip": "F:\\Reportes\\crs\\Server\\Client.cs",
-              "RelativeToolTip": "Server\\Client.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAF8AAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-29T20:32:47.4Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Program.cs",
               "RelativeDocumentMoniker": "Server\\Program.cs",
               "ToolTip": "F:\\Reportes\\crs\\Server\\Program.cs",
               "RelativeToolTip": "Server\\Program.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAQwDIAAABRAAAAAAAAAA==",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAQwDEAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-29T20:27:11.355Z",
+              "WhenOpened": "2025-09-01T22:00:06.309Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "WebSocketManager.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Core\\WebSocketManager.cs",
-              "RelativeDocumentMoniker": "Server\\Core\\WebSocketManager.cs",
-              "ToolTip": "F:\\Reportes\\crs\\Server\\Core\\WebSocketManager.cs",
-              "RelativeToolTip": "Server\\Core\\WebSocketManager.cs",
-              "ViewState": "AgIAAC8AAAAAAAAAAAAIwFoAAAAFAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "AuthMiddleware.cs",
+              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Core\\AuthMiddleware.cs",
+              "RelativeDocumentMoniker": "Server\\Core\\AuthMiddleware.cs",
+              "ToolTip": "F:\\Reportes\\crs\\Server\\Core\\AuthMiddleware.cs",
+              "RelativeToolTip": "Server\\Core\\AuthMiddleware.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAqwB8AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-29T18:18:48.15Z",
+              "WhenOpened": "2025-09-01T21:15:37.712Z",
               "EditorCaption": ""
             }
           ]
