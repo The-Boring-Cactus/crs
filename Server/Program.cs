@@ -16,12 +16,12 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var cache = new ReportsCache("reports-cache.db");
+        var cache = new ReportsCache("report-system");
         var dataSource = new DataSourceManager(cache);
         var authService = new AuthService(cache);
         var reportsService = new UserReportsService(cache, dataSource);
         var backgroundWorker = new ReportsBackgroundWorker(cache, reportsService);
-        var webSocketManager = new WebSocketManager(authService, reportsService); // ¡Ahora sí lo usaremos!
+        var webSocketManager = new WebSocketManager(authService, reportsService); 
 
         // Configurar conexiones de base de datos
         dataSource.AddConnection("mssql-main",

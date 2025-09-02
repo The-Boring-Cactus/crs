@@ -11,3 +11,16 @@
 /home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/refint/Connectors.dll
 /home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/Connectors.pdb
 /home/peyote/Documents/GitHub/crs/Connectors/obj/Debug/net9.0/ref/Connectors.dll
+F:\Reportes\crs\Connectors\bin\Debug\net9.0\Connectors.deps.json
+F:\Reportes\crs\Connectors\bin\Debug\net9.0\Connectors.dll
+F:\Reportes\crs\Connectors\bin\Debug\net9.0\Connectors.pdb
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.csproj.AssemblyReference.cache
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.GeneratedMSBuildEditorConfig.editorconfig
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.AssemblyInfoInputs.cache
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.AssemblyInfo.cs
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.csproj.CoreCompileInputs.cache
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.sourcelink.json
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.dll
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\refint\Connectors.dll
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\Connectors.pdb
+F:\Reportes\crs\Connectors\obj\Debug\net9.0\ref\Connectors.dll

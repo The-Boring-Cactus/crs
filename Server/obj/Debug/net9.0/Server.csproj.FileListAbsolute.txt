@@ -419,3 +419,13 @@ E:\Proyectos\crs\Server\bin\Debug\net9.0\NJsonSchema.Yaml.dll
 E:\Proyectos\crs\Server\bin\Debug\net9.0\NSwag.Core.dll
 E:\Proyectos\crs\Server\bin\Debug\net9.0\NSwag.Core.Yaml.dll
 E:\Proyectos\crs\Server\bin\Debug\net9.0\NSwag.Generation.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\GenHTTP.Modules.ApiBrowsing.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\GenHTTP.Modules.OpenApi.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\Namotion.Reflection.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\NJsonSchema.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\NJsonSchema.Annotations.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\NJsonSchema.NewtonsoftJson.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\NJsonSchema.Yaml.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\NSwag.Core.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\NSwag.Core.Yaml.dll
+F:\Reportes\crs\Server\bin\Debug\net9.0\NSwag.Generation.dll

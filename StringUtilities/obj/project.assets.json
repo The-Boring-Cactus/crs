@@ -8,23 +8,23 @@
     "net9.0": []
   },
   "packageFolders": {
-    "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\": {},
+    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Proyectos\\crs\\StringUtilities\\StringUtilities.csproj",
+      "projectUniqueName": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj",
       "projectName": "StringUtilities",
-      "projectPath": "E:\\Proyectos\\crs\\StringUtilities\\StringUtilities.csproj",
-      "packagesPath": "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\",
-      "outputPath": "E:\\Proyectos\\crs\\StringUtilities\\obj\\",
+      "projectPath": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj",
+      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
+      "outputPath": "F:\\Reportes\\crs\\StringUtilities\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Ricardo Rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -33,6 +33,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
