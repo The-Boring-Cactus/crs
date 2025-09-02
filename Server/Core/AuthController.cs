@@ -14,12 +14,9 @@ public class AuthController
         _authService = authService;
     }
 
-    public AuthController()
-    {
-        
-    }
 
-    [ResourceMethod(RequestMethod.Post)]
+
+    [ResourceMethod(RequestMethod.Post,"register")]
     public async ValueTask<AuthResponse> Register([FromBody] RegisterRequest request)
     {
         try
@@ -33,7 +30,7 @@ public class AuthController
         }
     }
     
-    [ResourceMethod(RequestMethod.Post)]
+    [ResourceMethod(RequestMethod.Post,"login")]
     public async ValueTask<AuthResponse> Login([FromBody] LoginRequest request)
     {
         var token = await _authService.AuthenticateAsync(request);

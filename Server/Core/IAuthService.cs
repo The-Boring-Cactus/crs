@@ -1,5 +1,6 @@
 namespace Server.Core;
 
+
 public interface IAuthService
 {
     Task<string> RegisterUserAsync(RegisterRequest request);

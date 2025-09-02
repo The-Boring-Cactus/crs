@@ -1,14 +1,18 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "F:\\Reportes\\crs\\",
+  "WorkspaceRootPath": "E:\\Proyectos\\crs\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|e:\\proyectos\\crs\\server\\core\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\core\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|f:\\reportes\\crs\\server\\core\\authmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\core\\authmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|e:\\proyectos\\crs\\server\\core\\reportscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\core\\reportscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|e:\\proyectos\\crs\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B6DC26FE-3DE4-47AD-8203-9B07CAEFD472}|Server\\Server.csproj|solutionrelative:server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -23,27 +27,40 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Program.cs",
-              "RelativeDocumentMoniker": "Server\\Program.cs",
-              "ToolTip": "F:\\Reportes\\crs\\Server\\Program.cs",
-              "RelativeToolTip": "Server\\Program.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAQwDEAAAA+AAAAAAAAAA==",
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Core\\AuthController.cs",
+              "RelativeDocumentMoniker": "Server\\Core\\AuthController.cs",
+              "ToolTip": "E:\\Proyectos\\crs\\Server\\Core\\AuthController.cs",
+              "RelativeToolTip": "Server\\Core\\AuthController.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAxwBMAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-01T22:00:06.309Z",
+              "WhenOpened": "2025-09-02T04:14:03.972Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "AuthMiddleware.cs",
-              "DocumentMoniker": "F:\\Reportes\\crs\\Server\\Core\\AuthMiddleware.cs",
-              "RelativeDocumentMoniker": "Server\\Core\\AuthMiddleware.cs",
-              "ToolTip": "F:\\Reportes\\crs\\Server\\Core\\AuthMiddleware.cs",
-              "RelativeToolTip": "Server\\Core\\AuthMiddleware.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAqwB8AAAAJAAAAAAAAAA==",
+              "Title": "ReportsController.cs",
+              "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Core\\ReportsController.cs",
+              "RelativeDocumentMoniker": "Server\\Core\\ReportsController.cs",
+              "ToolTip": "E:\\Proyectos\\crs\\Server\\Core\\ReportsController.cs",
+              "RelativeToolTip": "Server\\Core\\ReportsController.cs",
+              "ViewState": "AgIAAD8AAAAAAAAAAAAmwBoAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-01T21:15:37.712Z",
+              "WhenOpened": "2025-09-02T04:13:45.281Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Program.cs",
+              "RelativeDocumentMoniker": "Server\\Program.cs",
+              "ToolTip": "E:\\Proyectos\\crs\\Server\\Program.cs",
+              "RelativeToolTip": "Server\\Program.cs",
+              "ViewState": "AgIAABoAAAAAAAAAAAAEwDgAAABZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T02:34:30.394Z",
               "EditorCaption": ""
             }
           ]

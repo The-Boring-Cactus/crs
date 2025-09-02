@@ -5,10 +5,12 @@ using GenHTTP.Modules.Practices;
 using GenHTTP.Modules.Security;
 using GenHTTP.Modules.Webservices;
 using GenHTTP.Modules.Websockets;
+using GenHTTP.Modules.OpenApi;
 
 using Microsoft.Data.SqlClient;
 using Server.Core;
 using System.Net;
+using GenHTTP.Modules.ApiBrowsing;
 
 internal class Program
 {
@@ -29,6 +31,11 @@ internal class Program
         var authController = new AuthController(authService);
         var reportsController = new ReportsController(reportsService, cache);
 
+        var protectedApi = Layout.Create()
+            .Add("api/reports", ServiceResource.From(reportsController));
+
+
+        var protectedSection = new AuthMiddleware(protectedApi.Build(), authService);
 
         var websocketHandler = Websocket.Create()
                    .OnOpen(async (socket) =>
@@ -47,10 +54,16 @@ internal class Program
                        Layout.Create()
                            .Add(CorsPolicy.Permissive())
                            .Add("/srv", websocketHandler)
-                           .Add(new AuthMiddleware(authService))
-                           .Add("api/auth", ServiceResource.From(authController))
-                           .Add("api/reports", ServiceResource.From(reportsController))
-                           .Add("/", files))
+                           .Add("/api/auth", ServiceResource.From(authController).Build())
+                           .Add( protectedSection)
+                           .Add("/", files)
+                           .AddOpenApi()
+                           .AddSwaggerUI()
+                           .AddRedoc()
+                           )
+                   .Defaults()
+                   .Development()
+                   .Console()
                            .Bind(IPAddress.Any, 8080);
 
         await server.RunAsync();

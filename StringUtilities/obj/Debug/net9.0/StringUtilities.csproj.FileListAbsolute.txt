@@ -22,3 +22,15 @@ F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.dll
 F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\refint\StringUtilities.dll
 F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.pdb
 F:\Reportes\crs\StringUtilities\obj\Debug\net9.0\ref\StringUtilities.dll
+E:\Proyectos\crs\StringUtilities\bin\Debug\net9.0\StringUtilities.deps.json
+E:\Proyectos\crs\StringUtilities\bin\Debug\net9.0\StringUtilities.dll
+E:\Proyectos\crs\StringUtilities\bin\Debug\net9.0\StringUtilities.pdb
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.GeneratedMSBuildEditorConfig.editorconfig
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.AssemblyInfoInputs.cache
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.AssemblyInfo.cs
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.csproj.CoreCompileInputs.cache
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.sourcelink.json
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.dll
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\refint\StringUtilities.dll
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\StringUtilities.pdb
+E:\Proyectos\crs\StringUtilities\obj\Debug\net9.0\ref\StringUtilities.dll

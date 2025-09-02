@@ -23,6 +23,10 @@
 
     <PackageReference Include="GenHTTP.Core" Version="9.8.0" />
 
+    <PackageReference Include="GenHTTP.Modules.ApiBrowsing" Version="9.8.0" />
+
+    <PackageReference Include="GenHTTP.Modules.OpenApi" Version="9.8.0" />
+
     <PackageReference Include="GenHTTP.Modules.StaticWebsites" Version="9.8.0" />
 
     <PackageReference Include="GenHTTP.Modules.Webservices" Version="9.8.0" />
@@ -42,6 +46,10 @@
     <PackageReference Include="RocksDbNative" Version="6.2.2" />
 
     <PackageReference Include="RocksDbSharp" Version="6.2.2" />
+
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 
   </ItemGroup>
 
