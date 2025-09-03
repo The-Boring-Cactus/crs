@@ -2742,23 +2742,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {},
+    "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj",
+      "projectUniqueName": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.csproj",
       "projectName": "MathFunctions",
-      "projectPath": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj",
-      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-      "outputPath": "F:\\Reportes\\crs\\MathFunctions\\obj\\",
+      "projectPath": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.csproj",
+      "packagesPath": "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\",
+      "outputPath": "E:\\Proyectos\\crs\\MathFunctions\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Ricardo Rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2767,15 +2767,14 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-              "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+            "E:\\Proyectos\\crs\\FunctEngine\\FunctEngine.csproj": {
+              "projectPath": "E:\\Proyectos\\crs\\FunctEngine\\FunctEngine.csproj"
             }
           }
         }

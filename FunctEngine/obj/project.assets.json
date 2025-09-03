@@ -2690,23 +2690,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {},
+    "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj",
+      "projectUniqueName": "E:\\Proyectos\\crs\\FunctEngine\\FunctEngine.csproj",
       "projectName": "FunctEngine",
-      "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj",
-      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-      "outputPath": "F:\\Reportes\\crs\\FunctEngine\\obj\\",
+      "projectPath": "E:\\Proyectos\\crs\\FunctEngine\\FunctEngine.csproj",
+      "packagesPath": "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\",
+      "outputPath": "E:\\Proyectos\\crs\\FunctEngine\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Ricardo Rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2715,7 +2715,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {

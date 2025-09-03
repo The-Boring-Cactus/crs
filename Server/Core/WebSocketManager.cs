@@ -53,6 +53,7 @@ public class WebSocketManager
         connectionInfo.WebSocketMessageClient.HeartbeatMessageReceived += HeartbeatMessage;
         connectionInfo.WebSocketMessageClient.ErrorOccurred += ErrorOccurred;
         connectionInfo.interpreter.StatusUpdate += TestScriptOnStatusUpdate;
+        connectionInfo.interpreter.LoadExternalDll("MathFunctions.dll");
 
         if (!_connections.TryAdd(connectionId, connectionInfo))
         {

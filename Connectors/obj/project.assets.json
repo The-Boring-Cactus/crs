@@ -1803,23 +1803,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {},
+    "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\Reportes\\crs\\Connectors\\Connectors.csproj",
+      "projectUniqueName": "E:\\Proyectos\\crs\\Connectors\\Connectors.csproj",
       "projectName": "Connectors",
-      "projectPath": "F:\\Reportes\\crs\\Connectors\\Connectors.csproj",
-      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-      "outputPath": "F:\\Reportes\\crs\\Connectors\\obj\\",
+      "projectPath": "E:\\Proyectos\\crs\\Connectors\\Connectors.csproj",
+      "packagesPath": "C:\\Users\\Ricardo Rodriguez\\.nuget\\packages\\",
+      "outputPath": "E:\\Proyectos\\crs\\Connectors\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Ricardo Rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -1828,7 +1828,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {

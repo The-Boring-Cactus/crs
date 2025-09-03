@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -229,6 +230,8 @@ namespace FunctEngine
                 loadedAssemblies.Add(assembly);
 
                 // Buscar métodos públicos estáticos que pueden ser llamados como funciones
+                var exportedTypes = assembly.GetTypes()
+                    .Where(t => t.GetCustomAttribute<FunctEngineExportAttribute>() != null);
                 foreach (Type type in assembly.GetTypes())
                 {
                     foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.Static))

@@ -6,7 +6,6 @@ using GenHTTP.Modules.Security;
 using GenHTTP.Modules.Webservices;
 using GenHTTP.Modules.Websockets;
 using GenHTTP.Modules.OpenApi;
-
 using Microsoft.Data.SqlClient;
 using Server.Core;
 using System.Net;
@@ -29,13 +28,13 @@ internal class Program
 
         // Configurar servicios web
         var authController = new AuthController(authService);
-        var reportsController = new ReportsController(reportsService, cache);
+        var reportsController = new ReportsController(reportsService, cache, authService);
 
-        var protectedApi = Layout.Create()
-            .Add("api/reports", ServiceResource.From(reportsController));
+        //var protectedApi = Layout.Create()
+        //    .Add("api/reports", ServiceResource.From(reportsController));
 
 
-        var protectedSection = new AuthMiddleware(protectedApi.Build(), authService);
+        //var protectedSection = new AuthMiddleware(protectedApi.Build(), authService);
 
         var websocketHandler = Websocket.Create()
                    .OnOpen(async (socket) =>
@@ -54,12 +53,13 @@ internal class Program
                        Layout.Create()
                            .Add(CorsPolicy.Permissive())
                            .Add("/srv", websocketHandler)
+                           .Add("/api/reports", ServiceResource.From(reportsController).Build())
                            .Add("/api/auth", ServiceResource.From(authController).Build())
-                           .Add( protectedSection)
                            .Add("/", files)
-                           .AddOpenApi()
-                           .AddSwaggerUI()
-                           .AddRedoc()
+                           .AddOpenApi() //Open to all
+                           .AddSwaggerUI() //Open to all
+                           .AddRedoc() //Open to all
+                           .AddScalar()
                            )
                    .Defaults()
                    .Development()
