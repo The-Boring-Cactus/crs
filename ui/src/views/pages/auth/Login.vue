@@ -23,15 +23,17 @@ var { proxy } = getCurrentInstance();
 
 proxy.$socket.onmessage =  (data) => {
     const responseHandler = new ServerResponse();
-
-    var response = responseHandler.analizeMessage(JSON.parse(data.data));
-    console.log(response);
-  loading.value = false;
-  if(response.Type=="Response" || response.Status=="Success"){
-    toast.add({ severity: 'Success', summary: 'OK', detail: 'Welcome', life: 3000 });
-    userStore.setCurr(true,'User','admin', response.Data.Functions);
-    router.push({ path: '/', replace: true })
-  }
+    var jResponse = JSON.parse(data.data);
+    if(jResponse.Type == 3){
+        var response = responseHandler.analizeMessage(jResponse);
+        console.log(response);
+        loading.value = false;
+        if(response.Type=="Response" || response.Status=="Success"){
+            toast.add({ severity: 'Success', summary: 'OK', detail: 'Welcome', life: 3000 });
+            userStore.setCurr(true,'User','admin', response.Data.Functions);
+            router.push({ path: '/', replace: true })
+        }
+    }
 }
 
 const client = new WebSocketMessageClient(proxy.$socket);

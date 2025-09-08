@@ -3,16 +3,12 @@
   "WorkspaceRootPath": "E:\\Proyectos\\crs\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|e:\\proyectos\\crs\\functengine\\functionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\functionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|e:\\proyectos\\crs\\functengine\\functengineexportattribute.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\functengineexportattribute.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{847F9F0C-4CA3-4FBF-BD87-8184799641A6}|MathFunctions\\MathFunctions.csproj|e:\\proyectos\\crs\\mathfunctions\\mathfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{847F9F0C-4CA3-4FBF-BD87-8184799641A6}|MathFunctions\\MathFunctions.csproj|solutionrelative:mathfunctions\\mathfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|e:\\proyectos\\crs\\functengine\\functionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|solutionrelative:functengine\\functionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F9C60A6-2811-436D-A0B6-7DA16BA611ED}|FunctEngine\\FunctEngine.csproj|e:\\proyectos\\crs\\functengine\\codeengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -74,37 +70,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "FunctEngineExportAttribute.cs",
-              "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\FunctEngineExportAttribute.cs",
-              "RelativeDocumentMoniker": "FunctEngine\\FunctEngineExportAttribute.cs",
-              "ToolTip": "E:\\Proyectos\\crs\\FunctEngine\\FunctEngineExportAttribute.cs",
-              "RelativeToolTip": "FunctEngine\\FunctEngineExportAttribute.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T04:25:50.543Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "MathFunctions.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.cs",
               "RelativeDocumentMoniker": "MathFunctions\\MathFunctions.cs",
               "ToolTip": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.cs",
               "RelativeToolTip": "MathFunctions\\MathFunctions.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAQwJkAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIUAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-03T04:06:06.101Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 7,
               "Title": "Project.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Project.cs",
               "RelativeDocumentMoniker": "Server\\Project.cs",
@@ -112,12 +95,11 @@
               "RelativeToolTip": "Server\\Project.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T04:01:15.266Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T04:01:15.266Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 8,
               "Title": "Client.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Client.cs",
               "RelativeDocumentMoniker": "Server\\Client.cs",
@@ -125,25 +107,23 @@
               "RelativeToolTip": "Server\\Client.cs",
               "ViewState": "AgIAAFcAAAAAAAAAAAAkwHEAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T04:00:50.675Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T04:00:50.675Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "FunctionManager.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\FunctionManager.cs",
               "RelativeDocumentMoniker": "FunctEngine\\FunctionManager.cs",
               "ToolTip": "E:\\Proyectos\\crs\\FunctEngine\\FunctionManager.cs",
               "RelativeToolTip": "FunctEngine\\FunctionManager.cs",
-              "ViewState": "AgIAANcAAAAAAAAAAAAawOkAAABPAAAAAAAAAA==",
+              "ViewState": "AgIAANcAAAAAAAAAAAAawOgAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:59:05.316Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:59:05.316Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 10,
               "Title": "DatabaseFunctions.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\DatabaseFunctions.cs",
               "RelativeDocumentMoniker": "FunctEngine\\DatabaseFunctions.cs",
@@ -151,12 +131,11 @@
               "RelativeToolTip": "FunctEngine\\DatabaseFunctions.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:58:56.052Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:58:56.052Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "CodeEngine.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\CodeEngine.cs",
               "RelativeDocumentMoniker": "FunctEngine\\CodeEngine.cs",
@@ -164,12 +143,11 @@
               "RelativeToolTip": "FunctEngine\\CodeEngine.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAAoAAAA0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:58:49.901Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:58:49.901Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
               "Title": "BasicFunctions.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\BasicFunctions.cs",
               "RelativeDocumentMoniker": "FunctEngine\\BasicFunctions.cs",
@@ -177,12 +155,11 @@
               "RelativeToolTip": "FunctEngine\\BasicFunctions.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAAwAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:58:37.765Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:58:37.765Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 11,
               "Title": "ArrayFunctions.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\ArrayFunctions.cs",
               "RelativeDocumentMoniker": "FunctEngine\\ArrayFunctions.cs",
@@ -190,12 +167,11 @@
               "RelativeToolTip": "FunctEngine\\ArrayFunctions.cs",
               "ViewState": "AgIAAEQAAAAAAAAAAAAuwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:57:59.756Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:57:59.756Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "MathFunctions.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\MathFunctions.cs",
               "RelativeDocumentMoniker": "FunctEngine\\MathFunctions.cs",
@@ -203,12 +179,11 @@
               "RelativeToolTip": "FunctEngine\\MathFunctions.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:57:52.621Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:57:52.621Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 12,
               "Title": "User.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Core\\User.cs",
               "RelativeDocumentMoniker": "Server\\Core\\User.cs",
@@ -216,12 +191,11 @@
               "RelativeToolTip": "Server\\Core\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:57:27.739Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:57:27.739Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 14,
               "Title": "AuthController.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Core\\AuthController.cs",
               "RelativeDocumentMoniker": "Server\\Core\\AuthController.cs",
@@ -229,12 +203,11 @@
               "RelativeToolTip": "Server\\Core\\AuthController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T02:04:14.847Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T02:04:14.847Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 5,
               "Title": "WebSocketManager.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Core\\WebSocketManager.cs",
               "RelativeDocumentMoniker": "Server\\Core\\WebSocketManager.cs",
@@ -242,12 +215,11 @@
               "RelativeToolTip": "Server\\Core\\WebSocketManager.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAAkwDcAAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T01:51:03.708Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T01:51:03.708Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 6,
               "Title": "Program.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Program.cs",
               "RelativeDocumentMoniker": "Server\\Program.cs",
@@ -255,12 +227,11 @@
               "RelativeToolTip": "Server\\Program.cs",
               "ViewState": "AgIAABcAAAAAAAAAAAAlwCoAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T14:20:15.382Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-02T14:20:15.382Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 9,
               "Title": "DatabaseManager.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\FunctEngine\\DatabaseManager.cs",
               "RelativeDocumentMoniker": "FunctEngine\\DatabaseManager.cs",
@@ -268,12 +239,11 @@
               "RelativeToolTip": "FunctEngine\\DatabaseManager.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:59:00.797Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:59:00.797Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 13,
               "Title": "ReportsController.cs",
               "DocumentMoniker": "E:\\Proyectos\\crs\\Server\\Core\\ReportsController.cs",
               "RelativeDocumentMoniker": "Server\\Core\\ReportsController.cs",
@@ -281,8 +251,7 @@
               "RelativeToolTip": "Server\\Core\\ReportsController.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAABAAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T01:51:03.724Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T01:51:03.724Z"
             }
           ]
         }

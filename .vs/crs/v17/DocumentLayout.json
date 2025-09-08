@@ -80,7 +80,7 @@
               "RelativeDocumentMoniker": "MathFunctions\\MathFunctions.cs",
               "ToolTip": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.cs",
               "RelativeToolTip": "MathFunctions\\MathFunctions.cs",
-              "ViewState": "AgIAAHoAAAAAAAAAAAAAADgAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIUAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-03T04:06:06.101Z",
               "EditorCaption": ""
@@ -95,8 +95,7 @@
               "RelativeToolTip": "Server\\Project.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T04:01:15.266Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T04:01:15.266Z"
             },
             {
               "$type": "Document",
@@ -108,8 +107,7 @@
               "RelativeToolTip": "Server\\Client.cs",
               "ViewState": "AgIAAFcAAAAAAAAAAAAkwHEAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T04:00:50.675Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T04:00:50.675Z"
             },
             {
               "$type": "Document",
@@ -121,8 +119,7 @@
               "RelativeToolTip": "FunctEngine\\FunctionManager.cs",
               "ViewState": "AgIAANcAAAAAAAAAAAAawOgAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:59:05.316Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:59:05.316Z"
             },
             {
               "$type": "Document",
@@ -134,8 +131,7 @@
               "RelativeToolTip": "FunctEngine\\DatabaseFunctions.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:58:56.052Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:58:56.052Z"
             },
             {
               "$type": "Document",
@@ -147,8 +143,7 @@
               "RelativeToolTip": "FunctEngine\\CodeEngine.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAAoAAAA0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:58:49.901Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:58:49.901Z"
             },
             {
               "$type": "Document",
@@ -160,8 +155,7 @@
               "RelativeToolTip": "FunctEngine\\BasicFunctions.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAAwAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:58:37.765Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:58:37.765Z"
             },
             {
               "$type": "Document",
@@ -173,8 +167,7 @@
               "RelativeToolTip": "FunctEngine\\ArrayFunctions.cs",
               "ViewState": "AgIAAEQAAAAAAAAAAAAuwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:57:59.756Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:57:59.756Z"
             },
             {
               "$type": "Document",
@@ -186,8 +179,7 @@
               "RelativeToolTip": "FunctEngine\\MathFunctions.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:57:52.621Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:57:52.621Z"
             },
             {
               "$type": "Document",
@@ -199,8 +191,7 @@
               "RelativeToolTip": "Server\\Core\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:57:27.739Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:57:27.739Z"
             },
             {
               "$type": "Document",
@@ -212,8 +203,7 @@
               "RelativeToolTip": "Server\\Core\\AuthController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T02:04:14.847Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T02:04:14.847Z"
             },
             {
               "$type": "Document",
@@ -225,8 +215,7 @@
               "RelativeToolTip": "Server\\Core\\WebSocketManager.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAAkwDcAAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T01:51:03.708Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T01:51:03.708Z"
             },
             {
               "$type": "Document",
@@ -238,8 +227,7 @@
               "RelativeToolTip": "Server\\Program.cs",
               "ViewState": "AgIAABcAAAAAAAAAAAAlwCoAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T14:20:15.382Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-02T14:20:15.382Z"
             },
             {
               "$type": "Document",
@@ -251,8 +239,7 @@
               "RelativeToolTip": "FunctEngine\\DatabaseManager.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T03:59:00.797Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T03:59:00.797Z"
             },
             {
               "$type": "Document",
@@ -264,8 +251,7 @@
               "RelativeToolTip": "Server\\Core\\ReportsController.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAABAAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T01:51:03.724Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T01:51:03.724Z"
             }
           ]
         }
