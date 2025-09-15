@@ -32,6 +32,7 @@
     v-model:layout="layout.componentes"
     :col-num="15"
     :row-height="40"
+    :auto-size="true"
     is-draggable
     is-resizable
     vertical-compact
