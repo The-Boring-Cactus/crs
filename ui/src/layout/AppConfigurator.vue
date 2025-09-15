@@ -6,7 +6,7 @@ import Lara from '@primeuix/themes/lara';
 import Nora from '@primeuix/themes/nora';
 import { ref } from 'vue';
 
-const { layoutConfig, isDarkTheme } = useLayout();
+const { layoutConfig, isDarkTheme, toggleDarkMode } = useLayout();
 
 const presets = {
     Aura,
@@ -241,6 +241,18 @@ function onMenuModeChange() {
             <div class="flex flex-col gap-2">
                 <span class="text-sm text-muted-color font-semibold">Menu Mode</span>
                 <SelectButton v-model="menuMode" @change="onMenuModeChange" :options="menuModeOptions" :allowEmpty="false" optionLabel="label" optionValue="value" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <span class="text-sm text-muted-color font-semibold">Theme Mode</span>
+                <div class="flex items-center gap-2">
+                    <Button
+                        :icon="isDarkTheme ? 'pi pi-sun' : 'pi pi-moon'"
+                        :label="isDarkTheme ? 'Light Mode' : 'Dark Mode'"
+                        @click="toggleDarkMode"
+                        size="small"
+                        :outlined="true"
+                    />
+                </div>
             </div>
         </div>
     </div>
