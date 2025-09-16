@@ -4,85 +4,187 @@
   <!-- Main Toolbar -->
   <Toolbar class="dataset-toolbar">
     <template #start>
-      <div class="toolbar-section">
-        <label class="dataset-label">Dataset Name:</label>
+      <div class="flex align-items-center gap-2">
+        <label class="dataset-label">Dataset:</label>
         <Inplace v-tooltip="'Click to Change'" class="dataset-name">
           <template #display>
-            <span class="dataset-title">{{ MyTitle || 'Untitled Dataset' }}</span>
+            <div class="flex align-items-center gap-2 cursor-pointer">
+              <i class="pi pi-table text-muted-color"></i>
+              <span class="dataset-title">{{ MyTitle || 'Untitled Dataset' }}</span>
+              <i class="pi pi-pencil text-xs text-muted-color"></i>
+            </div>
           </template>
           <template #content="{ closeCallback }">
-            <span class="inline-flex items-center gap-2">
+            <div class="flex align-items-center gap-2">
               <InputText v-model="MyTitle" placeholder="Enter dataset name" autofocus />
               <Button icon="pi pi-check" text severity="success" @click="closeCallback" />
               <Button icon="pi pi-times" text severity="danger" @click="closeCallback" />
-            </span>
+            </div>
           </template>
         </Inplace>
       </div>
     </template>
 
     <template #center>
-      <div class="toolbar-stats">
+      <div class="flex align-items-center gap-2">
         <Tag severity="info" class="stats-tag">
           <i class="pi pi-table mr-1"></i>
           {{ jsondata.length }} rows × {{ getColumnCount() }} columns
         </Tag>
-        <Tag v-if="selectedCells.length > 0" severity="success" class="stats-tag">
+        <Tag v-if="selectedRows.length > 0" severity="success" class="stats-tag">
           <i class="pi pi-check-square mr-1"></i>
-          {{ selectedCells.length }} selected
+          {{ selectedRows.length }} selected
         </Tag>
       </div>
     </template>
 
     <template #end>
-      <div class="toolbar-actions">
+      <div class="flex align-items-center gap-2">
         <Button
           icon="pi pi-save"
-          label="Save"
-          severity="secondary"
           @click="quickSave"
-          v-tooltip.bottom="'Quick Save JSON'"
+          v-tooltip.bottom="'Save Dataset'"
+          text
         />
         <Button
           icon="pi pi-upload"
-          label="Import"
-          severity="secondary"
           @click="showImportDialog = true"
-          v-tooltip.bottom="'Import from file'"
+          v-tooltip.bottom="'Import Data'"
+          text
         />
         <Button
           icon="pi pi-download"
-          label="Export"
-          severity="secondary"
           @click="showExportDialog = true"
-          v-tooltip.bottom="'Export to file'"
+          v-tooltip.bottom="'Export Data'"
+          text
         />
       </div>
     </template>
   </Toolbar>
 
-  <!-- Menu Bar -->
-  <Menubar :model="menuItems" class="dataset-menubar" />
+  <!-- Secondary Toolbar -->
+  <Toolbar class="dataset-secondary-toolbar">
+    <template #start>
+      <div class="flex align-items-center gap-1">
+        <Button icon="pi pi-plus" text @click="newDoc" v-tooltip.top="'New Dataset'" />
+        <Divider layout="vertical" />
+        <Button icon="pi pi-plus-circle" text @click="createnewRow" v-tooltip.top="'Add Row'" />
+        <Button icon="pi pi-table" text @click="createnewCol" v-tooltip.top="'Add Column'" />
+        <Divider layout="vertical" />
+        <Button icon="pi pi-copy" text @click="copySelection" v-tooltip.top="'Copy Selection'" :disabled="selectedRows.length === 0" />
+        <Button icon="pi pi-clone" text @click="pasteSelection" v-tooltip.top="'Paste'" :disabled="!clipboard" />
+        <Button icon="pi pi-scissors" text @click="cutSelection" v-tooltip.top="'Cut Selection'" :disabled="selectedRows.length === 0" />
+      </div>
+    </template>
+
+    <template #center>
+      <div class="flex align-items-center gap-1">
+        <Button icon="pi pi-check-square" text @click="selectAll" v-tooltip.top="'Select All'" />
+        <Button icon="pi pi-eraser" text @click="clearSelection" v-tooltip.top="'Clear Selection'" />
+        <Divider layout="vertical" />
+        <Button icon="pi pi-trash" text @click="deleteSelectedRows" v-tooltip.top="'Delete Selected Rows'" :disabled="selectedRows.length === 0" />
+        <Button icon="pi pi-times" text @click="confirmClearAll" v-tooltip.top="'Clear All Data'" severity="danger" />
+      </div>
+    </template>
+
+    <template #end>
+      <div class="flex align-items-center gap-1">
+        <Button icon="pi pi-search" text @click="showFindReplace" v-tooltip.top="'Find & Replace'" />
+        <Button icon="pi pi-sort" text @click="showSortDialog" v-tooltip.top="'Sort Data'" />
+        <Button icon="pi pi-filter" text @click="showFilterDialog" v-tooltip.top="'Filter Data'" />
+        <Divider layout="vertical" />
+        <Button icon="pi pi-check-circle" text @click="validateData" v-tooltip.top="'Validate Data'" />
+        <Button icon="pi pi-chart-bar" text @click="showDataStats" v-tooltip.top="'Show Statistics'" />
+      </div>
+    </template>
+  </Toolbar>
 
   <!-- Data Editor Container -->
   <div class="dataset-container">
-    <vue-excel-editor
+    <DataTable
       v-if="renderComponent"
-      v-model="jsondata"
-      :no-footer="false"
-      :no-paging="false"
-      :no-num-col="false"
-      :allow-add-col="true"
-      :no-finding="false"
-      :no-sorting="false"
-      :no-filtering="false"
-      :disable-panel-setting="false"
-      :no-header-edit="false"
-      :remember="true"
-      class="theme-excel-editor"
-      @update:model-value="onDataChange"
-      @cell-selected="onCellSelected"
-    />
+      :value="jsondata"
+      editMode="cell"
+      @cell-edit-complete="onCellEditComplete"
+      @cell-edit-init="onCellEditInit"
+      v-model:selection="selectedRows"
+      dataKey="id"
+      :paginator="true"
+      :rows="20"
+      :rowsPerPageOptions="[10, 20, 50, 100]"
+      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+      scrollable
+      scrollHeight="calc(100vh - 300px)"
+      resizableColumns
+      columnResizeMode="expand"
+      sortMode="multiple"
+      class="editable-datatable"
+      @row-contextmenu="onRowContextMenu"
+      contextMenu
+    >
+      <Column
+        v-for="(column, index) in columns"
+        :key="column.field"
+        :field="column.field"
+        :header="column.header"
+        :sortable="true"
+        style="min-width: 120px"
+      >
+        <template #editor="{ data, field }">
+          <InputText
+            v-model="data[field]"
+            autofocus
+            @keydown.enter="$event.target.blur()"
+            @keydown.tab="$event.target.blur()"
+            class="cell-editor"
+          />
+        </template>
+        <template #header>
+          <div class="column-header">
+            <span @dblclick="editColumnHeader(column, index)">
+              {{ column.header }}
+            </span>
+            <Button
+              icon="pi pi-times"
+              class="p-button-text p-button-sm delete-column-btn"
+              @click="deleteColumn(index)"
+              v-tooltip.top="'Delete Column'"
+            />
+          </div>
+        </template>
+      </Column>
+
+      <!-- Add new column button -->
+      <Column header="" style="width: 50px" :sortable="false">
+        <template #header>
+          <Button
+            icon="pi pi-plus"
+            class="p-button-text p-button-sm"
+            @click="createnewCol"
+            v-tooltip.top="'Add Column'"
+          />
+        </template>
+        <template #body="{ index }">
+          <Button
+            icon="pi pi-trash"
+            class="p-button-text p-button-sm p-button-danger"
+            @click="deleteRow(index)"
+            v-tooltip.top="'Delete Row'"
+          />
+        </template>
+      </Column>
+    </DataTable>
+
+    <!-- Add new row button -->
+    <div class="add-row-container">
+      <Button
+        icon="pi pi-plus"
+        label="Add Row"
+        @click="createnewRow"
+        class="add-row-btn"
+      />
+    </div>
   </div>
 
   <!-- Import Dialog -->
@@ -189,13 +291,12 @@
   </Dialog>
 
   <!-- Context Menu -->
-  <ContextMenu ref="contextMenu" :model="contextMenuItems" />
+  <ContextMenu ref="contextMenuRef" :model="contextMenuItems" />
 </template>
 
 <script setup>
 import { nextTick, ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import VueExcelEditor from '@/components/VueExcelEditor.vue'
 import * as XLSX from 'xlsx'
 
 const toast = useToast()
@@ -206,205 +307,11 @@ const renderComponent = ref(true)
 const showImportDialog = ref(false)
 const showExportDialog = ref(false)
 const pasteData = ref('')
-const selectedCells = ref([])
+const selectedRows = ref([])
 const clipboard = ref(null)
+const editingCell = ref(null)
+const contextMenuRef = ref()
 
-// Menu items with comprehensive options
-const menuItems = ref([
-  {
-    label: 'File',
-    icon: 'pi pi-file',
-    items: [
-      {
-        label: 'New Dataset',
-        icon: 'pi pi-plus',
-        command: () => newDoc()
-      },
-      {
-        label: 'Import',
-        icon: 'pi pi-upload',
-        items: [
-          {
-            label: 'From CSV',
-            icon: 'pi pi-file',
-            command: () => triggerFileImport('csv')
-          },
-          {
-            label: 'From Excel',
-            icon: 'pi pi-file-excel',
-            command: () => triggerFileImport('excel')
-          },
-          {
-            label: 'From JSON',
-            icon: 'pi pi-code',
-            command: () => triggerFileImport('json')
-          }
-        ]
-      },
-      {
-        label: 'Export',
-        icon: 'pi pi-download',
-        items: [
-          {
-            label: 'To CSV',
-            icon: 'pi pi-file',
-            command: () => exportData('csv')
-          },
-          {
-            label: 'To Excel',
-            icon: 'pi pi-file-excel',
-            command: () => exportData('excel')
-          },
-          {
-            label: 'To JSON',
-            icon: 'pi pi-code',
-            command: () => exportData('json')
-          }
-        ]
-      },
-      { separator: true },
-      {
-        label: 'Save',
-        icon: 'pi pi-save',
-        command: () => quickSave()
-      }
-    ]
-  },
-  {
-    label: 'Edit',
-    icon: 'pi pi-pencil',
-    items: [
-      {
-        label: 'Copy',
-        icon: 'pi pi-copy',
-        command: () => copySelection(),
-        disabled: computed(() => selectedCells.value.length === 0)
-      },
-      {
-        label: 'Paste',
-        icon: 'pi pi-clone',
-        command: () => pasteSelection(),
-        disabled: computed(() => !clipboard.value)
-      },
-      {
-        label: 'Cut',
-        icon: 'pi pi-scissors',
-        command: () => cutSelection(),
-        disabled: computed(() => selectedCells.value.length === 0)
-      },
-      { separator: true },
-      {
-        label: 'Select All',
-        icon: 'pi pi-check-square',
-        command: () => selectAll()
-      },
-      {
-        label: 'Clear Selection',
-        icon: 'pi pi-eraser',
-        command: () => clearSelection()
-      }
-    ]
-  },
-  {
-    label: 'Insert',
-    icon: 'pi pi-plus',
-    items: [
-      {
-        label: 'Insert Row Above',
-        icon: 'pi pi-angle-up',
-        command: () => insertRowAbove()
-      },
-      {
-        label: 'Insert Row Below',
-        icon: 'pi pi-angle-down',
-        command: () => insertRowBelow()
-      },
-      {
-        label: 'Insert Column Left',
-        icon: 'pi pi-angle-left',
-        command: () => insertColumnLeft()
-      },
-      {
-        label: 'Insert Column Right',
-        icon: 'pi pi-angle-right',
-        command: () => insertColumnRight()
-      },
-      { separator: true },
-      {
-        label: 'Add Row',
-        icon: 'pi pi-plus',
-        command: () => createnewRow()
-      },
-      {
-        label: 'Add Column',
-        icon: 'pi pi-plus',
-        command: () => createnewCol()
-      }
-    ]
-  },
-  {
-    label: 'Delete',
-    icon: 'pi pi-trash',
-    items: [
-      {
-        label: 'Delete Rows',
-        icon: 'pi pi-minus',
-        command: () => deleteSelectedRows(),
-        disabled: computed(() => selectedCells.value.length === 0)
-      },
-      {
-        label: 'Delete Columns',
-        icon: 'pi pi-minus',
-        command: () => deleteSelectedColumns(),
-        disabled: computed(() => selectedCells.value.length === 0)
-      },
-      {
-        label: 'Clear Content',
-        icon: 'pi pi-eraser',
-        command: () => clearSelectedCells(),
-        disabled: computed(() => selectedCells.value.length === 0)
-      },
-      { separator: true },
-      {
-        label: 'Clear All Data',
-        icon: 'pi pi-times',
-        command: () => confirmClearAll()
-      }
-    ]
-  },
-  {
-    label: 'Tools',
-    icon: 'pi pi-cog',
-    items: [
-      {
-        label: 'Find & Replace',
-        icon: 'pi pi-search',
-        command: () => showFindReplace()
-      },
-      {
-        label: 'Sort Data',
-        icon: 'pi pi-sort',
-        command: () => showSortDialog()
-      },
-      {
-        label: 'Filter Data',
-        icon: 'pi pi-filter',
-        command: () => showFilterDialog()
-      },
-      { separator: true },
-      {
-        label: 'Data Validation',
-        icon: 'pi pi-check-circle',
-        command: () => validateData()
-      },
-      {
-        label: 'Statistics',
-        icon: 'pi pi-chart-bar',
-        command: () => showDataStats()
-      }
-    ]
-  }
-])
 
 // Context menu items
 const contextMenuItems = ref([
@@ -501,6 +408,17 @@ const getColumnCount = () => {
   return jsondata.value.length > 0 ? Object.keys(jsondata.value[0]).length : 0
 }
 
+// Generate columns from data
+const columns = computed(() => {
+  if (jsondata.value.length === 0) return []
+  return Object.keys(jsondata.value[0])
+    .filter(key => key !== 'id')
+    .map(key => ({
+      field: key,
+      header: key
+    }))
+})
+
 // Utility functions
 function addProperties(data, newProperties) {
   data.forEach(item => {
@@ -511,12 +429,14 @@ function addProperties(data, newProperties) {
 
 function addRow(data) {
   if (data.length === 0) {
-    return [{ 'Column 1': '', 'Column 2': '', 'Column 3': '' }]
+    return [{ id: 1, 'Column 1': '', 'Column 2': '', 'Column 3': '' }]
   }
 
-  const newRow = {}
+  const newRow = { id: Math.max(...data.map(row => row.id || 0)) + 1 }
   Object.keys(data[0]).forEach(key => {
-    newRow[key] = ''
+    if (key !== 'id') {
+      newRow[key] = ''
+    }
   })
   data.push(newRow)
   return data
@@ -564,7 +484,7 @@ const newDoc = async () => {
     { 'Column 1': '', 'Column 2': '', 'Column 3': '' },
     { 'Column 1': '', 'Column 2': '', 'Column 3': '' }
   ]
-  selectedCells.value = []
+  selectedRows.value = []
   clipboard.value = null
 
   await forceRerender()
@@ -601,9 +521,6 @@ const quickSave = () => {
   })
 }
 
-const triggerFileImport = (type) => {
-  showImportDialog.value = true
-}
 
 const handleFileImport = async (event) => {
   const file = event.target.files[0]
@@ -629,6 +546,10 @@ const handleFileImport = async (event) => {
     }
 
     if (importedData.length > 0) {
+      // Add IDs to imported data
+      importedData.forEach((row, index) => {
+        row.id = index + 1
+      })
       jsondata.value = importedData
       MyTitle.value = file.name.split('.')[0]
       await forceRerender()
@@ -677,6 +598,10 @@ const importFromClipboard = async () => {
   try {
     const importedData = parseCSV(pasteData.value)
     if (importedData.length > 0) {
+      // Add IDs to imported data
+      importedData.forEach((row, index) => {
+        row.id = index + 1
+      })
       jsondata.value = importedData
       await forceRerender()
 
@@ -714,7 +639,11 @@ const exportData = (format) => {
         break
       case 'excel':
         const workbook = XLSX.utils.book_new()
-        const worksheet = XLSX.utils.json_to_sheet(jsondata.value)
+        const exportData = jsondata.value.map(row => {
+          const { id, ...rest } = row
+          return rest
+        })
+        const worksheet = XLSX.utils.json_to_sheet(exportData)
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
         const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
         content = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
@@ -763,8 +692,14 @@ const exportData = (format) => {
 const convertToCSV = (data) => {
   if (!data || data.length === 0) return ''
 
-  const headers = Object.keys(data[0]).join(',')
-  const rows = data.map(row =>
+  // Exclude ID field from CSV export
+  const exportData = data.map(row => {
+    const { id, ...rest } = row
+    return rest
+  })
+
+  const headers = Object.keys(exportData[0]).join(',')
+  const rows = exportData.map(row =>
     Object.values(row).map(value =>
       typeof value === 'string' && value.includes(',') ? `"${value}"` : value
     ).join(',')
@@ -774,31 +709,117 @@ const convertToCSV = (data) => {
 }
 
 // Edit operations
-const onCellSelected = (selection) => {
-  selectedCells.value = selection || []
+const onCellEditComplete = (event) => {
+  const { data, newValue, field } = event
+  data[field] = newValue
+
+  toast.add({
+    severity: 'success',
+    summary: 'Cell Updated',
+    detail: `Updated ${field}`,
+    life: 1000
+  })
 }
 
-const onDataChange = (newData) => {
-  jsondata.value = newData
+const onCellEditInit = (event) => {
+  editingCell.value = event
 }
 
-const copySelection = () => {
-  if (selectedCells.value.length === 0) {
+const onRowContextMenu = (event) => {
+  contextMenuRef.value.show(event.originalEvent)
+}
+
+const editColumnHeader = (column, index) => {
+  const newHeader = prompt('Enter new column name:', column.header)
+  if (newHeader && newHeader.trim() !== '') {
+    const oldHeader = column.header
+
+    // Update all rows to use new column name
+    jsondata.value.forEach(row => {
+      if (row[oldHeader] !== undefined) {
+        row[newHeader.trim()] = row[oldHeader]
+        delete row[oldHeader]
+      }
+    })
+
+    toast.add({
+      severity: 'success',
+      summary: 'Column Renamed',
+      detail: `Column renamed from "${oldHeader}" to "${newHeader.trim()}"`,
+      life: 2000
+    })
+
+    forceRerender()
+  }
+}
+
+const deleteColumn = (columnIndex) => {
+  if (columns.value.length <= 1) {
     toast.add({
       severity: 'warn',
-      summary: 'No Selection',
-      detail: 'Please select cells to copy',
+      summary: 'Cannot Delete',
+      detail: 'At least one column must remain',
       life: 2000
     })
     return
   }
 
-  clipboard.value = selectedCells.value.map(cell => ({ ...cell }))
+  const columnToDelete = columns.value[columnIndex]
+  const fieldToDelete = columnToDelete.field
+
+  // Remove the field from all rows
+  jsondata.value.forEach(row => {
+    delete row[fieldToDelete]
+  })
+
+  toast.add({
+    severity: 'success',
+    summary: 'Column Deleted',
+    detail: `Column "${columnToDelete.header}" has been deleted`,
+    life: 2000
+  })
+
+  forceRerender()
+}
+
+const deleteRow = (rowIndex) => {
+  if (jsondata.value.length <= 1) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cannot Delete',
+      detail: 'At least one row must remain',
+      life: 2000
+    })
+    return
+  }
+
+  jsondata.value.splice(rowIndex, 1)
+
+  toast.add({
+    severity: 'success',
+    summary: 'Row Deleted',
+    detail: 'Row has been deleted',
+    life: 2000
+  })
+}
+
+const copySelection = () => {
+  if (selectedRows.value.length === 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'No Selection',
+      detail: 'Please select rows to copy',
+      life: 2000
+    })
+    return
+  }
+
+  clipboard.value = selectedRows.value.map(row => ({ ...row }))
 
   toast.add({
     severity: 'info',
     summary: 'Copied',
-    detail: `${selectedCells.value.length} cell(s) copied to clipboard`,
+    detail: `${selectedRows.value.length} row(s) copied to clipboard`,
     life: 2000
   })
 }
@@ -839,23 +860,31 @@ const selectAll = () => {
 }
 
 const clearSelection = () => {
-  selectedCells.value = []
+  selectedRows.value = []
   toast.add({
     severity: 'info',
     summary: 'Selection Cleared',
-    detail: 'Cell selection cleared',
+    detail: 'Row selection cleared',
     life: 1000
   })
 }
 
 const clearSelectedCells = () => {
-  if (selectedCells.value.length === 0) return
+  if (selectedRows.value.length === 0) return
 
-  // Clear content of selected cells
+  // Clear content of selected rows
+  selectedRows.value.forEach(row => {
+    Object.keys(row).forEach(key => {
+      if (key !== 'id') {
+        row[key] = ''
+      }
+    })
+  })
+
   toast.add({
     severity: 'info',
     summary: 'Content Cleared',
-    detail: 'Selected cells cleared',
+    detail: 'Selected rows cleared',
     life: 2000
   })
 }
@@ -880,7 +909,17 @@ const insertColumnRight = async () => {
 
 // Delete operations
 const deleteSelectedRows = () => {
-  if (selectedCells.value.length === 0) return
+  if (selectedRows.value.length === 0) return
+
+  // Remove selected rows from data
+  selectedRows.value.forEach(selectedRow => {
+    const index = jsondata.value.findIndex(row => row.id === selectedRow.id)
+    if (index !== -1) {
+      jsondata.value.splice(index, 1)
+    }
+  })
+
+  selectedRows.value = []
 
   toast.add({
     severity: 'warn',
@@ -891,7 +930,7 @@ const deleteSelectedRows = () => {
 }
 
 const deleteSelectedColumns = () => {
-  if (selectedCells.value.length === 0) return
+  if (selectedRows.value.length === 0) return
 
   toast.add({
     severity: 'warn',
@@ -983,23 +1022,23 @@ const showDataStats = () => {
 <style>
 /* Dataset container styling */
 .dataset-container {
-  height: calc(100vh - 200px);
+  height: calc(100vh - 280px);
   width: 100%;
   padding: 1rem;
   background: var(--surface-ground);
 }
 
 /* Toolbar styling */
-.dataset-toolbar {
+.dataset-toolbar,
+.dataset-secondary-toolbar {
   background: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   padding: 0.75rem 1rem;
 }
 
-.toolbar-section {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.dataset-secondary-toolbar {
+  background: var(--surface-section);
+  padding: 0.5rem 1rem;
 }
 
 .dataset-label {
@@ -1028,131 +1067,90 @@ const showDataStats = () => {
   border-color: var(--surface-border);
 }
 
-.toolbar-stats {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
 .stats-tag {
   font-size: 0.8rem;
   padding: 0.25rem 0.5rem;
 }
 
-.toolbar-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-/* Menu bar styling */
-.dataset-menubar {
-  background: var(--surface-section);
-  border-bottom: 1px solid var(--surface-border);
-  padding: 0.5rem 1rem;
-}
-
-.dataset-menubar :deep(.p-menubar) {
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
-.dataset-menubar :deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-content) {
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  margin: 0 0.25rem;
-  transition: all 0.2s ease;
-}
-
-.dataset-menubar :deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-content:hover) {
-  background: var(--surface-hover);
-}
-
-/* Excel editor theme integration */
-.theme-excel-editor {
+/* DataTable editable styles */
+.editable-datatable {
   height: 100%;
-  border: 1px solid var(--surface-border);
+  border: 1px solid var(--p-border-color);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--surface-card);
+  background: var(--p-surface-card);
 }
 
-/* Override VueExcelEditor styles for theme compatibility */
-.theme-excel-editor :deep(.vue-excel-editor) {
-  background: var(--surface-card);
-  color: var(--text-color);
-  font-family: var(--font-family);
+.editable-datatable :deep(.p-datatable-table) {
+  font-size: 14px;
 }
 
-.theme-excel-editor :deep(.systable) {
-  background: var(--surface-card);
-  color: var(--text-color);
-  border-color: var(--surface-border);
-}
-
-.theme-excel-editor :deep(.systable th) {
-  background: var(--surface-section);
-  color: var(--text-color);
-  border-color: var(--surface-border);
+.editable-datatable :deep(.p-datatable-thead > tr > th) {
+  background: var(--p-surface-100);
+  border-color: var(--p-border-color);
+  padding: 0.75rem 0.5rem;
   font-weight: 600;
 }
 
-.theme-excel-editor :deep(.systable td) {
-  background: var(--surface-card);
-  color: var(--text-color);
-  border-color: var(--surface-border);
+.editable-datatable :deep(.p-datatable-tbody > tr > td) {
+  background: var(--p-surface-card);
+  border-color: var(--p-border-color);
+  padding: 0.5rem;
+  cursor: pointer;
 }
 
-.theme-excel-editor :deep(.systable tr:hover td) {
-  background: var(--surface-hover);
+.editable-datatable :deep(.p-datatable-tbody > tr:hover > td) {
+  background: var(--p-surface-hover);
 }
 
-.theme-excel-editor :deep(.systable tr.select td) {
-  background: var(--primary-color) !important;
-  color: var(--primary-color-text) !important;
+.editable-datatable :deep(.p-datatable-tbody > tr.p-highlight > td) {
+  background: var(--p-primary-100) !important;
 }
 
-.theme-excel-editor :deep(.systable .cell-selected) {
-  background: var(--primary-100) !important;
-  border-color: var(--primary-color) !important;
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
-.theme-excel-editor :deep(.vue-excel-editor .toolbar) {
-  background: var(--surface-section);
-  border-color: var(--surface-border);
-  color: var(--text-color);
+.column-header span {
+  cursor: pointer;
+  flex: 1;
+  text-align: left;
 }
 
-.theme-excel-editor :deep(.vue-excel-editor .toolbar button) {
-  background: var(--surface-card);
-  color: var(--text-color);
-  border-color: var(--surface-border);
+.delete-column-btn {
+  opacity: 0;
+  transition: opacity 0.2s;
+  margin-left: 0.5rem;
 }
 
-.theme-excel-editor :deep(.vue-excel-editor .toolbar button:hover) {
-  background: var(--surface-hover);
+.column-header:hover .delete-column-btn {
+  opacity: 1;
 }
 
-.theme-excel-editor :deep(.vue-excel-editor .pagination) {
-  background: var(--surface-section);
-  border-color: var(--surface-border);
-  color: var(--text-color);
+.cell-editor {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 14px;
 }
 
-.theme-excel-editor :deep(.vue-excel-editor input),
-.theme-excel-editor :deep(.vue-excel-editor select),
-.theme-excel-editor :deep(.vue-excel-editor textarea) {
-  background: var(--surface-card);
-  color: var(--text-color);
-  border-color: var(--surface-border);
+.cell-editor:focus {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: -2px;
 }
 
-.theme-excel-editor :deep(.vue-excel-editor input:focus),
-.theme-excel-editor :deep(.vue-excel-editor select:focus),
-.theme-excel-editor :deep(.vue-excel-editor textarea:focus) {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 1px var(--primary-color);
+.add-row-container {
+  padding: 1rem;
+  text-align: center;
+  background: var(--p-surface-card);
+  border-top: 1px solid var(--p-border-color);
+}
+
+.add-row-btn {
+  min-width: 120px;
 }
 
 /* Dialog styling */
@@ -1224,31 +1222,23 @@ const showDataStats = () => {
 @media (max-width: 768px) {
   .dataset-container {
     padding: 0.5rem;
-    height: calc(100vh - 160px);
+    height: calc(100vh - 240px);
   }
 
-  .toolbar-section {
-    flex-direction: column;
-    align-items: flex-start;
+  .dataset-toolbar,
+  .dataset-secondary-toolbar {
+    padding: 0.5rem;
+  }
+
+  .dataset-toolbar :deep(.flex),
+  .dataset-secondary-toolbar :deep(.flex) {
+    flex-wrap: wrap;
     gap: 0.5rem;
-  }
-
-  .toolbar-stats {
-    flex-wrap: wrap;
-  }
-
-  .toolbar-actions {
-    flex-wrap: wrap;
-    width: 100%;
   }
 
   .dataset-name {
     min-width: auto;
     width: 100%;
-  }
-
-  .dataset-menubar {
-    padding: 0.25rem 0.5rem;
   }
 
   .import-dialog,
@@ -1268,7 +1258,7 @@ const showDataStats = () => {
 /* Print styles */
 @media print {
   .dataset-toolbar,
-  .dataset-menubar {
+  .dataset-secondary-toolbar {
     display: none;
   }
 
@@ -1277,18 +1267,24 @@ const showDataStats = () => {
     padding: 0;
   }
 
-  .theme-excel-editor :deep(.vue-excel-editor .toolbar),
-  .theme-excel-editor :deep(.vue-excel-editor .pagination) {
+  .add-row-container {
     display: none;
   }
 }
+
+/* Dark theme styles */
 body .app-dark .dataset-container {
     background: var(--p-surface-900);
 }
 
-body .app-dark .dataset-toolbar {
+body .app-dark .dataset-toolbar,
+body .app-dark .dataset-secondary-toolbar {
     background: var(--p-surface-800);
     border-bottom: 1px solid var(--p-surface-700);
+}
+
+body .app-dark .dataset-secondary-toolbar {
+    background: var(--p-surface-700);
 }
 
 body .app-dark .dataset-label {
@@ -1300,97 +1296,35 @@ body .app-dark .dataset-title:hover {
     border-color: var(--p-surface-600);
 }
 
-body .app-dark .dataset-menubar {
+body .app-dark .editable-datatable {
+    border-color: var(--p-surface-border);
     background: var(--p-surface-800);
-    border-bottom: 1px solid var(--p-surface-700);
 }
 
-body .app-dark .dataset-menubar .p-menubar {
-    background: transparent;
-    border: none;
+body .app-dark .editable-datatable .p-datatable-thead > tr > th {
+    background: var(--p-surface-700);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-border);
 }
 
-body .app-dark .dataset-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content:hover {
+body .app-dark .editable-datatable .p-datatable-tbody > tr > td {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-border);
+}
+
+body .app-dark .editable-datatable .p-datatable-tbody > tr:hover > td {
     background: var(--p-surface-700);
 }
 
-body .app-dark .theme-excel-editor {
-    border-color: var(--p-surface-700);
-    background: var(--p-surface-800);
-}
-
-body .app-dark .theme-excel-editor .vue-excel-editor {
-    background: var(--p-surface-800);
-    color: var(--p-text-color);
-}
-
-body .app-dark .theme-excel-editor .systable {
-    background: var(--p-surface-800);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-700);
-}
-
-body .app-dark .theme-excel-editor .systable th {
-    background: var(--p-surface-700);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-600);
-}
-
-body .app-dark .theme-excel-editor .systable td {
-    background: var(--p-surface-800);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-700);
-}
-
-body .app-dark .theme-excel-editor .systable tr:hover td {
-    background: var(--p-surface-600);
-}
-
-body .app-dark .theme-excel-editor .systable tr.select td {
-    background: var(--p-primary-color) !important;
+body .app-dark .editable-datatable .p-datatable-tbody > tr.p-highlight > td {
+    background: var(--p-primary-600) !important;
     color: var(--p-primary-color-text) !important;
 }
 
-body .app-dark .theme-excel-editor .systable .cell-selected {
-    background: var(--p-primary-200) !important;
-    border-color: var(--p-primary-color) !important;
-}
-
-body .app-dark .theme-excel-editor .vue-excel-editor .toolbar {
-    background: var(--p-surface-700);
-    border-color: var(--p-surface-600);
-    color: var(--p-text-color);
-}
-
-body .app-dark .theme-excel-editor .vue-excel-editor .toolbar button {
+body .app-dark .add-row-container {
     background: var(--p-surface-800);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-700);
-}
-
-body .app-dark .theme-excel-editor .vue-excel-editor .toolbar button:hover {
-    background: var(--p-surface-600);
-}
-
-body .app-dark .theme-excel-editor .vue-excel-editor .pagination {
-    background: var(--p-surface-700);
-    border-color: var(--p-surface-600);
-    color: var(--p-text-color);
-}
-
-body .app-dark .theme-excel-editor .vue-excel-editor input,
-body .app-dark .theme-excel-editor .vue-excel-editor select,
-body .app-dark .theme-excel-editor .vue-excel-editor textarea {
-    background: var(--p-surface-900);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-700);
-}
-
-body .app-dark .theme-excel-editor .vue-excel-editor input:focus,
-body .app-dark .theme-excel-editor .vue-excel-editor select:focus,
-body .app-dark .theme-excel-editor .vue-excel-editor textarea:focus {
-    border-color: var(--p-primary-color);
-    box-shadow: 0 0 0 1px var(--p-primary-color);
+    border-color: var(--p-surface-border);
 }
 
 body .app-dark .import-dialog .p-dialog-content,

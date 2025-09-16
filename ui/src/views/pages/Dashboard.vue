@@ -506,18 +506,85 @@
           </div>
         </div>
 
-        <VueExcelEditor
-          v-model="item.tableData"
-          :height="getExcelHeight(item.h)"
-          :width="'100%'"
-          :fields="item.fields"
-          :filter-row="item.filterRow"
-          :no-footer="item.noFooter"
-          :readonly="item.readonly"
-          :remember="true"
-          class="excel-editor"
-          @update:model-value="onExcelDataUpdate(item, $event)"
-        />
+        <DataTable
+          :value="item.tableData"
+          editMode="cell"
+          @cell-edit-complete="onExcelCellEditComplete"
+          :paginator="true"
+          :rows="10"
+          :rowsPerPageOptions="[5, 10, 20]"
+          class="excel-datatable"
+          :style="{ height: getExcelHeight(item.h) }"
+          :scrollable="true"
+          :scrollHeight="getExcelHeight(item.h)"
+        >
+          <Column
+            v-for="field in item.fields"
+            :key="field.name"
+            :field="field.name"
+            :header="field.label"
+            :sortable="true"
+            style="min-width: 120px"
+          >
+            <template #editor="{ data, field }" v-if="!field.readonly">
+              <InputText
+                v-if="field.type === 'string'"
+                v-model="data[field]"
+                autofocus
+                @keydown.enter="$event.target.blur()"
+                @keydown.tab="$event.target.blur()"
+                class="cell-editor"
+              />
+              <InputNumber
+                v-else-if="field.type === 'number'"
+                v-model="data[field]"
+                autofocus
+                @keydown.enter="$event.target.blur()"
+                @keydown.tab="$event.target.blur()"
+                class="cell-editor"
+              />
+              <Calendar
+                v-else-if="field.type === 'date'"
+                v-model="data[field]"
+                dateFormat="yy-mm-dd"
+                class="cell-editor"
+              />
+              <Dropdown
+                v-else-if="field.type === 'select'"
+                v-model="data[field]"
+                :options="field.options"
+                optionLabel="text"
+                optionValue="value"
+                class="cell-editor"
+              />
+              <Checkbox
+                v-else-if="field.type === 'checkYN'"
+                v-model="data[field]"
+                binary
+                class="cell-editor"
+              />
+              <InputText
+                v-else
+                v-model="data[field]"
+                autofocus
+                @keydown.enter="$event.target.blur()"
+                @keydown.tab="$event.target.blur()"
+                class="cell-editor"
+              />
+            </template>
+            <template #body="{ data, field }" v-else>
+              <span v-if="field.type === 'checkYN'">
+                {{ data[field] === 'Y' ? 'Yes' : 'No' }}
+              </span>
+              <span v-else-if="field.toText">
+                {{ field.toText(data[field]) }}
+              </span>
+              <span v-else>
+                {{ data[field] }}
+              </span>
+            </template>
+          </Column>
+        </DataTable>
       </div>
     </grid-item>
   </grid-layout>
@@ -527,7 +594,6 @@
 import GridLayout from '@/components/draggable/GridLayout.vue'
 import GridItem from '@/components/draggable/GridItem.vue'
 import PrimeChart from '@/components/PrimeChart.vue'
-import VueExcelEditor from '@/components/VueExcelEditor.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import TreeTable from 'primevue/treetable'
@@ -535,6 +601,10 @@ import Image from 'primevue/image'
 import ToggleButton from 'primevue/togglebutton'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Calendar from 'primevue/calendar'
+import Checkbox from 'primevue/checkbox'
 import { nextTick, ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 
@@ -1247,28 +1317,48 @@ function addExcelRow(item) {
 }
 
 function exportExcelData(item) {
-  const data = JSON.stringify(item.tableData, null, 2)
-  const blob = new Blob([data], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${item.title || 'excel-data'}-${new Date().toISOString().split('T')[0]}.json`
-  link.click()
-  URL.revokeObjectURL(url)
+  try {
+    // Export as CSV for better Excel compatibility
+    const csv = convertToCSV(item.tableData)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${item.title || 'excel-data'}-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
 
-  toast.add({
-    severity: 'success',
-    summary: 'Data Exported',
-    detail: 'Excel data has been exported successfully',
-    life: 3000
-  })
+    toast.add({
+      severity: 'success',
+      summary: 'Data Exported',
+      detail: 'Data has been exported to CSV format',
+      life: 3000
+    })
+  } catch (error) {
+    // Fallback to JSON export if CSV conversion fails
+    const data = JSON.stringify(item.tableData, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${item.title || 'excel-data'}-${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+
+    toast.add({
+      severity: 'success',
+      summary: 'Data Exported',
+      detail: 'Data has been exported as JSON format',
+      life: 3000
+    })
+  }
 }
 
 function importExcelData(item) {
   // Create hidden file input
   const fileInput = document.createElement('input')
   fileInput.type = 'file'
-  fileInput.accept = '.json'
+  fileInput.accept = '.json,.csv'
   fileInput.style.display = 'none'
 
   fileInput.onchange = (event) => {
@@ -1277,23 +1367,40 @@ function importExcelData(item) {
       const reader = new FileReader()
       reader.onload = (e) => {
         try {
-          const importedData = JSON.parse(e.target.result)
-          if (Array.isArray(importedData)) {
-            item.tableData = importedData
+          const fileContent = e.target.result
+          let importedData
+
+          if (file.name.toLowerCase().endsWith('.csv')) {
+            // Parse CSV file
+            importedData = parseCSV(fileContent)
+          } else {
+            // Parse JSON file
+            importedData = JSON.parse(fileContent)
+          }
+
+          if (Array.isArray(importedData) && importedData.length > 0) {
+            // Ensure each row has required properties and generate IDs if missing
+            const processedData = importedData.map((row, index) => ({
+              $id: row.$id || row.id || index + 1,
+              id: row.id || index + 1,
+              ...row
+            }))
+
+            item.tableData = processedData
             toast.add({
               severity: 'success',
               summary: 'Data Imported',
-              detail: 'Excel data has been imported successfully',
+              detail: `Successfully imported ${processedData.length} rows`,
               life: 3000
             })
           } else {
-            throw new Error('Invalid data format')
+            throw new Error('Invalid data format or empty file')
           }
         } catch (error) {
           toast.add({
             severity: 'error',
             summary: 'Import Failed',
-            detail: 'Invalid file format. Please upload a valid JSON file.',
+            detail: 'Invalid file format. Please upload a valid CSV or JSON file.',
             life: 5000
           })
         }
@@ -1317,9 +1424,16 @@ function resetExcelData(item) {
   })
 }
 
-function onExcelDataUpdate(item, newData) {
-  item.tableData = newData
-  console.log('Excel data updated:', newData)
+function onExcelCellEditComplete(event) {
+  const { data, newValue, field } = event
+  data[field] = newValue
+
+  toast.add({
+    severity: 'success',
+    summary: 'Cell Updated',
+    detail: `Updated ${field}`,
+    life: 1000
+  })
 }
 
 // DataTable helper functions
@@ -1417,6 +1531,40 @@ function convertToCSV(data) {
   )
 
   return [headers, ...rows].join('\n')
+}
+
+function parseCSV(csvText) {
+  const lines = csvText.trim().split('\n')
+  if (lines.length < 2) return []
+
+  const headers = lines[0].split(',').map(header => header.trim().replace(/"/g, ''))
+  const data = []
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(value => value.trim().replace(/"/g, ''))
+    const row = {}
+
+    headers.forEach((header, index) => {
+      let value = values[index] || ''
+
+      // Try to convert numeric values
+      if (!isNaN(value) && value !== '') {
+        value = Number(value)
+      }
+
+      // Convert boolean-like values
+      if (value === 'true') value = true
+      if (value === 'false') value = false
+      if (value === 'Y') value = 'Y'
+      if (value === 'N') value = 'N'
+
+      row[header] = value
+    })
+
+    data.push(row)
+  }
+
+  return data
 }
 
 // TreeTable helper functions
@@ -2049,7 +2197,7 @@ body .app-dark .input-container h5 {
     }
   }
 
-  .component-panel-menu {
+body .app-dark .component-panel-menu {
     background: var(--p-surface-800);
 
     .p-panelmenu-header {
@@ -2066,7 +2214,7 @@ body .app-dark .input-container h5 {
     }
   }
 
-  .menu-item-content {
+body .app-dark .menu-item-content {
     background: var(--p-surface-800);
     color: var(--p-text-color);
     border-color: var(--p-surface-border);
@@ -2081,7 +2229,7 @@ body .app-dark .input-container h5 {
     }
   }
 
-  .menu-footer {
+body .app-dark .menu-footer {
     background: var(--p-surface-700);
     border-color: var(--p-surface-border);
   }

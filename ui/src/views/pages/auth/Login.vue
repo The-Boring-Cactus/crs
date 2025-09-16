@@ -1,17 +1,19 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { getCurrentInstance } from 'vue'
 import {userStoreMe} from "@/store/userStore";
 import { useRouter } from 'vue-router'
 import { useToast } from "primevue/usetoast";
 import {WebSocketMessageClient} from "@/websocket/WebSocketMessageClient";
 import {ServerResponse} from "@/websocket/ServerResponse";
+import { useLayout } from '@/layout/composables/layout.js';
 
 
 const toast = useToast();
 
 const router = useRouter()
 const userStore = userStoreMe();
+const { isDarkTheme, toggleDarkMode } = useLayout();
 
 
 const loging = ref('');
@@ -39,11 +41,19 @@ proxy.$socket.onmessage =  (data) => {
 const client = new WebSocketMessageClient(proxy.$socket);
 
 const handleReady = () => {
-
         client.sendAuthentication(loging.value, password.value);
         loading.value = true;
-        
-      }
+}
+
+// Initialize theme on mount
+onMounted(() => {
+    // Apply the saved dark mode preference to the document
+    if (isDarkTheme.value) {
+        document.documentElement.classList.add('app-dark');
+    } else {
+        document.documentElement.classList.remove('app-dark');
+    }
+})
 
 
 
@@ -51,7 +61,21 @@ const handleReady = () => {
 
 <template>
      <Toast />
-    <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden" >
+    <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden relative" >
+
+        <!-- Theme Toggle Button -->
+        <div class="absolute top-4 right-4">
+            <Button
+                :icon="isDarkTheme ? 'pi pi-sun' : 'pi pi-moon'"
+                @click="toggleDarkMode"
+                severity="secondary"
+                text
+                rounded
+                size="large"
+                v-tooltip.bottom="isDarkTheme ? 'Switch to Light Theme' : 'Switch to Dark Theme'"
+                aria-label="Toggle Theme"
+            />
+        </div>
         <div v-if="loading" class="card flex justify-center">
 
     <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="transparent"

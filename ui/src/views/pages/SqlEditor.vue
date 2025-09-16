@@ -85,7 +85,7 @@
                     <Button icon="pi pi-plus" text @click="newScript" v-tooltip.top="'New Script'" />
                     <Divider layout="vertical" />
                     <Button icon="pi pi-undo" text @click="handleUndo" v-tooltip.top="'Undo'" />
-                    <Button icon="pi pi-redo" text @click="handleRedo" v-tooltip.top="'Redo'" />
+                    <Button icon="pi pi-refresh" text @click="handleRedo" v-tooltip.top="'Redo'" />
                     <Divider layout="vertical" />
                     <Button icon="pi pi-copy" text @click="copyText" v-tooltip.top="'Copy'" />
                     <Button icon="pi pi-clone" text @click="pasteText" v-tooltip.top="'Paste'" />
