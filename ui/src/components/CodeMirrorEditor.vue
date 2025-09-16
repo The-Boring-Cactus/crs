@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch, computed } from 'vue'
 
 // Importaciones de CodeMirror
 import { EditorView, basicSetup } from 'codemirror'
@@ -37,6 +37,10 @@ export default {
     codeFunctions: {
       type: Array,
       default: () => []
+    },
+    theme: {
+      type: Object,
+      default: null
     }
   },
   emits: ['update:code', 'language-changed'],
@@ -45,6 +49,7 @@ export default {
     const selectedLanguage = ref(props.initialLanguage)
     const editorView = ref(null)
     const languageCompartment = new Compartment()
+    const themeCompartment = new Compartment()
     
     // Datos de autocompletado para diferentes lenguajes
     const completionData = {
@@ -191,11 +196,14 @@ export default {
       const initialLanguage = getLanguageMode(selectedLanguage.value)
       const initialCompletion = createCustomCompletion(selectedLanguage.value)
 
+      const themeExtensions = props.theme ? [props.theme] : []
+
       const state = EditorState.create({
         doc: props.initialCode,
         extensions: [
           basicSetup,
           languageCompartment.of([initialLanguage, initialCompletion]),
+          themeCompartment.of(themeExtensions),
           keymap.of([...completionKeymap]),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
@@ -205,14 +213,6 @@ export default {
           EditorView.theme({
             '&': {
               fontSize: '14px'
-            },
-            '.cm-editor': {
-              border: '1px solid #ddd',
-              borderRadius: '4px'
-            },
-            '.cm-focused': {
-              outline: '2px solid #007acc',
-              outlineOffset: '-2px'
             },
             '.cm-completionLabel': {
               fontFamily: 'Monaco, Consolas, "Courier New", monospace'
@@ -245,13 +245,23 @@ export default {
       }
     }
 
+    // Watch for theme changes
+    watch(() => props.theme, (newTheme) => {
+      if (editorView.value) {
+        const themeExtensions = newTheme ? [newTheme] : []
+        editorView.value.dispatch({
+          effects: themeCompartment.reconfigure(themeExtensions)
+        })
+      }
+    })
+
     onMounted(() => {
       initializeEditor()
     })
 // changeLanguage,
     return {
       editorElement,
-      selectedLanguage,      
+      selectedLanguage,
       getCode,
       setCode
     }

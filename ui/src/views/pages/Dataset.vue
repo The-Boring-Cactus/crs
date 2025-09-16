@@ -980,7 +980,7 @@ const showDataStats = () => {
 }
 </script>
 
-<style scoped>
+<style>
 /* Dataset container styling */
 .dataset-container {
   height: calc(100vh - 200px);
@@ -1263,17 +1263,7 @@ const showDataStats = () => {
   }
 }
 
-/* Dark theme specific adjustments */
-@media (prefers-color-scheme: dark) {
-  .theme-excel-editor :deep(.systable) {
-    border-color: var(--surface-border);
-  }
 
-  .theme-excel-editor :deep(.systable th),
-  .theme-excel-editor :deep(.systable td) {
-    border-color: var(--surface-border);
-  }
-}
 
 /* Print styles */
 @media print {
@@ -1291,5 +1281,136 @@ const showDataStats = () => {
   .theme-excel-editor :deep(.vue-excel-editor .pagination) {
     display: none;
   }
+}
+body .app-dark .dataset-container {
+    background: var(--p-surface-900);
+}
+
+body .app-dark .dataset-toolbar {
+    background: var(--p-surface-800);
+    border-bottom: 1px solid var(--p-surface-700);
+}
+
+body .app-dark .dataset-label {
+    color: var(--p-text-color-secondary);
+}
+
+body .app-dark .dataset-title:hover {
+    background: var(--p-surface-700);
+    border-color: var(--p-surface-600);
+}
+
+body .app-dark .dataset-menubar {
+    background: var(--p-surface-800);
+    border-bottom: 1px solid var(--p-surface-700);
+}
+
+body .app-dark .dataset-menubar .p-menubar {
+    background: transparent;
+    border: none;
+}
+
+body .app-dark .dataset-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content:hover {
+    background: var(--p-surface-700);
+}
+
+body .app-dark .theme-excel-editor {
+    border-color: var(--p-surface-700);
+    background: var(--p-surface-800);
+}
+
+body .app-dark .theme-excel-editor .vue-excel-editor {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+}
+
+body .app-dark .theme-excel-editor .systable {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-700);
+}
+
+body .app-dark .theme-excel-editor .systable th {
+    background: var(--p-surface-700);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-600);
+}
+
+body .app-dark .theme-excel-editor .systable td {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-700);
+}
+
+body .app-dark .theme-excel-editor .systable tr:hover td {
+    background: var(--p-surface-600);
+}
+
+body .app-dark .theme-excel-editor .systable tr.select td {
+    background: var(--p-primary-color) !important;
+    color: var(--p-primary-color-text) !important;
+}
+
+body .app-dark .theme-excel-editor .systable .cell-selected {
+    background: var(--p-primary-200) !important;
+    border-color: var(--p-primary-color) !important;
+}
+
+body .app-dark .theme-excel-editor .vue-excel-editor .toolbar {
+    background: var(--p-surface-700);
+    border-color: var(--p-surface-600);
+    color: var(--p-text-color);
+}
+
+body .app-dark .theme-excel-editor .vue-excel-editor .toolbar button {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-700);
+}
+
+body .app-dark .theme-excel-editor .vue-excel-editor .toolbar button:hover {
+    background: var(--p-surface-600);
+}
+
+body .app-dark .theme-excel-editor .vue-excel-editor .pagination {
+    background: var(--p-surface-700);
+    border-color: var(--p-surface-600);
+    color: var(--p-text-color);
+}
+
+body .app-dark .theme-excel-editor .vue-excel-editor input,
+body .app-dark .theme-excel-editor .vue-excel-editor select,
+body .app-dark .theme-excel-editor .vue-excel-editor textarea {
+    background: var(--p-surface-900);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-700);
+}
+
+body .app-dark .theme-excel-editor .vue-excel-editor input:focus,
+body .app-dark .theme-excel-editor .vue-excel-editor select:focus,
+body .app-dark .theme-excel-editor .vue-excel-editor textarea:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 1px var(--p-primary-color);
+}
+
+body .app-dark .import-dialog .p-dialog-content,
+body .app-dark .export-dialog .p-dialog-content {
+    background: var(--p-surface-800);
+}
+
+body .app-dark .import-content,
+body .app-dark .export-content {
+    padding: 1rem 0;
+}
+
+body .app-dark .import-options h4,
+body .app-dark .export-format h4 {
+    color: var(--p-text-color);
+}
+
+body .app-dark .paste-textarea {
+    background: var(--p-surface-900);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-700);
 }
 </style>

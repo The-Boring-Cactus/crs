@@ -267,12 +267,9 @@ const selectedScriptToLoad = ref(null);
 
 // Theme-aware editor styling
 const editorStyle = computed(() => {
-    const isDark = document.documentElement.classList.contains('app-dark');
     return {
         width: '100%',
         height: config.height,
-        backgroundColor: isDark ? 'var(--p-surface-100)' : 'var(--p-surface-0)',
-        color: isDark ? 'var(--p-text-color)' : 'var(--p-text-color)',
         border: `1px solid var(--p-border-color)`,
         borderRadius: 'var(--p-border-radius)'
     };
@@ -651,7 +648,7 @@ onMounted(() => {
     loadScriptsFromStorage();
 });
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 .sql-editor-container {
   height: 100%;
   display: flex;
@@ -668,11 +665,6 @@ onMounted(() => {
 
   :deep(.cm-editor) {
     height: 100%;
-
-    &.cm-focused {
-      outline: 2px solid var(--p-primary-color);
-      outline-offset: -2px;
-    }
   }
 
   :deep(.cm-content) {
@@ -680,16 +672,6 @@ onMounted(() => {
     font-size: 14px;
     line-height: 1.5;
     padding: 1rem;
-  }
-
-  :deep(.cm-line) {
-    padding: 0;
-  }
-
-  :deep(.cm-search) {
-    background-color: var(--p-surface-100);
-    border: 1px solid var(--p-border-color);
-    border-radius: var(--p-border-radius);
   }
 }
 
@@ -728,65 +710,7 @@ onMounted(() => {
   max-width: 200px;
 }
 
-// Theme-aware styling
-:global(.app-dark) .editor-container {
-  :deep(.cm-editor) {
-    background-color: var(--p-surface-900);
-    color: var(--p-text-color);
-  }
 
-  :deep(.cm-content) {
-    background-color: var(--p-surface-900);
-    color: var(--p-text-color);
-  }
-
-  :deep(.cm-line) {
-    color: var(--p-text-color);
-  }
-
-  :deep(.cm-cursor) {
-    border-left-color: var(--p-primary-color);
-  }
-
-  :deep(.cm-selectionBackground) {
-    background-color: var(--p-primary-color-200);
-  }
-
-  :deep(.cm-search) {
-    background-color: var(--p-surface-800);
-    color: var(--p-text-color);
-  }
-}
-
-// Light theme overrides
-:global(:not(.app-dark)) .editor-container {
-  :deep(.cm-editor) {
-    background-color: var(--p-surface-0);
-    color: var(--p-text-color);
-  }
-
-  :deep(.cm-content) {
-    background-color: var(--p-surface-0);
-    color: var(--p-text-color);
-  }
-
-  :deep(.cm-line) {
-    color: var(--p-text-color);
-  }
-
-  :deep(.cm-cursor) {
-    border-left-color: var(--p-primary-color);
-  }
-
-  :deep(.cm-selectionBackground) {
-    background-color: var(--p-primary-color-100);
-  }
-
-  :deep(.cm-search) {
-    background-color: var(--p-surface-50);
-    color: var(--p-text-color);
-  }
-}
 
 // Responsive design
 @media (max-width: 768px) {
@@ -845,5 +769,52 @@ onMounted(() => {
       font-weight: 500;
     }
   }
+}
+
+// Dark theme adjustments
+body .app-dark .sql-editor-container {
+    .editor-container {
+        background: var(--p-surface-800);
+        border-color: var(--p-surface-border);
+        
+        .cm-search {
+            background-color: var(--p-surface-700);
+            border-color: var(--p-surface-border);
+            color: var(--p-text-color);
+        }
+    }
+    .results-container {
+        background: var(--p-surface-800);
+        color: var(--p-text-color);
+        .results-table {
+            .p-datatable-thead > tr > th {
+                background-color: var(--p-surface-700);
+                color: var(--p-text-color);
+                border-color: var(--p-surface-border);
+            }
+            .p-datatable-tbody > tr > td {
+                background-color: var(--p-surface-800);
+                color: var(--p-text-color);
+                border-color: var(--p-surface-border);
+            }
+            .p-datatable-tbody > tr:hover > td {
+                background-color: var(--p-surface-700);
+            }
+        }
+    }
+    .p-toolbar {
+        background: var(--p-surface-700);
+        border-color: var(--p-surface-border);
+        color: var(--p-text-color);
+    }
+    .p-dropdown {
+        background: var(--p-surface-800);
+        color: var(--p-text-color);
+        border-color: var(--p-surface-border);
+    }
+    .p-badge {
+        background: var(--p-primary-color);
+        color: var(--p-primary-color-text);
+    }
 }
 </style>

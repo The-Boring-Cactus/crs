@@ -1817,7 +1817,7 @@ const itemTitle = (item) => {
   return result
 }
 </script>
-<style scoped>
+<style>
 .vue-grid-layout {
   background: var(--surface-ground);
   min-height: calc(100vh - 200px);
@@ -1963,10 +1963,129 @@ const itemTitle = (item) => {
 
 /* Theme-aware grid styling */
 .vue-grid-placeholder {
-  background: var(--primary-color) !important;
+  background: var(--p-primary-color) !important;
   opacity: 0.2;
   border-radius: 8px;
 }
+
+/* Dark theme adjustments */
+body .app-dark .vue-grid-layout {
+    background: var(--p-surface-900);
+}
+body .app-dark .vue-grid-item:not(.vue-grid-placeholder) {
+    background: var(--p-surface-800);
+    border-color: var(--p-surface-border);
+    color: var(--p-text-color);
+}
+body .app-dark .vue-grid-item:hover {
+    border-color: var(--p-primary-color);
+}
+body .app-dark .chart-container,
+body .app-dark .excel-container,
+body .app-dark .datatable-container,
+body .app-dark .treetable-container,
+body .app-dark .image-container,
+body .app-dark .toggle-container,
+body .app-dark .select-container,
+body .app-dark .input-container {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+}
+body .app-dark .chart-container h5,
+body .app-dark .excel-container h5,
+body .app-dark .datatable-container h5,
+body .app-dark .treetable-container h5,
+body .app-dark .image-container h5,
+body .app-dark .toggle-container h5,
+body .app-dark .select-container h5,
+body .app-dark .input-container h5 {
+    color: var(--p-text-color);
+}
+  
+
+  .excel-editor .vue-excel-editor,
+  .excel-editor .systable {
+    background: var(--p-surface-900);
+    color: var(--p-text-color);
+  }
+
+  .excel-editor .systable th {
+    background: var(--p-surface-700);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-border);
+  }
+
+  .excel-editor .systable td {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-border);
+  }
+
+  .custom-datatable,
+  .custom-treetable {
+    background: var(--p-surface-800);
+
+    .p-datatable-header,
+    .p-treetable-header {
+      background: var(--p-surface-700);
+      color: var(--p-text-color);
+    }
+
+    .p-datatable-thead > tr > th,
+    .p-treetable-thead > tr > th {
+      background: var(--p-surface-700);
+      color: var(--p-text-color);
+    }
+
+    .p-datatable-tbody > tr,
+    .p-treetable-tbody > tr {
+      background: var(--p-surface-800);
+      color: var(--p-text-color);
+    }
+
+    .p-datatable-tbody > tr:hover,
+    .p-treetable-tbody > tr:hover {
+      background: var(--p-surface-700);
+    }
+  }
+
+  .component-panel-menu {
+    background: var(--p-surface-800);
+
+    .p-panelmenu-header {
+      background: var(--p-surface-700);
+    }
+
+    .p-panelmenu-header-content {
+      background: var(--p-surface-700);
+      color: var(--p-text-color);
+    }
+
+    .p-panelmenu-content {
+      background: var(--p-surface-800);
+    }
+  }
+
+  .menu-item-content {
+    background: var(--p-surface-800);
+    color: var(--p-text-color);
+    border-color: var(--p-surface-border);
+
+    &:hover {
+      background: var(--p-surface-700);
+    }
+
+    &.menu-item-action:hover {
+      background: var(--p-primary-color);
+      color: var(--p-primary-color-text);
+    }
+  }
+
+  .menu-footer {
+    background: var(--p-surface-700);
+    border-color: var(--p-surface-border);
+  }
+
 
 /* Text component styling */
 .center .p-inplace-display {

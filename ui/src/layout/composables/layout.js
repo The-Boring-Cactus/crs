@@ -56,10 +56,7 @@ export function useLayout() {
         }
     };
 
-    // Initialize dark mode on startup
-    if (layoutConfig.darkMode) {
-        document.documentElement.classList.add('app-dark');
-    }
+    
 
     // Watch for changes and save to localStorage
     watch(() => layoutConfig.preset, (newValue) => {

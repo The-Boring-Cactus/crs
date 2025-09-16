@@ -102,6 +102,7 @@
                 @update:code="handleCodeChange"
                 @language-changed="handleLanguageChange"
                 :style="editorStyle"
+                :theme="editorTheme"
             />
         </div>
 
@@ -190,6 +191,9 @@ import { shallowRef, ref, computed, onMounted, reactive } from 'vue';
 import { getCurrentInstance } from 'vue';
 import { useToast } from "primevue/usetoast";
 import CodeMirrorEditor from "@/components/CodeMirrorEditor.vue";
+import { useLayout } from '@/layout/composables/layout.js';
+import { basicDark } from '@fsegurai/codemirror-theme-basic-dark';
+import { basicLight } from '@fsegurai/codemirror-theme-basic-light';
 
 import {userStoreMe} from "@/store/userStore";
 
@@ -204,6 +208,7 @@ const toast = useToast();
 const { proxy } = getCurrentInstance();
 const client = new WebSocketMessageClient(proxy.$socket);
 const userStore = userStoreMe();
+const { isDarkTheme } = useLayout();
 
 // Editor state
 const code = ref(`// Welcome to C# Script Editor
@@ -243,17 +248,18 @@ const savedScripts = ref([]);
 const showLoadDialog = ref(false);
 const selectedScriptToLoad = ref(null);
 
-// Theme-aware editor styling
+// Theme-aware editor styling and extensions
 const editorStyle = computed(() => {
-    const isDark = document.documentElement.classList.contains('app-dark');
     return {
         width: '100%',
         minHeight: '350px',
-        backgroundColor: isDark ? 'var(--p-surface-100)' : 'var(--p-surface-0)',
-        color: isDark ? 'var(--p-text-color)' : 'var(--p-text-color)',
         border: `1px solid var(--p-border-color)`,
         borderRadius: 'var(--p-border-radius)'
     };
+});
+
+const editorTheme = computed(() => {
+    return isDarkTheme.value ? basicDark : basicLight;
 });
 
 
@@ -622,7 +628,7 @@ onMounted(() => {
 
 
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 .cs-editor-container {
   height: 100%;
   display: flex;
@@ -649,21 +655,12 @@ onMounted(() => {
   :deep(.cm-editor) {
     height: 100%;
     font-family: 'JetBrains Mono', 'Monaco', 'Consolas', monospace;
-
-    &.cm-focused {
-      outline: 2px solid var(--p-primary-color);
-      outline-offset: -2px;
-    }
   }
 
   :deep(.cm-content) {
     font-size: 14px;
     line-height: 1.5;
     padding: 1rem;
-  }
-
-  :deep(.cm-line) {
-    padding: 0;
   }
 }
 
@@ -723,35 +720,7 @@ onMounted(() => {
   }
 }
 
-// Theme-aware styling
-:global(.app-dark) .debug-container {
-  .debug-textarea {
-    :deep(textarea) {
-      background-color: var(--p-surface-900);
-      border-color: var(--p-border-color);
-      color: var(--p-text-color);
 
-      &[readonly] {
-        background-color: var(--p-surface-800);
-      }
-    }
-  }
-}
-
-// Light theme overrides
-:global(:not(.app-dark)) .debug-container {
-  .debug-textarea {
-    :deep(textarea) {
-      background-color: var(--p-surface-0);
-      border-color: var(--p-border-color);
-      color: var(--p-text-color);
-
-      &[readonly] {
-        background-color: var(--p-surface-100);
-      }
-    }
-  }
-}
 
 // Responsive design
 @media (max-width: 768px) {
@@ -794,38 +763,7 @@ onMounted(() => {
   }
 }
 
-// C# syntax highlighting adjustments
-.editor-container {
-  :deep(.cm-content) {
-    .cm-keyword {
-      color: var(--p-primary-color);
-      font-weight: 600;
-    }
 
-    .cm-string {
-      color: var(--p-green-500);
-    }
-
-    .cm-number {
-      color: var(--p-orange-500);
-    }
-
-    .cm-comment {
-      color: var(--p-text-muted-color);
-      font-style: italic;
-    }
-
-    .cm-operator {
-      color: var(--p-text-color);
-      font-weight: 500;
-    }
-
-    .cm-type {
-      color: var(--p-blue-500);
-      font-weight: 500;
-    }
-  }
-}
 
 // Status badges styling
 :deep(.p-badge) {
@@ -866,17 +804,4 @@ onMounted(() => {
   }
 }
 
-// Dark theme toolbar adjustments
-:global(.app-dark) .cs-editor-container {
-  :deep(.p-toolbar) {
-    background: var(--p-surface-800);
-    border-color: var(--p-border-color);
-
-    .p-button.p-button-text {
-      &:hover {
-        background-color: var(--p-surface-700);
-      }
-    }
-  }
-}
 </style>
