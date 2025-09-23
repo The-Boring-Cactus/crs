@@ -70,20 +70,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 10,
+          "SelectedChildIndex": 9,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MathFunctions.cs",
-              "DocumentMoniker": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.cs",
-              "RelativeDocumentMoniker": "MathFunctions\\MathFunctions.cs",
-              "ToolTip": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.cs",
-              "RelativeToolTip": "MathFunctions\\MathFunctions.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAA5AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T04:06:06.101Z"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 4,
@@ -202,8 +190,19 @@
               "RelativeToolTip": "Server\\Program.cs",
               "ViewState": "AgIAACwAAAAAAAAAAAAlwC0AAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T14:20:15.382Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-02T14:20:15.382Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "MathFunctions.cs",
+              "DocumentMoniker": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.cs",
+              "RelativeDocumentMoniker": "MathFunctions\\MathFunctions.cs",
+              "ToolTip": "E:\\Proyectos\\crs\\MathFunctions\\MathFunctions.cs",
+              "RelativeToolTip": "MathFunctions\\MathFunctions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-03T04:06:06.101Z"
             },
             {
               "$type": "Document",
@@ -227,8 +226,7 @@
               "RelativeToolTip": "Server\\Core\\WebSocketManager.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAAkwDcAAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T01:51:03.708Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T01:51:03.708Z"
             },
             {
               "$type": "Document",
@@ -252,8 +250,7 @@
               "RelativeToolTip": "Server\\Core\\ReportsController.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAABAAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T01:51:03.724Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T01:51:03.724Z"
             }
           ]
         }
