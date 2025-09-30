@@ -1,0 +1,16 @@
+/home/peyotex/repos/crs/DoeFunctions/bin/Debug/net9.0/DoeFunctions.deps.json
+/home/peyotex/repos/crs/DoeFunctions/bin/Debug/net9.0/DoeFunctions.dll
+/home/peyotex/repos/crs/DoeFunctions/bin/Debug/net9.0/DoeFunctions.pdb
+/home/peyotex/repos/crs/DoeFunctions/bin/Debug/net9.0/FunctEngine.dll
+/home/peyotex/repos/crs/DoeFunctions/bin/Debug/net9.0/FunctEngine.pdb
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.csproj.AssemblyReference.cache
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.AssemblyInfoInputs.cache
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.AssemblyInfo.cs
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.csproj.CoreCompileInputs.cache
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.sourcelink.json
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunct.17AA1030.Up2Date
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.dll
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/refint/DoeFunctions.dll
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/DoeFunctions.pdb
+/home/peyotex/repos/crs/DoeFunctions/obj/Debug/net9.0/ref/DoeFunctions.dll

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functions Manual - FunctEngine Library</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        nav {
+            background: #2c3e50;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover {
+            background: #34495e;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .function {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 5px;
+        }
+
+        .function-name {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .function-description {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .syntax {
+            background: #2c3e50;
+            color: #fff;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .parameters {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .parameters h4 {
+            color: #764ba2;
+            margin-bottom: 0.5rem;
+        }
+
+        .param-list {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .param-list li {
+            padding: 0.3rem 0;
+        }
+
+        .param-name {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .example {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .example h4 {
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+        }
+
+        .example-code {
+            background: #1b5e20;
+            color: #a5d6a7;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin-top: 0.5rem;
+        }
+
+        .returns {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .returns strong {
+            color: #e65100;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc h2 {
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .toc li {
+            padding: 0.3rem 0;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .category-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Functions Manual</h1>
+            <p>FunctEngine Library - Complete Reference Guide</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#basic">Basic</a></li>
+                <li><a href="#math">Math</a></li>
+                <li><a href="#string">String</a></li>
+                <li><a href="#array">Array</a></li>
+                <li><a href="#statistics">Statistics</a></li>
+                <li><a href="#database">Database</a></li>
+                <li><a href="#datetime">Date & Time</a></li>
+                <li><a href="#financial">Financial</a></li>
+                <li><a href="#doe">DOE</a></li>
+            </ul>
+        </nav>
+
+        <div class="content">
+            <!-- BASIC FUNCTIONS -->
+            <section id="basic" class="section">
+                <h2><span class="category-icon">🔧</span>Basic Functions</h2>
+                <p>Basic operations for general purpose programming.</p>
+
+                <div class="function">
+                    <div class="function-name">Print</div>
+                    <div class="function-description">Outputs text to the console.</div>
+                    <div class="syntax">Print(value)</div>
+                    <div class="parameters">
+                        <h4>Parameters:</h4>
+                        <ul class="param-list">
+                            <li><span class="param-name">value</span> - The value to print</li>
+                        </ul>
+                    </div>
+                    <div class="example">
+                        <h4>Example:</h4>
+                        <div class="example-code">Print("Hello World")</div>
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Concat</div>
+                    <div class="function-description">Concatenates multiple values into a single string.</div>
+                    <div class="syntax">Concat(value1, value2, ...)</div>
+                    <div class="example">
+                        <h4>Example:</h4>
+                        <div class="example-code">Concat("Hello", " ", "World")  // Returns: "Hello World"</div>
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Add / Multiply</div>
+                    <div class="function-description">Basic arithmetic operations.</div>
+                    <div class="syntax">Add(a, b)<br>Multiply(a, b)</div>
+                    <div class="returns"><strong>Returns:</strong> Numeric result of operation</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">CountWords</div>
+                    <div class="function-description">Counts the number of words in a text.</div>
+                    <div class="syntax">CountWords(text)</div>
+                    <div class="returns"><strong>Returns:</strong> Number of words</div>
+                </div>
+            </section>
+
+            <!-- MATH FUNCTIONS -->
+            <section id="math" class="section">
+                <h2><span class="category-icon">➗</span>Math Functions</h2>
+                <p>Mathematical operations and constants.</p>
+
+                <div class="function">
+                    <div class="function-name">Basic Operations</div>
+                    <div class="syntax">
+                        Subtract(a, b)  // a - b<br>
+                        Divide(a, b)    // a / b<br>
+                        Power(base, exponent)  // base^exponent<br>
+                        Sqrt(value)     // Square root<br>
+                        Abs(value)      // Absolute value
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Rounding Functions</div>
+                    <div class="syntax">
+                        Floor(value)           // Round down<br>
+                        Ceil(value)            // Round up<br>
+                        Round(value, decimals) // Round to decimals
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Trigonometric Functions</div>
+                    <div class="syntax">
+                        Sin(angle)  // Sine (radians)<br>
+                        Cos(angle)  // Cosine (radians)<br>
+                        Tan(angle)  // Tangent (radians)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Logarithmic Functions</div>
+                    <div class="syntax">
+                        Log(value)    // Natural logarithm<br>
+                        Log10(value)  // Log base 10<br>
+                        Exp(value)    // e^value
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Min / Max</div>
+                    <div class="syntax">
+                        Min(value1, value2, ...)<br>
+                        Max(value1, value2, ...)
+                    </div>
+                    <div class="returns"><strong>Returns:</strong> Minimum or maximum value</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Random</div>
+                    <div class="function-description">Generates random numbers.</div>
+                    <div class="syntax">
+                        Random()         // 0.0 to 1.0<br>
+                        Random(max)      // 0 to max-1<br>
+                        Random(min, max) // min to max-1
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Constants</div>
+                    <div class="syntax">
+                        PI()  // Returns π (3.14159...)<br>
+                        E()   // Returns e (2.71828...)
+                    </div>
+                </div>
+            </section>
+
+            <!-- STRING FUNCTIONS -->
+            <section id="string" class="section">
+                <h2><span class="category-icon">📝</span>String Functions</h2>
+                <p>String manipulation and analysis.</p>
+
+                <div class="function">
+                    <div class="function-name">GetLength</div>
+                    <div class="syntax">GetLength(str)</div>
+                    <div class="returns"><strong>Returns:</strong> Length of string</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Substring</div>
+                    <div class="syntax">
+                        Substring(str, start)<br>
+                        Substring(str, start, length)
+                    </div>
+                    <div class="returns"><strong>Returns:</strong> Portion of the string</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Case Conversion</div>
+                    <div class="syntax">
+                        ToUpper(str)  // Converts to uppercase<br>
+                        ToLower(str)  // Converts to lowercase
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">String Operations</div>
+                    <div class="syntax">
+                        Trim(str)  // Remove whitespace<br>
+                        Replace(str, oldValue, newValue)<br>
+                        Split(str, separator)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Search Functions</div>
+                    <div class="syntax">
+                        IndexOf(str, search)      // Find position<br>
+                        StartsWith(str, prefix)   // Check prefix<br>
+                        EndsWith(str, suffix)     // Check suffix<br>
+                        Contains(str, search)     // Check contains
+                    </div>
+                    <div class="returns"><strong>Returns:</strong> Position (number) or boolean</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Padding</div>
+                    <div class="syntax">
+                        PadLeft(str, totalWidth, paddingChar)<br>
+                        PadRight(str, totalWidth, paddingChar)
+                    </div>
+                </div>
+            </section>
+
+            <!-- ARRAY FUNCTIONS -->
+            <section id="array" class="section">
+                <h2><span class="category-icon">📊</span>Array Functions</h2>
+                <p>Array creation and manipulation.</p>
+
+                <div class="function">
+                    <div class="function-name">CreateArray</div>
+                    <div class="syntax">CreateArray(item1, item2, ...)</div>
+                    <div class="returns"><strong>Returns:</strong> New array</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Array Access</div>
+                    <div class="syntax">
+                        GetLength(array)<br>
+                        GetElement(array, index)<br>
+                        SetElement(array, index, value)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Stack Operations</div>
+                    <div class="syntax">
+                        Push(array, value)  // Add to end<br>
+                        Pop(array)          // Remove from end
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Array Manipulation</div>
+                    <div class="syntax">
+                        Slice(array, start, count)<br>
+                        Join(array, separator)<br>
+                        Sort(array)<br>
+                        Reverse(array)
+                    </syntax>
+                </div>
+            </section>
+
+            <!-- STATISTICS FUNCTIONS -->
+            <section id="statistics" class="section">
+                <h2><span class="category-icon">📈</span>Statistics Functions</h2>
+                <p>Statistical analysis and calculations.</p>
+
+                <div class="function">
+                    <div class="function-name">Central Tendency</div>
+                    <div class="syntax">
+                        Mean(values)    // Arithmetic mean<br>
+                        Median(values)  // Middle value<br>
+                        Mode(values)    // Most frequent value
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Dispersion</div>
+                    <div class="syntax">
+                        Range(values)               // Max - Min<br>
+                        Variance(values)            // Population variance<br>
+                        StandardDeviation(values)   // Population std dev
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Aggregation</div>
+                    <div class="syntax">
+                        Sum(values)<br>
+                        Count(values)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Percentiles & Quartiles</div>
+                    <div class="syntax">
+                        Percentile(values, percentile)  // 0-100<br>
+                        Quartile(values, quartile)      // 1, 2, or 3
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Correlation & Z-Score</div>
+                    <div class="syntax">
+                        Correlation(array1, array2)  // -1 to 1<br>
+                        ZScore(value, dataset)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Histogram</div>
+                    <div class="syntax">
+                        CreateHistogram(data, bins)<br>
+                        PrintHistogram(histogram, maxWidth)
+                    </div>
+                </div>
+            </section>
+
+            <!-- DATABASE FUNCTIONS -->
+            <section id="database" class="section">
+                <h2><span class="category-icon">🗄️</span>Database Functions</h2>
+                <p>Database connectivity and operations.</p>
+
+                <div class="function">
+                    <div class="function-name">Connection</div>
+                    <div class="syntax">
+                        ConnectPostgres(name, connectionString)<br>
+                        ConnectSqlServer(name, connectionString)<br>
+                        DisconnectDB(name)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Query Execution</div>
+                    <div class="syntax">
+                        ExecuteQuery(name, query, params...)     // SELECT<br>
+                        ExecuteNonQuery(name, query, params...)  // INSERT/UPDATE/DELETE<br>
+                        ExecuteScalar(name, query, params...)    // Single value
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Result Handling</div>
+                    <div class="syntax">
+                        GetRowValue(row, columnName)<br>
+                        GetRowKeys(row)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Transactions</div>
+                    <div class="syntax">
+                        BeginTransaction(name)<br>
+                        CommitTransaction(name)<br>
+                        RollbackTransaction(name)
+                    </div>
+                </div>
+            </section>
+
+            <!-- DATE & TIME FUNCTIONS -->
+            <section id="datetime" class="section">
+                <h2><span class="category-icon">📅</span>Date & Time Functions</h2>
+                <p>Date and time manipulation functions.</p>
+
+                <div class="function">
+                    <div class="function-name">Current Date/Time</div>
+                    <div class="syntax">
+                        Date(format)         // Current date<br>
+                        Now(format)          // Current datetime<br>
+                        Today()              // Date only<br>
+                        UtcNow(format)       // UTC datetime
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Date Components</div>
+                    <div class="syntax">
+                        Day(date)      // 1-31<br>
+                        Month(date)    // 1-12<br>
+                        Year(date)     // 4-digit year<br>
+                        Quarter(date)  // 1-4<br>
+                        WeekDay(date)  // 0-6 (Sun-Sat)<br>
+                        WeekNum(date)  // Week of year
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Time Components</div>
+                    <div class="syntax">
+                        Hour(dateTime)    // 0-23<br>
+                        Minute(dateTime)  // 0-59<br>
+                        Second(dateTime)  // 0-59
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Date Calculations</div>
+                    <div class="syntax">
+                        Datediff(startDate, endDate)      // Days between<br>
+                        YearFrac(startDate, endDate)      // Year fraction
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Conversions</div>
+                    <div class="syntax">
+                        Datevalue(dateText)             // Text to date<br>
+                        Timevalue(timeText)             // Text to time<br>
+                        Time(hours, minutes, seconds)   // Create time
+                    </div>
+                </div>
+            </section>
+
+            <!-- FINANCIAL FUNCTIONS -->
+            <section id="financial" class="section">
+                <h2><span class="category-icon">💰</span>Financial Functions</h2>
+                <p>Financial calculations and analysis.</p>
+
+                <div class="function">
+                    <div class="function-name">Time Value of Money</div>
+                    <div class="syntax">
+                        Fv(rate, nper, pmt, pv, type)      // Future value<br>
+                        Pv(rate, nper, pmt, fv, type)      // Present value<br>
+                        Pmt(rate, nper, pv, fv, type)      // Payment<br>
+                        Nper(rate, pmt, pv, fv, type)      // Periods<br>
+                        Rate(nper, pmt, pv, fv, type, guess) // Interest rate
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Loan Analysis</div>
+                    <div class="syntax">
+                        Ipmt(rate, period, nper, pv, fv, type)    // Interest payment<br>
+                        Ppmt(rate, period, nper, pv, fv, type)    // Principal payment<br>
+                        Cumipmt(rate, nper, pv, start, end, type) // Cumulative interest<br>
+                        Cumprinc(rate, nper, pv, start, end, type)// Cumulative principal
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Depreciation</div>
+                    <div class="syntax">
+                        Sln(cost, salvage, life)              // Straight-line<br>
+                        Syd(cost, salvage, life, period)      // Sum-of-years<br>
+                        Db(cost, salvage, life, period, month) // Declining balance<br>
+                        Ddb(cost, salvage, life, period, factor) // Double-declining
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Interest Rates</div>
+                    <div class="syntax">
+                        Effect(nominalRate, npery)    // Effective rate<br>
+                        Nominal(effectRate, npery)    // Nominal rate<br>
+                        Rri(nper, pv, fv)             // Growth rate
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Cash Flow Analysis</div>
+                    <div class="syntax">
+                        Xnpv(rate, values, dates)      // Net present value<br>
+                        Xirr(values, dates, guess)     // Internal rate of return
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Securities</div>
+                    <div class="syntax">
+                        Disc(settlement, maturity, pr, redemption, basis)<br>
+                        Intrate(settlement, maturity, investment, redemption, basis)<br>
+                        Received(settlement, maturity, investment, discount, basis)
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Treasury Bills</div>
+                    <div class="syntax">
+                        Tbillprice(settlement, maturity, discount)<br>
+                        TbillYield(settlement, maturity, pr)<br>
+                        Tbilleq(settlement, maturity, discount)
+                    </div>
+                </div>
+            </section>
+
+            <!-- DOE FUNCTIONS -->
+            <section id="doe" class="section">
+                <h2><span class="category-icon">🔬</span>Design of Experiments Functions</h2>
+                <p>Statistical analysis for experimental design.</p>
+
+                <div class="function">
+                    <div class="function-name">Linear Regression</div>
+                    <div class="syntax">
+                        LinearRegression(xValues, yValues)<br>
+                        MultipleLinearRegression(xMatrix, yValues)
+                    </div>
+                    <div class="returns"><strong>Returns:</strong> Coefficients, R-squared</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">ANOVA</div>
+                    <div class="syntax">
+                        OneWayAnova(groups)  // Single factor<br>
+                        TwoWayAnova(data, factorA, factorB)  // Two factors<br>
+                        Manova(groups)  // Multivariate
+                    </div>
+                    <div class="returns"><strong>Returns:</strong> F-statistics, p-values, sum of squares</div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Generalized Linear Model</div>
+                    <div class="syntax">
+                        Glm(xMatrix, yValues, family)
+                    </div>
+                    <div class="parameters">
+                        <h4>Parameters:</h4>
+                        <ul class="param-list">
+                            <li><span class="param-name">family</span> - "gaussian", "binomial", etc.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="function">
+                    <div class="function-name">Gage R&R Analysis</div>
+                    <div class="syntax">
+                        GageRR(measurements)
+                    </div>
+                    <div class="parameters">
+                        <h4>Parameters:</h4>
+                        <ul class="param-list">
+                            <li><span class="param-name">measurements</span> - 3D array [parts][operators][replicates]</li>
+                        </ul>
+                    </div>
+                    <div class="returns"><strong>Returns:</strong> repeatability, reproducibility, gageRR, partVariation</div>
+                </div>
+            </section>
+
+            <!-- EXAMPLES SECTION -->
+            <section class="section">
+                <h2><span class="category-icon">💡</span>Usage Examples</h2>
+
+                <div class="example">
+                    <h4>Financial Example: Loan Payment</h4>
+                    <div class="example-code">
+// Calculate monthly payment for $200,000 loan at 5% for 30 years<br>
+rate = 0.05 / 12        // Monthly rate<br>
+nper = 30 * 12          // Total months<br>
+pv = 200000             // Loan amount<br>
+payment = Pmt(rate, nper, pv)<br>
+Print(payment)          // Returns: -1073.64
+                    </div>
+                </div>
+
+                <div class="example">
+                    <h4>Statistics Example: Sales Analysis</h4>
+                    <div class="example-code">
+sales = CreateArray(100, 150, 120, 180, 145, 160, 175)<br>
+avgSales = Mean(sales)<br>
+stdDev = StandardDeviation(sales)<br>
+Print(Concat("Average: ", avgSales, ", Std Dev: ", stdDev))
+                    </div>
+                </div>
+
+                <div class="example">
+                    <h4>Database Example: Query Data</h4>
+                    <div class="example-code">
+ConnectPostgres("mydb", "Host=localhost;Database=sales")<br>
+results = ExecuteQuery("mydb", "SELECT * FROM products WHERE price > @p1", 100)<br>
+DisconnectDB("mydb")
+                    </div>
+                </div>
+
+                <div class="example">
+                    <h4>Regression Example: Linear Fit</h4>
+                    <div class="example-code">
+xValues = CreateArray(1, 2, 3, 4, 5)<br>
+yValues = CreateArray(2, 4, 5, 4, 5)<br>
+result = LinearRegression(xValues, yValues)<br>
+Print(Concat("Slope: ", result.slope, ", R²: ", result.rSquared))
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p><strong>FunctEngine Library - Functions Manual</strong></p>
+            <p>Version 1.0 | Last Updated: September 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

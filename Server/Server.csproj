@@ -60,6 +60,9 @@
 </ItemGroup>
 
 <ItemGroup>
+  <ProjectReference Include="..\DateTimeFunctions\DateTimeFunctions.csproj" />
+  <ProjectReference Include="..\DoeFunctions\DoeFunctions.csproj" />
+  <ProjectReference Include="..\Financialfunctions\Financialfunctions.csproj" />
   <ProjectReference Include="..\MathFunctions\MathFunctions.csproj" />
   <ProjectReference Include="..\FunctEngine\FunctEngine.csproj" />
   <ProjectReference Include="..\StringUtilities\StringUtilities.csproj" />

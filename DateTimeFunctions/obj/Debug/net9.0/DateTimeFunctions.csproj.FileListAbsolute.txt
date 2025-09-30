@@ -1,0 +1,16 @@
+/home/peyotex/repos/crs/DateTimeFunctions/bin/Debug/net9.0/DateTimeFunctions.deps.json
+/home/peyotex/repos/crs/DateTimeFunctions/bin/Debug/net9.0/DateTimeFunctions.dll
+/home/peyotex/repos/crs/DateTimeFunctions/bin/Debug/net9.0/DateTimeFunctions.pdb
+/home/peyotex/repos/crs/DateTimeFunctions/bin/Debug/net9.0/FunctEngine.dll
+/home/peyotex/repos/crs/DateTimeFunctions/bin/Debug/net9.0/FunctEngine.pdb
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.csproj.AssemblyReference.cache
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.AssemblyInfoInputs.cache
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.AssemblyInfo.cs
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.csproj.CoreCompileInputs.cache
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.sourcelink.json
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTime.2F5B5F4D.Up2Date
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.dll
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/refint/DateTimeFunctions.dll
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/DateTimeFunctions.pdb
+/home/peyotex/repos/crs/DateTimeFunctions/obj/Debug/net9.0/ref/DateTimeFunctions.dll

@@ -51,7 +51,6 @@ app.use(
 const userStore = userStoreMe();
 app.use(ToastService);
 app.use(ConfirmationService);
-// app.use(VueExcelEditor)
 app.component('VueExcelEditor', VueExcelEditor)
 
 app.mount('#app');

@@ -41,29 +41,18 @@
 
       <!-- ReportFlow text -->
       <text
-        x="95"
-        y="42"
+        x="115"
+        y="52"
         :fill="textColor"
         font-family="Inter, system-ui, sans-serif"
         font-size="26"
         font-weight="700"
         letter-spacing="1px"
       >
-        ReportFlow
+        μ-Reporter
       </text>
 
-      <!-- Tagline -->
-      <text
-        x="95"
-        y="62"
-        :fill="subtextColor"
-        font-family="Inter, system-ui, sans-serif"
-        font-size="11"
-        font-weight="400"
-        letter-spacing="0.5px"
-      >
-        Insight. Growth. Clarity.
-      </text>
+     
     </svg>
   </div>
 </template>

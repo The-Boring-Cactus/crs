@@ -1,0 +1,148 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj": {}
+  },
+  "projects": {
+    "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj",
+        "projectName": "DoeFunctions",
+        "projectPath": "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/repos/crs/DoeFunctions/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj": {
+                "projectPath": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj",
+        "projectName": "FunctEngine",
+        "projectPath": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/repos/crs/FunctEngine/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.CodeAnalysis.CSharp": {
+              "target": "Package",
+              "version": "[4.14.0, )"
+            },
+            "Microsoft.Data.SqlClient": {
+              "target": "Package",
+              "version": "[6.1.1, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            },
+            "Npgsql": {
+              "target": "Package",
+              "version": "[9.0.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

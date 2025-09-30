@@ -1,0 +1,16 @@
+/home/peyotex/repos/crs/Financialfunctions/bin/Debug/net9.0/Financialfunctions.deps.json
+/home/peyotex/repos/crs/Financialfunctions/bin/Debug/net9.0/Financialfunctions.dll
+/home/peyotex/repos/crs/Financialfunctions/bin/Debug/net9.0/Financialfunctions.pdb
+/home/peyotex/repos/crs/Financialfunctions/bin/Debug/net9.0/FunctEngine.dll
+/home/peyotex/repos/crs/Financialfunctions/bin/Debug/net9.0/FunctEngine.pdb
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.csproj.AssemblyReference.cache
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.AssemblyInfoInputs.cache
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.AssemblyInfo.cs
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.csproj.CoreCompileInputs.cache
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.sourcelink.json
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financia.4FD1B0A7.Up2Date
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.dll
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/refint/Financialfunctions.dll
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/Financialfunctions.pdb
+/home/peyotex/repos/crs/Financialfunctions/obj/Debug/net9.0/ref/Financialfunctions.dll

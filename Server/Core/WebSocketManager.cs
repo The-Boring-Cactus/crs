@@ -54,6 +54,9 @@ public class WebSocketManager
         connectionInfo.WebSocketMessageClient.ErrorOccurred += ErrorOccurred;
         connectionInfo.interpreter.StatusUpdate += TestScriptOnStatusUpdate;
         connectionInfo.interpreter.LoadExternalDll("MathFunctions.dll");
+        connectionInfo.interpreter.LoadExternalDll("DateTimeFunctions.dll");
+        connectionInfo.interpreter.LoadExternalDll("DoeFunctions.dll");
+        connectionInfo.interpreter.LoadExternalDll("Financialfunctions.dll");
 
         if (!_connections.TryAdd(connectionId, connectionInfo))
         {
