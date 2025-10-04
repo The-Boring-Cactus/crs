@@ -30,6 +30,12 @@ const model = ref([
                 tooltip: 'Create/Edit Datasets'
             },
             {
+                label: 'New Datasets',
+                icon: 'pi pi-fw pi-table',
+                to: '/pages/myexcel',
+                tooltip: 'Create/Edit Datasets'
+            },
+            {
                 label: 'SQL Querys',
                 icon: 'pi pi-fw pi-database',
                 to: '/pages/sqleditor',

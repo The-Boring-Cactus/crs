@@ -28,6 +28,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/Dataset.vue')
                 },
                 {
+                    path: '/pages/myexcel',
+                    name: 'myexcel',
+                    component: () => import('@/views/pages/MyExcel.vue')
+                },
+                {
                     path: '/pages/databases',
                     name: 'databases',
                     component: () => import('@/views/pages/Databases.vue')

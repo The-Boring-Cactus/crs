@@ -77,7 +77,7 @@
         <div class="col-12 md:col-6">
           <div class="field">
             <label for="chartType" class="font-semibold">Chart Type</label>
-            <Dropdown
+            <Select
               id="chartType"
               v-model="newChart.type"
               :options="chartTypes"
@@ -91,7 +91,7 @@
         <div class="col-12 md:col-6">
           <div class="field">
             <label for="chartSize" class="font-semibold">Chart Size</label>
-            <Dropdown
+            <Select
               id="chartSize"
               v-model="newChart.gridClass"
               :options="sizeOptions"

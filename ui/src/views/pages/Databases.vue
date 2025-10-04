@@ -205,7 +205,7 @@
                     <div class="col-12 md:col-6">
                         <div class="flex items-center gap-4 mb-4">
                             <label for="type" class="font-semibold">Database Type</label>
-                            <Dropdown
+                            <Select
                                 id="type"
                                 v-model="connection.type"
                                 :options="databaseTypes"

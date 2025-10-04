@@ -807,7 +807,7 @@ body .app-dark .sql-editor-container {
         border-color: var(--p-surface-border);
         color: var(--p-text-color);
     }
-    .p-dropdown {
+    .p-select {
         background: var(--p-surface-800);
         color: var(--p-text-color);
         border-color: var(--p-surface-border);
