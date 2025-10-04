@@ -582,3 +582,5 @@ F:/Reportes/crs/Server/bin/Debug/net9.0/NSwag.Generation.dll
 /home/peyotex/repos/crs/Server/bin/Debug/net9.0/DateTimeFunctions.pdb
 /home/peyotex/repos/crs/Server/bin/Debug/net9.0/DoeFunctions.pdb
 /home/peyotex/repos/crs/Server/bin/Debug/net9.0/Financialfunctions.pdb
+/home/peyotex/repos/crs/Server/bin/Debug/net9.0/DataTableFunctions.dll
+/home/peyotex/repos/crs/Server/bin/Debug/net9.0/DataTableFunctions.pdb

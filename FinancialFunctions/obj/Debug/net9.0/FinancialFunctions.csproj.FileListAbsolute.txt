@@ -1,0 +1,16 @@
+/home/peyotex/repos/crs/FinancialFunctions/bin/Debug/net9.0/FinancialFunctions.deps.json
+/home/peyotex/repos/crs/FinancialFunctions/bin/Debug/net9.0/FinancialFunctions.dll
+/home/peyotex/repos/crs/FinancialFunctions/bin/Debug/net9.0/FinancialFunctions.pdb
+/home/peyotex/repos/crs/FinancialFunctions/bin/Debug/net9.0/FunctEngine.dll
+/home/peyotex/repos/crs/FinancialFunctions/bin/Debug/net9.0/FunctEngine.pdb
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.csproj.AssemblyReference.cache
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.AssemblyInfoInputs.cache
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.AssemblyInfo.cs
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.csproj.CoreCompileInputs.cache
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.sourcelink.json
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/Financia.2EF1B2A6.Up2Date
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.dll
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/refint/FinancialFunctions.dll
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/FinancialFunctions.pdb
+/home/peyotex/repos/crs/FinancialFunctions/obj/Debug/net9.0/ref/FinancialFunctions.dll

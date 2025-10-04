@@ -392,7 +392,7 @@
         </div>
 
         <div class="select-content">
-          <Dropdown
+          <Select
             v-model="item.selectedValue"
             :options="item.options"
             :optionLabel="item.optionLabel"
@@ -549,7 +549,7 @@
                 dateFormat="yy-mm-dd"
                 class="cell-editor"
               />
-              <Dropdown
+              <Select
                 v-else-if="field.type === 'select'"
                 v-model="data[field]"
                 :options="field.options"
@@ -599,7 +599,7 @@ import Column from 'primevue/column'
 import TreeTable from 'primevue/treetable'
 import Image from 'primevue/image'
 import ToggleButton from 'primevue/togglebutton'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select';
 import Tag from 'primevue/tag'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'

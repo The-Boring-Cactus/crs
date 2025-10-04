@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DateTimeFunctions")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1b19a71d6a7ca005ac71d9eb615d03219d1179bf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b607cddc13faae063549c3230483199d0d114391")]
 [assembly: System.Reflection.AssemblyProductAttribute("DateTimeFunctions")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DateTimeFunctions")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

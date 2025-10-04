@@ -2803,6 +2803,19 @@
           "lib/net9.0/ZstdSharp.dll": {}
         }
       },
+      "DataTableFunctions/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "FunctEngine": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/DataTableFunctions.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DataTableFunctions.dll": {}
+        }
+      },
       "DateTimeFunctions/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
@@ -2829,17 +2842,17 @@
           "bin/placeholder/DoeFunctions.dll": {}
         }
       },
-      "Financialfunctions/1.0.0": {
+      "FinancialFunctions/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
           "FunctEngine": "1.0.0"
         },
         "compile": {
-          "bin/placeholder/Financialfunctions.dll": {}
+          "bin/placeholder/FinancialFunctions.dll": {}
         },
         "runtime": {
-          "bin/placeholder/Financialfunctions.dll": {}
+          "bin/placeholder/FinancialFunctions.dll": {}
         }
       },
       "FunctEngine/1.0.0": {
@@ -8892,6 +8905,11 @@
         "zstdsharp.port.nuspec"
       ]
     },
+    "DataTableFunctions/1.0.0": {
+      "type": "project",
+      "path": "../DataTableFunctions/DataTableFunctions.csproj",
+      "msbuildProject": "../DataTableFunctions/DataTableFunctions.csproj"
+    },
     "DateTimeFunctions/1.0.0": {
       "type": "project",
       "path": "../DateTimeFunctions/DateTimeFunctions.csproj",
@@ -8902,10 +8920,10 @@
       "path": "../DoeFunctions/DoeFunctions.csproj",
       "msbuildProject": "../DoeFunctions/DoeFunctions.csproj"
     },
-    "Financialfunctions/1.0.0": {
+    "FinancialFunctions/1.0.0": {
       "type": "project",
-      "path": "../Financialfunctions/Financialfunctions.csproj",
-      "msbuildProject": "../Financialfunctions/Financialfunctions.csproj"
+      "path": "../FinancialFunctions/FinancialFunctions.csproj",
+      "msbuildProject": "../FinancialFunctions/FinancialFunctions.csproj"
     },
     "FunctEngine/1.0.0": {
       "type": "project",
@@ -8926,9 +8944,10 @@
   "projectFileDependencyGroups": {
     "net9.0": [
       "Dapper >= 2.1.66",
+      "DataTableFunctions >= 1.0.0",
       "DateTimeFunctions >= 1.0.0",
       "DoeFunctions >= 1.0.0",
-      "Financialfunctions >= 1.0.0",
+      "FinancialFunctions >= 1.0.0",
       "FunctEngine >= 1.0.0",
       "GenHTTP.Core >= 9.8.0",
       "GenHTTP.Modules.ApiBrowsing >= 9.8.0",
@@ -8974,14 +8993,17 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
+            "/home/peyotex/repos/crs/DataTableFunctions/DataTableFunctions.csproj": {
+              "projectPath": "/home/peyotex/repos/crs/DataTableFunctions/DataTableFunctions.csproj"
+            },
             "/home/peyotex/repos/crs/DateTimeFunctions/DateTimeFunctions.csproj": {
               "projectPath": "/home/peyotex/repos/crs/DateTimeFunctions/DateTimeFunctions.csproj"
             },
             "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj": {
               "projectPath": "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj"
             },
-            "/home/peyotex/repos/crs/Financialfunctions/Financialfunctions.csproj": {
-              "projectPath": "/home/peyotex/repos/crs/Financialfunctions/Financialfunctions.csproj"
+            "/home/peyotex/repos/crs/FinancialFunctions/FinancialFunctions.csproj": {
+              "projectPath": "/home/peyotex/repos/crs/FinancialFunctions/FinancialFunctions.csproj"
             },
             "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj": {
               "projectPath": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj"

@@ -56,7 +56,9 @@ public class WebSocketManager
         connectionInfo.interpreter.LoadExternalDll("MathFunctions.dll");
         connectionInfo.interpreter.LoadExternalDll("DateTimeFunctions.dll");
         connectionInfo.interpreter.LoadExternalDll("DoeFunctions.dll");
-        connectionInfo.interpreter.LoadExternalDll("Financialfunctions.dll");
+        connectionInfo.interpreter.LoadExternalDll("FinancialFunctions.dll");
+        connectionInfo.interpreter.LoadExternalDll("StringUtilities.dll");
+        connectionInfo.interpreter.LoadExternalDll("DataTableFunctions.dll");
 
         if (!_connections.TryAdd(connectionId, connectionInfo))
         {

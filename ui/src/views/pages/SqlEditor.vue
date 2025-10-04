@@ -5,7 +5,7 @@
             <template #start>
                 <div class="flex align-items-center gap-2">
                     <label for="database-select" class="font-semibold text-sm">Database:</label>
-                    <Dropdown
+                    <Select
                         id="database-select"
                         v-model="selectedDatabase"
                         :options="availableDatabases"
@@ -31,7 +31,7 @@
                                 </div>
                             </div>
                         </template>
-                    </Dropdown>
+                    </Select>
                 </div>
             </template>
 
