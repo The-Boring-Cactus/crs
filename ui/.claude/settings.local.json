@@ -1,8 +1,10 @@
 {
-  "outputStyle": "default",
   "permissions": {
     "allow": [
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(dir \"F:\\Reportes\\crs\\example-ui\" /b)",
+      "Read(//f/Reportes/crs/**)"
     ]
-  }
+  },
+  "outputStyle": "default"
 }

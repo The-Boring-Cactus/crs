@@ -1,16 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { userStoreMe } from '@/store/userStore'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 import { useToast } from 'primevue/usetoast'
-import Password from 'primevue/password'
-import InputText from 'primevue/inputtext'
-import Button from 'primevue/button'
-import Toast from 'primevue/toast'
 
 const router = useRouter()
-const route = useRoute()
-const userStore = userStoreMe()
+const userStore = useUserStore()
 const toast = useToast()
 
 const loading = ref(false)
@@ -20,16 +15,11 @@ const loginData = ref({
 })
 const searchQuery = ref('')
 
-// Check if user is authenticated
-const isLoggedIn = computed(() => userStore.auth)
-const userName = computed(() => userStore.name || 'User')
-const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
-
 const login = () => {
   loading.value = true
   setTimeout(() => {
-    if (loginData.value.username && loginData.value.password) {
-      userStore.setCurr(true, loginData.value.username, 'admin', [])
+    const success = userStore.login(loginData.value.username, loginData.value.password)
+    if (success) {
       toast.add({
         severity: 'success',
         summary: 'Bienvenido',
@@ -46,37 +36,21 @@ const login = () => {
       })
     }
     loading.value = false
-  }, 500)
+  }, 1000)
 }
 
 const logout = () => {
-  userStore.setCurr(false, '', '', [])
+  userStore.logout()
   toast.add({
     severity: 'info',
     summary: 'Sesión cerrada',
     detail: 'Has cerrado sesión exitosamente',
-    life: 2000
+    life: 3000
   })
-  router.push('/auth/login')
 }
 
-const navigateTo = (path) => {
-  router.push(path)
-}
-
-// Define navigation items based on your routes
-const navItems = [
-  { icon: 'pi-home', path: '/', name: 'home', label: 'Home' },
-  { icon: 'pi-chart-bar', path: '/pages/dashboard', name: 'dashboard', label: 'Dashboard' },
-  { icon: 'pi-database', path: '/pages/databases', name: 'databases', label: 'Databases' },
-  { icon: 'pi-table', path: '/pages/dataset', name: 'dataset', label: 'Dataset' },
-  { icon: 'pi-file-excel', path: '/pages/myexcel', name: 'myexcel', label: 'Excel' },
-  { icon: 'pi-code', path: '/pages/sqleditor', name: 'sqleditor', label: 'SQL Editor' },
-  { icon: 'pi-file', path: '/pages/cseditor', name: 'cseditor', label: 'C# Editor' }
-]
-
-const isActive = (path) => {
-  return route.path === path
+const navigateTo = (routeName) => {
+  router.push({ name: routeName })
 }
 </script>
 
@@ -84,11 +58,11 @@ const isActive = (path) => {
   <Toast />
 
   <!-- Login Screen -->
-  <div v-if="!isLoggedIn" class="login-container">
+  <div v-if="!userStore.isLoggedIn" class="login-container">
     <div class="login-card">
       <div class="text-center mb-4">
-        <i class="pi pi-chart-bar" style="font-size: 3rem; color: #8B5CF6;"></i>
-        <h2 class="mt-3">CRS Reporter</h2>
+        <i class="pi pi-home" style="font-size: 3rem; color: #8B5CF6;"></i>
+        <h2 class="mt-3">Smart Home</h2>
         <p class="text-500">Bienvenido de vuelta</p>
       </div>
 
@@ -101,15 +75,7 @@ const isActive = (path) => {
 
       <div class="field mt-4">
         <span class="p-float-label">
-          <Password
-            id="password"
-            v-model="loginData.password"
-            class="w-full"
-            :feedback="false"
-            @keyup.enter="login"
-            fluid
-            toggleMask
-          />
+          <Password id="password" v-model="loginData.password" class="w-full" :feedback="false" @keyup.enter="login" fluid toggleMask  />
           <label for="password">Contraseña</label>
         </span>
       </div>
@@ -134,16 +100,55 @@ const isActive = (path) => {
     <!-- Sidebar -->
     <div class="sidebar">
       <div
-        v-for="item in navItems"
-        :key="item.path"
         class="sidebar-item"
-        :class="{ active: isActive(item.path) }"
-        @click="navigateTo(item.path)"
-        :title="item.label"
+        :class="{ active: $route.name === 'home' }"
+        @click="navigateTo('home')"
       >
-        <i :class="`pi ${item.icon}`"></i>
+        <i class="pi pi-home"></i>
       </div>
-      <div class="sidebar-item" style="margin-top: auto;" @click="logout" title="Logout">
+      <div
+        class="sidebar-item"
+        :class="{ active: $route.name === 'rooms' }"
+        @click="navigateTo('rooms')"
+      >
+        <i class="pi pi-th-large"></i>
+      </div>
+      <div
+        class="sidebar-item"
+        :class="{ active: $route.name === 'energy' }"
+        @click="navigateTo('energy')"
+      >
+        <i class="pi pi-sun"></i>
+      </div>
+      <div
+        class="sidebar-item"
+        :class="{ active: $route.name === 'security' }"
+        @click="navigateTo('security')"
+      >
+        <i class="pi pi-shield"></i>
+      </div>
+      <div
+        class="sidebar-item"
+        :class="{ active: $route.name === 'location' }"
+        @click="navigateTo('location')"
+      >
+        <i class="pi pi-map-marker"></i>
+      </div>
+      <div
+        class="sidebar-item"
+        :class="{ active: $route.name === 'members' }"
+        @click="navigateTo('members')"
+      >
+        <i class="pi pi-users"></i>
+      </div>
+      <div
+        class="sidebar-item"
+        :class="{ active: $route.name === 'analytics' }"
+        @click="navigateTo('analytics')"
+      >
+        <i class="pi pi-chart-bar"></i>
+      </div>
+      <div class="sidebar-item" style="margin-top: auto;" @click="logout">
         <i class="pi pi-sign-out"></i>
       </div>
     </div>
@@ -153,14 +158,14 @@ const isActive = (path) => {
       <!-- Search Bar -->
       <div class="search-bar">
         <i class="pi pi-search" style="color: #999;"></i>
-        <input type="text" placeholder="Buscar..." v-model="searchQuery">
+        <input type="text" placeholder="Search" v-model="searchQuery">
         <i class="pi pi-cog" style="color: #666; margin-left: auto; cursor: pointer;"></i>
         <i class="pi pi-bell" style="color: #666; margin-left: 1rem; cursor: pointer;"></i>
         <div style="display: flex; align-items: center; margin-left: 1rem;">
           <div class="member-avatar" style="width: 35px; height: 35px; font-size: 0.9rem;">
-            {{ userInitial }}
+            {{ userStore.userInitial }}
           </div>
-          <span style="margin-left: 0.5rem; font-weight: 500;">{{ userName }}</span>
+          <span style="margin-left: 0.5rem; font-weight: 500;">{{ userStore.userName }}</span>
         </div>
       </div>
 
@@ -169,7 +174,3 @@ const isActive = (path) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Scoped styles if needed - most styles are in app-style.css */
-</style>

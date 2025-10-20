@@ -1,0 +1,624 @@
+/* ==========================================================================
+   CRS UI - Modern Dashboard Styles
+   Adapted from example-ui with custom branding
+   ========================================================================== */
+
+/* Reset & Base
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #E8D5F2 0%, #FCE4EC 100%);
+    min-height: 100vh;
+}
+
+#app {
+    width: 100%;
+    height: 100vh;
+}
+
+/* Login Screen
+   ========================================================================== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 420px;
+}
+
+.login-card .text-center {
+    text-align: center;
+}
+
+.login-card h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-card .text-500 {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Main App Layout
+   ========================================================================== */
+.app-container {
+    display: flex;
+    height: 100vh;
+    background: #F5F0FA;
+}
+
+/* Sidebar Navigation
+   ========================================================================== */
+.sidebar {
+    width: 80px;
+    background: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+    border-radius: 0 30px 30px 0;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+}
+
+.sidebar-item {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.8rem 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    position: relative;
+}
+
+.sidebar-item:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.sidebar-item.active {
+    background: rgba(255,255,255,0.3);
+}
+
+.sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    width: 4px;
+    height: 30px;
+    background: white;
+    border-radius: 0 4px 4px 0;
+}
+
+.sidebar-item i {
+    color: white;
+    font-size: 1.4rem;
+}
+
+/* Main Content Area
+   ========================================================================== */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+/* Search & Top Bar
+   ========================================================================== */
+.search-bar {
+    background: white;
+    border-radius: 30px;
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    flex: 1;
+    margin-left: 1rem;
+    font-size: 1rem;
+    background: transparent;
+}
+
+.search-bar input::placeholder {
+    color: #999;
+}
+
+.search-bar i {
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.search-bar i:hover {
+    color: #8B5CF6 !important;
+}
+
+/* Welcome Card
+   ========================================================================== */
+.welcome-card {
+    background: linear-gradient(135deg, #FFE5B4 0%, #FFDAB9 100%);
+    border-radius: 25px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-card::before {
+    content: '';
+    position: absolute;
+    right: 50px;
+    bottom: -20px;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 215, 0, 0.2);
+    border-radius: 50%;
+}
+
+.welcome-text h2 {
+    color: #D2691E;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.welcome-text p {
+    color: #8B4513;
+    font-size: 1rem;
+}
+
+.weather-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #333;
+}
+
+/* Section Containers
+   ========================================================================== */
+.home-section {
+    background: white;
+    border-radius: 25px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h3 {
+    font-size: 1.5rem;
+    color: #333;
+    font-weight: 600;
+}
+
+/* Room Selector
+   ========================================================================== */
+.room-selector {
+    background: #F5F5F5;
+    border-radius: 20px;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.room-selector:hover {
+    background: #E8E8E8;
+}
+
+/* Controls Grid
+   ========================================================================== */
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.control-card {
+    background: #F8F8F8;
+    border-radius: 20px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.control-card.active {
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    color: white;
+    border-color: #8B5CF6;
+}
+
+.control-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+}
+
+.control-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    color: #666;
+}
+
+.control-card.active .control-icon {
+    color: white;
+}
+
+.control-card h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.control-card.active h4 {
+    color: white;
+}
+
+/* Temperature Control
+   ========================================================================== */
+.temperature-control {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin: 2rem 0;
+    justify-content: center;
+}
+
+.temp-display {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.temp-display::before {
+    content: '';
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    border: 4px solid #E8D5F2;
+    border-top-color: #8B5CF6;
+    border-right-color: #8B5CF6;
+    animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.temp-value {
+    font-size: 3.5rem;
+    font-weight: 300;
+    color: #333;
+}
+
+.temp-label {
+    color: #999;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Devices Grid
+   ========================================================================== */
+.devices-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.device-card {
+    border-radius: 20px;
+    padding: 1.5rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.device-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Device Type Colors */
+.device-card.refrigerator,
+.device-card.database {
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+}
+
+.device-card.router,
+.device-card.dataset {
+    background: linear-gradient(135deg, #FBB03B 0%, #F79E1B 100%);
+}
+
+.device-card.music,
+.device-card.excel {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+}
+
+.device-card.lamps,
+.device-card.analytics {
+    background: linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%);
+}
+
+.device-info h4 {
+    margin-bottom: 0.3rem;
+    font-size: 1.1rem;
+}
+
+.device-status {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.device-icon {
+    font-size: 2rem;
+}
+
+/* Members Section
+   ========================================================================== */
+.members-section {
+    margin-top: 2rem;
+}
+
+.members-list {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.member-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.member-avatar:hover {
+    transform: scale(1.15);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Power/Chart Section
+   ========================================================================== */
+.power-chart {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #FFF5F0;
+    border-radius: 20px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header h4 {
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.chart-value {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.chart-percentage {
+    font-weight: bold;
+    color: #4CAF50;
+    font-size: 1rem;
+}
+
+/* Stat Cards
+   ========================================================================== */
+.stat-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.stat-card h4 {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card .value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Responsive Design
+   ========================================================================== */
+@media (max-width: 1200px) {
+    .controls-grid,
+    .stat-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .controls-grid,
+    .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 60px;
+        padding: 1.5rem 0;
+    }
+
+    .sidebar-item {
+        width: 40px;
+        height: 40px;
+        margin: 0.6rem 0;
+    }
+
+    .sidebar-item i {
+        font-size: 1.2rem;
+    }
+
+    .main-content {
+        padding: 1.5rem;
+    }
+
+    .controls-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .devices-grid,
+    .stat-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .search-bar {
+        padding: 0.6rem 1rem;
+    }
+
+    .welcome-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .temperature-control {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .controls-grid,
+    .stat-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .home-section {
+        padding: 1.5rem;
+    }
+
+    .welcome-text h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Utility Classes
+   ========================================================================== */
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+
+/* PrimeVue Overrides for Theme
+   ========================================================================== */
+.p-button {
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.p-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+}
+
+.p-inputtext {
+    border-radius: 10px;
+    border: 1px solid #E0E0E0;
+    padding: 0.75rem 1rem;
+}
+
+.p-inputtext:focus {
+    border-color: #8B5CF6;
+    box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+}
