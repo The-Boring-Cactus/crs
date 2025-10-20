@@ -718,40 +718,4 @@ function formatDate(date) {
     border-radius: 10px;
     margin-bottom: 1rem;
 }
-body .app-dark .card {
-    background: var(--p-surface-800);
-    border-color: var(--p-surface-border);
-}
-
-body .app-dark .p-datatable .p-datatable-thead > tr > th {
-    background-color: var(--p-surface-700);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-border);
-}
-
-body .app-dark .p-datatable .p-datatable-tbody > tr {
-    background-color: var(--p-surface-800);
-    color: var(--p-text-color);
-}
-
-body .app-dark .p-datatable .p-datatable-tbody > tr > td {
-    border-color: var(--p-surface-border);
-}
-
-body .app-dark .p-datatable .p-datatable-tbody > tr:hover > td {
-    background-color: var(--p-surface-700);
-}
-
-body .app-dark .p-toolbar {
-    background: var(--p-surface-700);
-    border-color: var(--p-surface-border);
-}
-
-body .app-dark .p-dialog .p-dialog-header,
-body .app-dark .p-dialog .p-dialog-content,
-body .app-dark .p-dialog .p-dialog-footer {
-    background: var(--p-surface-800);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-700);
-}
 </style>

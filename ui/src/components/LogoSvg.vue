@@ -60,34 +60,14 @@
 <script>
 export default {
   name: 'LogoSvg',
-  props: {
-    theme: {
-      type: String,
-      default: 'light',
-      validator: (value) => ['light', 'dark'].includes(value)
-    }
-  },
-  computed: {
-    themeClass() {
-      return `theme-${this.theme}`
-    },
-    backgroundColor() {
-      return this.theme === 'dark' ? '#1a202c' : '#f7fafc'
-    },
-    strokeColor() {
-      return this.theme === 'dark' ? '#4a5568' : '#e2e8f0'
-    },
-    primaryColor() {
-      return this.theme === 'dark' ? '#3182ce' : '#2b6cb0'
-    },
-    accentColor() {
-      return this.theme === 'dark' ? '#38b2ac' : '#319795'
-    },
-    textColor() {
-      return this.theme === 'dark' ? '#f7fafc' : '#1a202c'
-    },
-    subtextColor() {
-      return this.theme === 'dark' ? '#a0aec0' : '#718096'
+  data() {
+    return {
+      backgroundColor: '#f7fafc',
+      strokeColor: '#e2e8f0',
+      primaryColor: '#2b6cb0',
+      accentColor: '#319795',
+      textColor: '#1a202c',
+      subtextColor: '#718096'
     }
   }
 }
@@ -101,13 +81,5 @@ export default {
 .logo-svg {
   height: auto;
   max-width: 100%;
-}
-
-.theme-light {
-  filter: none;
-}
-
-.theme-dark {
-  filter: none;
 }
 </style>

@@ -1568,45 +1568,4 @@ onUnmounted(() => {
   width: 100%;
 }
 
-/* Dark Theme */
-body .app-dark .excel-container {
-  background: var(--surface-900);
-}
-
-body .app-dark .excel-grid-wrapper {
-  background: var(--surface-800);
-  border-color: var(--surface-700);
-}
-
-body .app-dark .excel-corner-cell {
-  background: var(--surface-700);
-  border-color: var(--surface-600);
-}
-
-body .app-dark .excel-column-header,
-body .app-dark .excel-row-header {
-  background: var(--surface-700);
-  border-color: var(--surface-600);
-  color: var(--text-color);
-}
-
-body .app-dark .excel-cell {
-  background: var(--surface-800);
-  border-color: var(--surface-600);
-  color: var(--text-color);
-}
-
-body .app-dark .excel-cell:hover {
-  background: var(--surface-700);
-}
-
-body .app-dark .excel-cell-input {
-  background: var(--surface-800);
-  color: var(--text-color);
-}
-
-body .app-dark .excel-reference-bar {
-  background: var(--surface-800);
-  border-color: var(--surface-700);
-}
 </style>

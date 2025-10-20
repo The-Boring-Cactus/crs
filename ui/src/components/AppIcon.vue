@@ -11,8 +11,8 @@
       width="410"
       height="100"
       rx="12"
-      :fill="isDark ? '#1f2937' : '#f8fafc'"
-      :stroke="isDark ? '#374151' : '#e2e8f0'"
+      fill="#f8fafc"
+      stroke="#e2e8f0"
       stroke-width="1"
     />
 
@@ -21,7 +21,7 @@
       cx="50"
       cy="50"
       r="20"
-      :fill="isDark ? '#10b981' : '#059669'"
+      fill="#059669"
     />
 
     <!-- Inner circle -->
@@ -29,7 +29,7 @@
       cx="50"
       cy="50"
       r="12"
-      :fill="isDark ? '#065f46' : '#047857'"
+      fill="#047857"
     />
 
     <!-- Text -->
@@ -39,7 +39,7 @@
       font-family="Arial, sans-serif"
       font-size="24"
       font-weight="bold"
-      :fill="isDark ? '#f9fafb' : '#111827'"
+      fill="#111827"
     >
       CRS
     </text>
@@ -50,7 +50,7 @@
       y="55"
       font-family="Arial, sans-serif"
       font-size="12"
-      :fill="isDark ? '#9ca3af' : '#6b7280'"
+      fill="#6b7280"
     >
       System
     </text>
@@ -61,15 +61,12 @@
       y="65"
       width="60"
       height="2"
-      :fill="isDark ? '#10b981' : '#059669'"
+      fill="#059669"
     />
   </svg>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useLayout } from '@/layout/composables/layout.js'
-
 const props = defineProps({
   width: {
     type: [String, Number],
@@ -80,7 +77,4 @@ const props = defineProps({
     default: 50
   }
 })
-
-const { isDarkTheme } = useLayout()
-const isDark = computed(() => isDarkTheme.value)
 </script>

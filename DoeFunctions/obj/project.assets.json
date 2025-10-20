@@ -2708,32 +2708,40 @@
     ]
   },
   "packageFolders": {
-    "/home/peyotex/.nuget/packages/": {}
+    "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj",
+      "projectUniqueName": "F:\\Reportes\\crs\\DoeFunctions\\DoeFunctions.csproj",
       "projectName": "DoeFunctions",
-      "projectPath": "/home/peyotex/repos/crs/DoeFunctions/DoeFunctions.csproj",
-      "packagesPath": "/home/peyotex/.nuget/packages/",
-      "outputPath": "/home/peyotex/repos/crs/DoeFunctions/obj/",
+      "projectPath": "F:\\Reportes\\crs\\DoeFunctions\\DoeFunctions.csproj",
+      "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
+      "outputPath": "F:\\Reportes\\crs\\DoeFunctions\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/peyotex/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj": {
-              "projectPath": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj"
+            "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
+              "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
             }
           }
         }
@@ -2769,7 +2777,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

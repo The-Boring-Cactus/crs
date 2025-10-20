@@ -4,8 +4,7 @@ const layoutConfig = reactive({
     preset: localStorage.getItem('layout-preset') || 'Aura',
     primary: localStorage.getItem('layout-primary') || 'emerald',
     surface: localStorage.getItem('layout-surface') || null,
-    menuMode: localStorage.getItem('layout-menu-mode') || 'static',
-    darkMode: localStorage.getItem('layout-dark-mode') === 'true'
+    menuMode: localStorage.getItem('layout-menu-mode') || 'static'
 });
 
 const layoutState = reactive({
@@ -45,18 +44,7 @@ export function useLayout() {
 
     const getSurface = computed(() => layoutConfig.surface);
 
-    const isDarkTheme = computed(() => layoutConfig.darkMode);
 
-    const toggleDarkMode = () => {
-        layoutConfig.darkMode = !layoutConfig.darkMode;
-        if (layoutConfig.darkMode) {
-            document.documentElement.classList.add('app-dark');
-        } else {
-            document.documentElement.classList.remove('app-dark');
-        }
-    };
-
-    
 
     // Watch for changes and save to localStorage
     watch(() => layoutConfig.preset, (newValue) => {
@@ -75,17 +63,11 @@ export function useLayout() {
         localStorage.setItem('layout-menu-mode', newValue);
     });
 
-    watch(() => layoutConfig.darkMode, (newValue) => {
-        localStorage.setItem('layout-dark-mode', newValue.toString());
-    });
-
     return {
         layoutConfig,
         layoutState,
         toggleMenu,
-        toggleDarkMode,
         isSidebarActive,
-        isDarkTheme,
         getPrimary,
         getSurface,
         setActiveMenuItem,

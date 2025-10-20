@@ -64,9 +64,9 @@ internal class Program
                    .Defaults()
                    .Development()
                    .Console()
-                           .Bind(IPAddress.Any, 8080);
+                           .Bind(IPAddress.Any, 9876);
 
-        await server.RunAsync();
+        _ = await server.RunAsync();
 
         // Cleanup
         backgroundWorker.Dispose();

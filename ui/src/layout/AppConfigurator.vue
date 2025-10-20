@@ -6,7 +6,7 @@ import Lara from '@primeuix/themes/lara';
 import Nora from '@primeuix/themes/nora';
 import { ref } from 'vue';
 
-const { layoutConfig, isDarkTheme, toggleDarkMode } = useLayout();
+const { layoutConfig } = useLayout();
 
 const presets = {
     Aura,
@@ -110,20 +110,6 @@ function getPresetExt() {
                             color: '#ffffff',
                             focusColor: '#ffffff'
                         }
-                    },
-                    dark: {
-                        primary: {
-                            color: '{primary.50}',
-                            contrastColor: '{primary.950}',
-                            hoverColor: '{primary.200}',
-                            activeColor: '{primary.300}'
-                        },
-                        highlight: {
-                            background: '{primary.50}',
-                            focusBackground: '{primary.300}',
-                            color: '{primary.950}',
-                            focusColor: '{primary.950}'
-                        }
                     }
                 }
             }
@@ -145,20 +131,6 @@ function getPresetExt() {
                             focusBackground: '{primary.100}',
                             color: '{primary.700}',
                             focusColor: '{primary.800}'
-                        }
-                    },
-                    dark: {
-                        primary: {
-                            color: '{primary.400}',
-                            contrastColor: '{surface.900}',
-                            hoverColor: '{primary.300}',
-                            activeColor: '{primary.200}'
-                        },
-                        highlight: {
-                            background: 'color-mix(in srgb, {primary.400}, transparent 84%)',
-                            focusBackground: 'color-mix(in srgb, {primary.400}, transparent 76%)',
-                            color: 'rgba(255,255,255,.87)',
-                            focusColor: 'rgba(255,255,255,.87)'
                         }
                     }
                 }
@@ -200,7 +172,7 @@ function onMenuModeChange() {
 
 <template>
     <div
-        class="config-panel hidden absolute top-[3.25rem] right-0 w-64 p-4 bg-surface-0 dark:bg-surface-900 border border-surface rounded-border origin-top shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
+        class="config-panel hidden absolute top-[3.25rem] right-0 w-64 p-4 bg-surface-0 border border-surface rounded-border origin-top shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
     >
         <div class="flex flex-col gap-4">
             <div>
@@ -228,7 +200,7 @@ function onMenuModeChange() {
                         @click="updateColors('surface', surface)"
                         :class="[
                             'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
-                            { 'outline-primary': layoutConfig.surface ? layoutConfig.surface === surface.name : isDarkTheme ? surface.name === 'zinc' : surface.name === 'slate' }
+                            { 'outline-primary': layoutConfig.surface ? layoutConfig.surface === surface.name : surface.name === 'slate' }
                         ]"
                         :style="{ backgroundColor: `${surface.palette['500']}` }"
                     ></button>
@@ -241,18 +213,6 @@ function onMenuModeChange() {
             <div class="flex flex-col gap-2">
                 <span class="text-sm text-muted-color font-semibold">Menu Mode</span>
                 <SelectButton v-model="menuMode" @change="onMenuModeChange" :options="menuModeOptions" :allowEmpty="false" optionLabel="label" optionValue="value" />
-            </div>
-            <div class="flex flex-col gap-2">
-                <span class="text-sm text-muted-color font-semibold">Theme Mode</span>
-                <div class="flex items-center gap-2">
-                    <Button
-                        :icon="isDarkTheme ? 'pi pi-sun' : 'pi pi-moon'"
-                        :label="isDarkTheme ? 'Light Mode' : 'Dark Mode'"
-                        @click="toggleDarkMode"
-                        size="small"
-                        :outlined="true"
-                    />
-                </div>
             </div>
         </div>
     </div>

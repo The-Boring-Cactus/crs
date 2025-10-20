@@ -135,7 +135,6 @@ const props = defineProps({
 
 const emit = defineEmits(['chart-created', 'data-updated', 'chart-clicked'])
 
-const { isDarkTheme } = useLayout()
 const chartCanvas = ref(null)
 const animationEnabled = ref(true)
 let chartInstance = null
@@ -151,24 +150,13 @@ const chartData = computed(() => ({
   })) || []
 }))
 
-// Theme-aware colors
-const themeColors = computed(() => ({
-  light: {
-    gridColor: 'rgba(0, 0, 0, 0.1)',
-    textColor: '#333',
-    tooltipBg: '#fff',
-    tooltipColor: '#333'
-  },
-  dark: {
-    gridColor: 'rgba(255, 255, 255, 0.2)',
-    textColor: '#f1f1f1',
-    tooltipBg: '#222',
-    tooltipColor: '#f1f1f1'
-  }
-}))
-
-const currentTheme = computed(() => isDarkTheme.value ? 'dark' : 'light')
-const currentThemeColors = computed(() => themeColors.value[currentTheme.value])
+// Theme colors
+const currentThemeColors = {
+  gridColor: 'rgba(0, 0, 0, 0.1)',
+  textColor: '#333',
+  tooltipBg: '#fff',
+  tooltipColor: '#333'
+}
 
 function getDefaultColors() {
   const colors = [
@@ -199,18 +187,18 @@ function getChartConfig() {
           display: props.showLegend,
           position: 'top',
           labels: {
-            color: currentThemeColors.value.textColor
+            color: currentThemeColors.textColor
           }
         },
         title: {
           display: !!props.title,
           text: props.title,
-          color: currentThemeColors.value.textColor
+          color: currentThemeColors.textColor
         },
         tooltip: {
-          backgroundColor: currentThemeColors.value.tooltipBg,
-          titleColor: currentThemeColors.value.tooltipColor,
-          bodyColor: currentThemeColors.value.tooltipColor,
+          backgroundColor: currentThemeColors.tooltipBg,
+          titleColor: currentThemeColors.tooltipColor,
+          bodyColor: currentThemeColors.tooltipColor,
         }
       },
       onClick: (event, elements) => {
@@ -245,12 +233,12 @@ function getChartConfig() {
       config.options.scales = {
         y: {
           beginAtZero: true,
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         },
         x: {
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         }
       }
       break
@@ -259,12 +247,12 @@ function getChartConfig() {
       config.options.scales = {
         y: {
           beginAtZero: true,
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         },
         x: {
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         }
       }
       break
@@ -298,7 +286,7 @@ function getChartConfig() {
               }
               return []
             },
-            color: currentThemeColors.value.textColor
+            color: currentThemeColors.textColor
           }
         }
       }
@@ -307,9 +295,9 @@ function getChartConfig() {
     case 'polarArea':
       config.options.scales = {
         r: {
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor, backdropColor: 'transparent' },
-          pointLabels: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor, backdropColor: 'transparent' },
+          pointLabels: { color: currentThemeColors.textColor }
         }
       }
       break
@@ -317,12 +305,12 @@ function getChartConfig() {
     case 'radar':
       config.options.scales = {
         r: {
-          angleLines: { color: currentThemeColors.value.gridColor },
-          grid: { color: currentThemeColors.value.gridColor },
+          angleLines: { color: currentThemeColors.gridColor },
+          grid: { color: currentThemeColors.gridColor },
           suggestedMin: 0,
           suggestedMax: 100,
-          ticks: { color: currentThemeColors.value.textColor, backdropColor: 'transparent' },
-          pointLabels: { color: currentThemeColors.value.textColor }
+          ticks: { color: currentThemeColors.textColor, backdropColor: 'transparent' },
+          pointLabels: { color: currentThemeColors.textColor }
         }
       }
       break
@@ -332,14 +320,14 @@ function getChartConfig() {
       config.options.scales = {
         y: {
           beginAtZero: true,
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         },
         x: {
           type: 'linear',
           position: 'bottom',
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         }
       }
       break
@@ -349,12 +337,12 @@ function getChartConfig() {
       config.options.scales = {
         y: {
           beginAtZero: true,
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         },
         x: {
-          grid: { color: currentThemeColors.value.gridColor },
-          ticks: { color: currentThemeColors.value.textColor }
+          grid: { color: currentThemeColors.gridColor },
+          ticks: { color: currentThemeColors.textColor }
         }
       }
       break
@@ -371,7 +359,7 @@ function getChartConfig() {
           const meta = chart.getDatasetMeta(i)
           meta.data.forEach((element, index) => {
             const data = dataset.data[index]
-            ctx.fillStyle = currentThemeColors.value.textColor
+            ctx.fillStyle = currentThemeColors.textColor
             ctx.font = 'bold 12px Arial'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'bottom'
@@ -520,10 +508,6 @@ watch(() => props.data, () => {
 }, { deep: true })
 
 watch(() => props.type, () => {
-  createChart()
-})
-
-watch(currentTheme, () => {
   createChart()
 })
 

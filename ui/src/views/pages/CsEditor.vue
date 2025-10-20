@@ -191,8 +191,6 @@ import { shallowRef, ref, computed, onMounted, reactive } from 'vue';
 import { getCurrentInstance } from 'vue';
 import { useToast } from "primevue/usetoast";
 import CodeMirrorEditor from "@/components/CodeMirrorEditor.vue";
-import { useLayout } from '@/layout/composables/layout.js';
-import { basicDark } from '@fsegurai/codemirror-theme-basic-dark';
 import { basicLight } from '@fsegurai/codemirror-theme-basic-light';
 
 import {userStoreMe} from "@/store/userStore";
@@ -208,7 +206,6 @@ const toast = useToast();
 const { proxy } = getCurrentInstance();
 const client = new WebSocketMessageClient(proxy.$socket);
 const userStore = userStoreMe();
-const { isDarkTheme } = useLayout();
 
 // Editor state
 const code = ref(`// Welcome to C# Script Editor
@@ -259,7 +256,7 @@ const editorStyle = computed(() => {
 });
 
 const editorTheme = computed(() => {
-    return isDarkTheme.value ? basicDark : basicLight;
+    return basicLight;
 });
 
 

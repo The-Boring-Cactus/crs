@@ -1,5 +1,5 @@
 <template>
-  <div class="chart-dashboard" :class="`theme-${currentTheme}`">
+  <div class="chart-dashboard theme-light">
     <h1>Dashboard de Gráficos con Chart.js</h1>
     
     <div class="controls-wrapper">
@@ -19,12 +19,6 @@
         </select>
       </div>
 
-      <div class="theme-selector">
-        <label for="themeToggle">Tema del Dashboard:</label>
-        <button id="themeToggle" @click="toggleTheme">
-          Cambiar a Tema {{ currentTheme === 'light' ? 'Oscuro' : 'Claro' }}
-        </button>
-      </div>
     </div>
 
     <div class="chart-container">
@@ -61,28 +55,13 @@ export default {
     const animationEnabled = ref(true)
     let chartInstance = null
 
-    // --- Inicio: Funcionalidad de Theming ---
-    const currentTheme = ref('light'); // 'light' o 'dark'
-    const themes = {
-      light: {
-        gridColor: 'rgba(0, 0, 0, 0.1)',
-        textColor: '#333',
-        tooltipBg: '#fff',
-        tooltipColor: '#333'
-      },
-      dark: {
-        gridColor: 'rgba(255, 255, 255, 0.2)',
-        textColor: '#f1f1f1',
-        tooltipBg: '#222',
-        tooltipColor: '#f1f1f1'
-      }
+    // Theme configuration
+    const themeColors = {
+      gridColor: 'rgba(0, 0, 0, 0.1)',
+      textColor: '#333',
+      tooltipBg: '#fff',
+      tooltipColor: '#333'
     };
-
-    const toggleTheme = () => {
-      currentTheme.value = currentTheme.value === 'light' ? 'dark' : 'light';
-      updateChart(); // Redibuja el gráfico con el nuevo tema
-    };
-    // --- Fin: Funcionalidad de Theming ---
 
     const baseData = {
       labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
@@ -105,7 +84,6 @@ export default {
     };
 
     const getChartConfig = (type) => {
-      const themeColors = themes[currentTheme.value]; // Obtiene los colores del tema actual
       const config = {
         type: type,
         data: JSON.parse(JSON.stringify(baseData)), // Copia profunda para evitar mutaciones
@@ -156,7 +134,7 @@ export default {
                   
                   meta.data.forEach((point, index) => {
                     const data = dataset.data[index]
-                    ctx.fillStyle = currentTheme.value === 'light' ? '#666' : '#eee'
+                    ctx.fillStyle = '#666'
                     ctx.font = 'bold 12px Arial'
                     ctx.textAlign = 'center'
                     ctx.textBaseline = 'bottom'
@@ -183,7 +161,7 @@ export default {
                     const meta = chart.getDatasetMeta(i)
                     meta.data.forEach((bar, index) => {
                       const data = dataset.data[index]
-                      ctx.fillStyle =  currentTheme.value === 'light' ? '#666' : '#eee'
+                      ctx.fillStyle = '#666'
                       ctx.font = 'bold 12px Arial'
                       ctx.textAlign = 'center'
                       ctx.textBaseline = 'bottom'
@@ -242,7 +220,7 @@ export default {
                 const total = chart.data.datasets[0].data.reduce((sum, value) => sum + value, 0)
                 
                 ctx.save()
-                ctx.fillStyle = currentTheme.value === 'light' ? '#333' : '#fff'
+                ctx.fillStyle = '#333'
                 ctx.font = 'bold 24px Arial'
                 ctx.textAlign = 'center'
                 ctx.textBaseline = 'middle'
@@ -353,7 +331,7 @@ export default {
                     const meta = chart.getDatasetMeta(i)
                     meta.data.forEach((element, index) => {
                       const data = dataset.data[index]
-                      ctx.fillStyle =  currentTheme.value === 'light' ? '#666' : '#eee'
+                      ctx.fillStyle = '#666'
                       ctx.font = 'bold 10px Arial'
                       ctx.textAlign = 'center'
                       
@@ -449,8 +427,8 @@ export default {
     });
 
     return {
-      chartCanvas, selectedChartType, animationEnabled, currentTheme,
-      updateChart, addData, removeData, randomizeData, toggleAnimation, toggleTheme,
+      chartCanvas, selectedChartType, animationEnabled,
+      updateChart, addData, removeData, randomizeData, toggleAnimation,
       getChartTypeName, getChartDescription
     };
   }
@@ -558,17 +536,6 @@ h1 {
 .theme-light .chart-info p { color: #555; }
 
 /* --- Tema Oscuro --- */
-.theme-dark { background-color: #1e1e1e; color: #f1f1f1; }
-.theme-dark h1 { color: #f1f1f1; }
-.theme-dark .chart-selector label, .theme-dark .theme-selector label { color: #a0cff1; }
-.theme-dark .chart-selector select { background-color: #333; border-color: #555; color: #f1f1f1; }
-.theme-dark .chart-selector select:focus { border-color: #4CAF50; }
-.theme-dark .theme-selector button { background-color: #f8f9fa; color: #333; }
-.theme-dark .chart-container { background-color: #2a2a2a; border-color: #555; }
-.theme-dark .chart-info { background-color: #2c3e50; border-color: #34495e; }
-.theme-dark .chart-info h3 { color: #5dade2; }
-.theme-dark .chart-info p { color: #bdc3c7; }
-
 @media (max-width: 768px) {
   .chart-dashboard { padding: 10px; }
   .chart-container { height: 300px; padding: 10px; }

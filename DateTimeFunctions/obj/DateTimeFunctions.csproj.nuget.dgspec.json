@@ -1,33 +1,40 @@
 {
   "format": 1,
   "restore": {
-    "/home/peyotex/repos/crs/DateTimeFunctions/DateTimeFunctions.csproj": {}
+    "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj": {}
   },
   "projects": {
-    "/home/peyotex/repos/crs/DateTimeFunctions/DateTimeFunctions.csproj": {
+    "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/peyotex/repos/crs/DateTimeFunctions/DateTimeFunctions.csproj",
+        "projectUniqueName": "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj",
         "projectName": "DateTimeFunctions",
-        "projectPath": "/home/peyotex/repos/crs/DateTimeFunctions/DateTimeFunctions.csproj",
-        "packagesPath": "/home/peyotex/.nuget/packages/",
-        "outputPath": "/home/peyotex/repos/crs/DateTimeFunctions/obj/",
+        "projectPath": "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj",
+        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
+        "outputPath": "F:\\Reportes\\crs\\DateTimeFunctions\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/peyotex/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj": {
-                "projectPath": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj"
+              "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
+                "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
               }
             }
           }
@@ -63,26 +70,33 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj": {
+    "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj",
+        "projectUniqueName": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj",
         "projectName": "FunctEngine",
-        "projectPath": "/home/peyotex/repos/crs/FunctEngine/FunctEngine.csproj",
-        "packagesPath": "/home/peyotex/.nuget/packages/",
-        "outputPath": "/home/peyotex/repos/crs/FunctEngine/obj/",
+        "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj",
+        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
+        "outputPath": "F:\\Reportes\\crs\\FunctEngine\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/peyotex/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -140,7 +154,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

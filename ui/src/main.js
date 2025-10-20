@@ -23,10 +23,7 @@ const piniaSocketStore = useSocketStoreWithOut(app);
 app.use(router);
 app.use(PrimeVue, {
     theme: {
-        preset: Aura,
-        options: {
-            darkModeSelector: '.app-dark'
-        }
+        preset: Aura
     },
     zIndex: {
             modal: 1100, // For dialogs, drawers, etc.
@@ -38,7 +35,7 @@ app.use(PrimeVue, {
 
 app.use(
     VueNativeSock,
-  'ws://localhost:8080/srv/',
+  'ws://localhost:9876/srv/',
   {
     store: piniaSocketStore,
      format: "json",

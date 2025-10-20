@@ -8,7 +8,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const userStore = userStoreMe();
 
-const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
+const { toggleMenu } = useLayout();
 
 const selectedCategory = ref(null)
 const exit = async () => {
@@ -36,15 +36,6 @@ const exit = async () => {
 
 
         <div class="layout-topbar-actions">
-            <button
-                @click="toggleDarkMode"
-                type="button"
-                class="layout-topbar-action"
-                :title="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-            >
-                <i :class="isDarkTheme ? 'pi pi-sun' : 'pi pi-moon'"></i>
-            </button>
-
             <div class="layout-config-menu">
                 <div class="relative">
                     <button
