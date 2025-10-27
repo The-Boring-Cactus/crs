@@ -187,7 +187,7 @@
 </template>
 
 <script setup>
-import { shallowRef, ref, computed, onMounted, reactive } from 'vue';
+import { shallowRef, ref, computed, onMounted, reactive, watch } from 'vue';
 import { getCurrentInstance } from 'vue';
 import { useToast } from "primevue/usetoast";
 import CodeMirrorEditor from "@/components/CodeMirrorEditor.vue";
@@ -198,6 +198,7 @@ import {userStoreMe} from "@/store/userStore";
 
 import {WebSocketMessageClient} from "@/websocket/WebSocketMessageClient";
 import {ServerResponse} from "@/websocket/ServerResponse";
+import { useWorkspace } from '@/composables/useWorkspace';
 
 
 
@@ -206,6 +207,19 @@ const toast = useToast();
 const { proxy } = getCurrentInstance();
 const client = new WebSocketMessageClient(proxy.$socket);
 const userStore = userStoreMe();
+
+// Workspace management
+const {
+    workspaces: savedScripts,
+    currentWorkspace,
+    isLoading: workspaceLoading,
+    isSaving: workspaceSaving,
+    saveWorkspace,
+    loadWorkspace,
+    listWorkspaces,
+    deleteWorkspace: deleteWorkspaceById,
+    createNew: createNewWorkspace
+} = useWorkspace('CsEditor');
 
 // Editor state
 const code = ref(`// Welcome to C# Script Editor
@@ -241,7 +255,6 @@ const currentScript = reactive({
     language: 'csharp'
 });
 
-const savedScripts = ref([]);
 const showLoadDialog = ref(false);
 const selectedScriptToLoad = ref(null);
 
@@ -482,106 +495,87 @@ const newScript = () => {
     }
 };
 
-const saveScript = () => {
-    const script = {
-        id: currentScript.id || generateId(),
-        name: currentScript.name || 'Untitled C# Script',
-        content: code.value,
-        language: 'csharp',
-        createdAt: currentScript.id ? undefined : new Date(),
-        updatedAt: new Date()
-    };
+const saveScript = async () => {
+    try {
+        const workspace = await saveWorkspace({
+            id: currentScript.id,
+            name: currentScript.name || 'Untitled C# Script',
+            description: `C# script created on ${new Date().toLocaleDateString()}`,
+            content: {
+                code: code.value,
+                language: 'csharp'
+            },
+            metadata: {
+                lastExecuted: hasExecuted.value ? new Date().toISOString() : null
+            }
+        });
 
-    const existingIndex = savedScripts.value.findIndex(s => s.id === script.id);
-
-    if (existingIndex >= 0) {
-        savedScripts.value[existingIndex] = { ...savedScripts.value[existingIndex], ...script };
-    } else {
-        savedScripts.value.push(script);
-        currentScript.id = script.id;
-    }
-
-    saveScriptsToStorage();
-
-    toast.add({
-        severity: 'success',
-        summary: 'Script Saved',
-        detail: `Script "${script.name}" saved successfully`,
-        life: 3000
-    });
-};
-
-const loadScript = () => {
-    loadScriptsFromStorage();
-    showLoadDialog.value = true;
-};
-
-const confirmLoadScript = () => {
-    if (!selectedScriptToLoad.value) return;
-
-    const script = selectedScriptToLoad.value;
-    currentScript.id = script.id;
-    currentScript.name = script.name;
-    currentScript.content = script.content;
-    currentScript.language = script.language || 'csharp';
-
-    code.value = script.content;
-    debugText.value = '';
-    hasExecuted.value = false;
-
-    if (editorRef.value?.setCode) {
-        editorRef.value.setCode(script.content);
-    }
-
-    showLoadDialog.value = false;
-    selectedScriptToLoad.value = null;
-
-    toast.add({
-        severity: 'success',
-        summary: 'Script Loaded',
-        detail: `Script "${script.name}" loaded successfully`,
-        life: 3000
-    });
-};
-
-const deleteScript = (scriptId) => {
-    const index = savedScripts.value.findIndex(s => s.id === scriptId);
-    if (index >= 0) {
-        const scriptName = savedScripts.value[index].name;
-        savedScripts.value.splice(index, 1);
-        saveScriptsToStorage();
-
+        currentScript.id = workspace.id || workspace.Id;
+    } catch (error) {
         toast.add({
-            severity: 'success',
-            summary: 'Script Deleted',
-            detail: `Script "${scriptName}" deleted successfully`,
-            life: 3000
+            severity: 'error',
+            summary: 'Save Failed',
+            detail: error.message || 'Failed to save script',
+            life: 5000
         });
     }
 };
 
-// Storage management
-const saveScriptsToStorage = () => {
+const loadScript = async () => {
     try {
-        localStorage.setItem('cs-scripts', JSON.stringify(savedScripts.value));
+        await listWorkspaces();
+        showLoadDialog.value = true;
     } catch (error) {
-        console.error('Failed to save scripts:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Load Failed',
+            detail: 'Failed to load scripts list',
+            life: 5000
+        });
     }
 };
 
-const loadScriptsFromStorage = () => {
+const confirmLoadScript = async () => {
+    if (!selectedScriptToLoad.value) return;
+
     try {
-        const saved = localStorage.getItem('cs-scripts');
-        if (saved) {
-            savedScripts.value = JSON.parse(saved).map(script => ({
-                ...script,
-                createdAt: script.createdAt ? new Date(script.createdAt) : new Date(),
-                updatedAt: script.updatedAt ? new Date(script.updatedAt) : new Date()
-            }));
+        const workspace = await loadWorkspace(selectedScriptToLoad.value.id || selectedScriptToLoad.value.Id);
+
+        currentScript.id = workspace.id || workspace.Id;
+        currentScript.name = workspace.name;
+        currentScript.content = workspace.content?.code || '';
+        currentScript.language = workspace.content?.language || 'csharp';
+
+        code.value = workspace.content?.code || '';
+        debugText.value = '';
+        hasExecuted.value = false;
+
+        if (editorRef.value?.setCode) {
+            editorRef.value.setCode(code.value);
         }
+
+        showLoadDialog.value = false;
+        selectedScriptToLoad.value = null;
     } catch (error) {
-        console.error('Failed to load scripts:', error);
-        savedScripts.value = [];
+        toast.add({
+            severity: 'error',
+            summary: 'Load Failed',
+            detail: error.message || 'Failed to load script',
+            life: 5000
+        });
+    }
+};
+
+const deleteScript = async (scriptId) => {
+    try {
+        await deleteWorkspaceById(scriptId);
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Delete Failed',
+            detail: error.message || 'Failed to delete script',
+            life: 5000
+        });
     }
 };
 
@@ -619,8 +613,12 @@ const handleSave = () => {
 };
 
 // Initialize component
-onMounted(() => {
-    loadScriptsFromStorage();
+onMounted(async () => {
+    try {
+        await listWorkspaces();
+    } catch (error) {
+        console.error('Failed to load workspaces on mount:', error);
+    }
 });
 
 

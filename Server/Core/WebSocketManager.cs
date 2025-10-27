@@ -4,12 +4,14 @@ using GenHTTP.Modules.Websockets;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Server.Helpers;
+using Server.Core.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 
 
 namespace Server.Core;
@@ -20,12 +22,14 @@ public class WebSocketManager
     private readonly ConcurrentDictionary<string, ConnectionInfo> _connections;
     private readonly IAuthService _authService;
     private readonly IUserReportsService _reportsService;
+    private readonly IWorkspaceService _workspaceService;
 
-    public WebSocketManager(IAuthService authService, IUserReportsService reportsService)
+    public WebSocketManager(IAuthService authService, IUserReportsService reportsService, IWorkspaceService workspaceService)
     {
         _connections = new ConcurrentDictionary<string, ConnectionInfo>();
         _authService = authService;
         _reportsService = reportsService;
+        _workspaceService = workspaceService;
     }
 
   
@@ -100,9 +104,107 @@ public class WebSocketManager
         using var _ = SendMessageAsync(connectionInfo, new HeartbeatMessage(), socket);
     }
 
-    private void DataMessage(object sender, MessageReceivedEventArgs e)
+    private async void DataMessage(object sender, MessageReceivedEventArgs e)
     {
-        throw new NotImplementedException();
+        IWebsocketConnection socket = e.WebSocket;
+        ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
+
+        if (e.Message is DataMessage dataMsg)
+        {
+            try
+            {
+                var response = dataMsg.DataType.ToLower() switch
+                {
+                    "save_workspace" => await HandleSaveWorkspace(dataMsg, connectionInfo),
+                    "load_workspace" => await HandleLoadWorkspace(dataMsg, connectionInfo),
+                    "list_workspaces" => await HandleListWorkspaces(dataMsg, connectionInfo),
+                    "delete_workspace" => await HandleDeleteWorkspace(dataMsg, connectionInfo),
+                    _ => CreateErrorResponse($"Unknown data type: {dataMsg.DataType}")
+                };
+
+                await SendMessageAsync(connectionInfo, response, socket);
+            }
+            catch (Exception ex)
+            {
+                await SendMessageAsync(connectionInfo, CreateErrorResponse(ex.Message), socket);
+            }
+        }
+    }
+
+    private async Task<ResponseMessage> HandleSaveWorkspace(DataMessage dataMsg, ConnectionInfo connectionInfo)
+    {
+        var workspaceJson = dataMsg.Payload.ToString();
+        var workspace = System.Text.Json.JsonSerializer.Deserialize<WorkspaceData>(workspaceJson);
+
+        if (workspace == null)
+        {
+            return CreateErrorResponse("Invalid workspace data");
+        }
+
+        workspace.UserId = connectionInfo.UserId ?? connectionInfo.ConnectionId;
+        var savedWorkspace = await _workspaceService.SaveWorkspaceAsync(workspace);
+
+        return new ResponseMessage
+        {
+            Status = MessageStatus.Success,
+            Data = savedWorkspace
+        };
+    }
+
+    private async Task<ResponseMessage> HandleLoadWorkspace(DataMessage dataMsg, ConnectionInfo connectionInfo)
+    {
+        var workspaceId = dataMsg.Metadata.GetValueOrDefault("workspaceId", "").ToString();
+        var userId = connectionInfo.UserId ?? connectionInfo.ConnectionId;
+
+        var workspace = await _workspaceService.GetWorkspaceAsync(workspaceId, userId);
+
+        if (workspace == null)
+        {
+            return CreateErrorResponse("Workspace not found");
+        }
+
+        return new ResponseMessage
+        {
+            Status = MessageStatus.Success,
+            Data = workspace
+        };
+    }
+
+    private async Task<ResponseMessage> HandleListWorkspaces(DataMessage dataMsg, ConnectionInfo connectionInfo)
+    {
+        var workspaceType = dataMsg.Metadata.GetValueOrDefault("workspaceType", null)?.ToString();
+        var userId = connectionInfo.UserId ?? connectionInfo.ConnectionId;
+
+        var workspaces = await _workspaceService.ListWorkspacesAsync(userId, workspaceType);
+
+        return new ResponseMessage
+        {
+            Status = MessageStatus.Success,
+            Data = workspaces
+        };
+    }
+
+    private async Task<ResponseMessage> HandleDeleteWorkspace(DataMessage dataMsg, ConnectionInfo connectionInfo)
+    {
+        var workspaceId = dataMsg.Metadata.GetValueOrDefault("workspaceId", "").ToString();
+        var userId = connectionInfo.UserId ?? connectionInfo.ConnectionId;
+
+        var success = await _workspaceService.DeleteWorkspaceAsync(workspaceId, userId);
+
+        return new ResponseMessage
+        {
+            Status = success ? MessageStatus.Success : MessageStatus.Error,
+            Data = new { success, workspaceId }
+        };
+    }
+
+    private ResponseMessage CreateErrorResponse(string errorMessage)
+    {
+        return new ResponseMessage
+        {
+            Status = MessageStatus.Error,
+            ErrorMessage = errorMessage
+        };
     }
 
     private void ErrorMessage(object sender, MessageReceivedEventArgs e)

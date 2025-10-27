@@ -30,11 +30,12 @@ internal class Program
 
         var cache = new ReportsCache(cacheConfig);
         await cache.InitializeAsync();
+        var workspaceService = new WorkspaceService(cache);
         var dataSource = new DataSourceManager(cache);
         var authService = new AuthService(cache);
         var reportsService = new UserReportsService(cache, dataSource);
         var backgroundWorker = new ReportsBackgroundWorker(cache, reportsService);
-        var webSocketManager = new WebSocketManager(authService, reportsService); 
+        var webSocketManager = new WebSocketManager(authService, reportsService, workspaceService); 
 
         // Configurar conexiones de base de datos
         dataSource.AddConnection("mssql-main",
