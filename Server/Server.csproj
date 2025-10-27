@@ -43,9 +43,9 @@
 
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
-    <PackageReference Include="RocksDbNative" Version="6.2.2" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
 
-    <PackageReference Include="RocksDbSharp" Version="6.2.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
 
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
 

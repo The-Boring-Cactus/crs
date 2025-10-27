@@ -1,111 +1,79 @@
-using RocksDbSharp;
 using System.Text.Json;
-using System.Text;
 
 namespace Server.Core;
 
-public class ReportsCache : IDisposable
+public class ReportsCache : IReportsCache
 {
-    private readonly RocksDb _db;
-    private readonly JsonSerializerOptions _jsonOptions;
-    private readonly CacheMetrics _metrics;
-    
-    public ReportsCache(string cachePath)
+    private readonly IReportsCache _implementation;
+
+    public ReportsCache(CacheConfiguration config)
     {
-        var options = new DbOptions()
-            .SetCreateIfMissing(true)
-            .SetCompression(Compression.Lz4)
-            .SetWriteBufferSize(32 * 1024 * 1024)
-            .SetMaxWriteBufferNumber(2)
-            .SetTargetFileSizeBase(128 * 1024 * 1024);
-            
-        _db = RocksDb.Open(options, cachePath);
-        _jsonOptions = new JsonSerializerOptions 
-        { 
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
+        _implementation = config.ProviderType switch
+        {
+            CacheProviderType.PostgreSQL => new PostgreSQLReportsCache(config),
+            CacheProviderType.MSSQL => new MSSQLReportsCache(config),
+            _ => throw new ArgumentException($"Unsupported cache provider: {config.ProviderType}")
         };
-        _metrics = new CacheMetrics();
     }
-    
+
+    // Constructor for backward compatibility (uses MSSQL by default with provided connection string)
+    public ReportsCache(string connectionStringOrPath)
+    {
+        // Try to determine if it's a connection string or a path
+        var config = new CacheConfiguration();
+
+        if (connectionStringOrPath.Contains("Server=") || connectionStringOrPath.Contains("Data Source="))
+        {
+            // It's a connection string - use MSSQL
+            config.ProviderType = CacheProviderType.MSSQL;
+            config.ConnectionString = connectionStringOrPath;
+        }
+        else if (connectionStringOrPath.Contains("Host=") || connectionStringOrPath.Contains("host="))
+        {
+            // It's a PostgreSQL connection string
+            config.ProviderType = CacheProviderType.PostgreSQL;
+            config.ConnectionString = connectionStringOrPath;
+        }
+        else
+        {
+            // Default to MSSQL with local server
+            config.ProviderType = CacheProviderType.MSSQL;
+            config.ConnectionString = $"Server=.;Database={connectionStringOrPath};Integrated Security=true";
+        }
+
+        _implementation = config.ProviderType switch
+        {
+            CacheProviderType.PostgreSQL => new PostgreSQLReportsCache(config),
+            CacheProviderType.MSSQL => new MSSQLReportsCache(config),
+            _ => throw new ArgumentException($"Unsupported cache provider: {config.ProviderType}")
+        };
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _implementation.InitializeAsync();
+    }
+
     public async Task<T> GetOrExecuteAsync<T>(
-        string queryKey, 
-        Func<Task<T>> queryExecutor, 
+        string queryKey,
+        Func<Task<T>> queryExecutor,
         TimeSpan maxAge)
     {
-        var startTime = DateTime.UtcNow;
-        var cacheEntry = GetCacheEntry<T>(queryKey);
-        
-        if (cacheEntry != null && !IsExpired(cacheEntry.Timestamp, maxAge))
-        {
-            _metrics.CacheHits++;
-            _metrics.UpdateAverageQueryTime(DateTime.UtcNow - startTime);
-            return cacheEntry.Data;
-        }
-        
-        _metrics.CacheMisses++;
-        var freshData = await queryExecutor();
-        StoreCacheEntry(queryKey, freshData);
-        _metrics.UpdateAverageQueryTime(DateTime.UtcNow - startTime);
-        
-        return freshData;
+        return await _implementation.GetOrExecuteAsync(queryKey, queryExecutor, maxAge);
     }
-    
-    private CacheEntry<T> GetCacheEntry<T>(string key)
-    {
-        var entryKey = $"entry:{key}";
-        var json = _db.Get(Encoding.UTF8.GetBytes(entryKey));
-        if (json == null) return null;
-        
-        try 
-        {
-            var jsonString = Encoding.UTF8.GetString(json);
-            return JsonSerializer.Deserialize<CacheEntry<T>>(jsonString, _jsonOptions);
-        }
-        catch
-        {
-            _db.Remove(Encoding.UTF8.GetBytes(entryKey));
-            return null;
-        }
-    }
-    
-    private void StoreCacheEntry<T>(string key, T data)
-    {
-        var entry = new CacheEntry<T>
-        {
-            Data = data,
-            Timestamp = DateTimeOffset.UtcNow,
-            Key = key
-        };
-        
-        var json = JsonSerializer.Serialize(entry, _jsonOptions);
-        
-        using var batch = new WriteBatch();
-        batch.Put(Encoding.UTF8.GetBytes($"entry:{key}"), Encoding.UTF8.GetBytes(json));
-        batch.Put(Encoding.UTF8.GetBytes($"timestamp:{key}"), Encoding.UTF8.GetBytes(entry.Timestamp.ToUnixTimeMilliseconds().ToString()));
-        _db.Write(batch);
-    }
-    
-    private bool IsExpired(DateTimeOffset timestamp, TimeSpan maxAge)
-    {
-        return DateTimeOffset.UtcNow - timestamp > maxAge;
-    }
-    
+
     public void InvalidateQuery(string queryKey)
     {
-        using var batch = new WriteBatch();
-        batch.Delete(Encoding.UTF8.GetBytes($"entry:{queryKey}"));
-        batch.Delete(Encoding.UTF8.GetBytes($"timestamp:{queryKey}"));
-        _db.Write(batch);
+        _implementation.InvalidateQuery(queryKey);
     }
-    
+
     public CacheMetrics GetMetrics()
     {
-        return _metrics;
+        return _implementation.GetMetrics();
     }
-    
+
     public void Dispose()
     {
-        _db?.Dispose();
+        _implementation?.Dispose();
     }
 }

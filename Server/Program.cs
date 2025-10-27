@@ -10,12 +10,26 @@ using Microsoft.Data.SqlClient;
 using Server.Core;
 using System.Net;
 using GenHTTP.Modules.ApiBrowsing;
+using System.Text.Json;
 
 internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var cache = new ReportsCache("report-system");
+        // Load cache configuration from appsettings.json
+        var configJson = await File.ReadAllTextAsync("appsettings.json");
+        var configDoc = JsonDocument.Parse(configJson);
+        var cacheConfigElement = configDoc.RootElement.GetProperty("CacheConfiguration");
+
+        var cacheConfig = new CacheConfiguration
+        {
+            ProviderType = Enum.Parse<CacheProviderType>(cacheConfigElement.GetProperty("ProviderType").GetString() ?? "MSSQL"),
+            ConnectionString = cacheConfigElement.GetProperty("ConnectionString").GetString() ?? "",
+            TableName = cacheConfigElement.GetProperty("TableName").GetString() ?? "ReportsCache"
+        };
+
+        var cache = new ReportsCache(cacheConfig);
+        await cache.InitializeAsync();
         var dataSource = new DataSourceManager(cache);
         var authService = new AuthService(cache);
         var reportsService = new UserReportsService(cache, dataSource);

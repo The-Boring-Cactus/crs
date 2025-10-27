@@ -1399,6 +1399,7 @@ onUnmounted(() => {
   border-radius: 8px;
   background: white;
   min-height: 0;
+  position: relative;
 }
 
 .excel-grid-header {
@@ -1407,21 +1408,25 @@ onUnmounted(() => {
   top: 0;
   z-index: 10;
   background: var(--surface-100);
+  flex-shrink: 0;
 }
 
 .excel-corner-cell {
   width: 50px;
   min-width: 50px;
-  height: 30px;
+  max-width: 50px;
+  height: 32px;
   border-right: 1px solid var(--surface-border);
   border-bottom: 1px solid var(--surface-border);
   background: var(--surface-200);
+  flex-shrink: 0;
 }
 
 .excel-column-header {
   min-width: 100px;
   width: 100px;
-  height: 30px;
+  max-width: 100px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1433,6 +1438,7 @@ onUnmounted(() => {
   font-size: 0.85rem;
   user-select: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .excel-column-header:hover {
@@ -1440,17 +1446,20 @@ onUnmounted(() => {
 }
 
 .excel-grid-body {
-  /* No overflow here - parent handles it */
+  display: flex;
+  flex-direction: column;
 }
 
 .excel-row {
   display: flex;
+  flex-shrink: 0;
 }
 
 .excel-row-header {
   width: 50px;
   min-width: 50px;
-  height: 28px;
+  max-width: 50px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1462,6 +1471,7 @@ onUnmounted(() => {
   color: var(--text-color-secondary);
   user-select: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .excel-row-header:hover {
@@ -1471,7 +1481,8 @@ onUnmounted(() => {
 .excel-cell {
   min-width: 100px;
   width: 100px;
-  height: 28px;
+  max-width: 100px;
+  height: 30px;
   border-right: 1px solid var(--surface-border);
   border-bottom: 1px solid var(--surface-border);
   padding: 2px 6px;
@@ -1480,6 +1491,8 @@ onUnmounted(() => {
   background: white;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .excel-cell:hover {
