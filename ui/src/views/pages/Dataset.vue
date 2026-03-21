@@ -1,1275 +1,1035 @@
-<template>
-  <Toast />
-
-  <!-- Main Toolbar -->
-  <Toolbar class="dataset-toolbar">
-    <template #start>
-      <div class="flex align-items-center gap-2">
-        <label class="dataset-label">Dataset:</label>
-        <Inplace v-tooltip="'Click to Change'" class="dataset-name">
-          <template #display>
-            <div class="flex align-items-center gap-2 cursor-pointer">
-              <i class="pi pi-table text-muted-color"></i>
-              <span class="dataset-title">{{ MyTitle || 'Untitled Dataset' }}</span>
-              <i class="pi pi-pencil text-xs text-muted-color"></i>
-            </div>
-          </template>
-          <template #content="{ closeCallback }">
-            <div class="flex align-items-center gap-2">
-              <InputText v-model="MyTitle" placeholder="Enter dataset name" autofocus />
-              <Button icon="pi pi-check" text severity="success" @click="closeCallback" />
-              <Button icon="pi pi-times" text severity="danger" @click="closeCallback" />
-            </div>
-          </template>
-        </Inplace>
-      </div>
-    </template>
-
-    <template #center>
-      <div class="flex align-items-center gap-2">
-        <Tag severity="info" class="stats-tag">
-          <i class="pi pi-table mr-1"></i>
-          {{ jsondata.length }} rows × {{ getColumnCount() }} columns
-        </Tag>
-        <Tag v-if="selectedRows.length > 0" severity="success" class="stats-tag">
-          <i class="pi pi-check-square mr-1"></i>
-          {{ selectedRows.length }} selected
-        </Tag>
-      </div>
-    </template>
-
-    <template #end>
-      <div class="flex align-items-center gap-2">
-        <Button
-          icon="pi pi-save"
-          @click="quickSave"
-          v-tooltip.bottom="'Save Dataset'"
-          text
-        />
-        <Button
-          icon="pi pi-upload"
-          @click="showImportDialog = true"
-          v-tooltip.bottom="'Import Data'"
-          text
-        />
-        <Button
-          icon="pi pi-download"
-          @click="showExportDialog = true"
-          v-tooltip.bottom="'Export Data'"
-          text
-        />
-      </div>
-    </template>
-  </Toolbar>
-
-  <!-- Secondary Toolbar -->
-  <Toolbar class="dataset-secondary-toolbar">
-    <template #start>
-      <div class="flex align-items-center gap-1">
-        <Button icon="pi pi-plus" text @click="newDoc" v-tooltip.top="'New Dataset'" />
-        <Divider layout="vertical" />
-        <Button icon="pi pi-plus-circle" text @click="createnewRow" v-tooltip.top="'Add Row'" />
-        <Button icon="pi pi-table" text @click="createnewCol" v-tooltip.top="'Add Column'" />
-        <Divider layout="vertical" />
-        <Button icon="pi pi-copy" text @click="copySelection" v-tooltip.top="'Copy Selection'" :disabled="selectedRows.length === 0" />
-        <Button icon="pi pi-clone" text @click="pasteSelection" v-tooltip.top="'Paste'" :disabled="!clipboard" />
-        <Button icon="pi pi-scissors" text @click="cutSelection" v-tooltip.top="'Cut Selection'" :disabled="selectedRows.length === 0" />
-      </div>
-    </template>
-
-    <template #center>
-      <div class="flex align-items-center gap-1">
-        <Button icon="pi pi-check-square" text @click="selectAll" v-tooltip.top="'Select All'" />
-        <Button icon="pi pi-eraser" text @click="clearSelection" v-tooltip.top="'Clear Selection'" />
-        <Divider layout="vertical" />
-        <Button icon="pi pi-trash" text @click="deleteSelectedRows" v-tooltip.top="'Delete Selected Rows'" :disabled="selectedRows.length === 0" />
-        <Button icon="pi pi-times" text @click="confirmClearAll" v-tooltip.top="'Clear All Data'" severity="danger" />
-      </div>
-    </template>
-
-    <template #end>
-      <div class="flex align-items-center gap-1">
-        <Button icon="pi pi-search" text @click="showFindReplace" v-tooltip.top="'Find & Replace'" />
-        <Button icon="pi pi-sort" text @click="showSortDialog" v-tooltip.top="'Sort Data'" />
-        <Button icon="pi pi-filter" text @click="showFilterDialog" v-tooltip.top="'Filter Data'" />
-        <Divider layout="vertical" />
-        <Button icon="pi pi-check-circle" text @click="validateData" v-tooltip.top="'Validate Data'" />
-        <Button icon="pi pi-chart-bar" text @click="showDataStats" v-tooltip.top="'Show Statistics'" />
-      </div>
-    </template>
-  </Toolbar>
-
-  <!-- Data Editor Container -->
-  <div class="dataset-container">
-    <DataTable
-      v-if="renderComponent"
-      :value="jsondata"
-      editMode="cell"
-      @cell-edit-complete="onCellEditComplete"
-      @cell-edit-init="onCellEditInit"
-      v-model:selection="selectedRows"
-      dataKey="id"
-      :paginator="true"
-      :rows="20"
-      :rowsPerPageOptions="[10, 20, 50, 100]"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-      scrollable
-      scrollHeight="calc(100vh - 300px)"
-      resizableColumns
-      columnResizeMode="expand"
-      sortMode="multiple"
-      class="editable-datatable"
-      @row-contextmenu="onRowContextMenu"
-      contextMenu
-    >
-      <Column
-        v-for="(column, index) in columns"
-        :key="column.field"
-        :field="column.field"
-        :header="column.header"
-        :sortable="true"
-        style="min-width: 120px"
-      >
-        <template #editor="{ data, field }">
-          <InputText
-            v-model="data[field]"
-            autofocus
-            @keydown.enter="$event.target.blur()"
-            @keydown.tab="$event.target.blur()"
-            class="cell-editor"
-          />
-        </template>
-        <template #header>
-          <div class="column-header">
-            <span @dblclick="editColumnHeader(column, index)">
-              {{ column.header }}
-            </span>
-            <Button
-              icon="pi pi-times"
-              class="p-button-text p-button-sm delete-column-btn"
-              @click="deleteColumn(index)"
-              v-tooltip.top="'Delete Column'"
-            />
-          </div>
-        </template>
-      </Column>
-
-      <!-- Add new column button -->
-      <Column header="" style="width: 50px" :sortable="false">
-        <template #header>
-          <Button
-            icon="pi pi-plus"
-            class="p-button-text p-button-sm"
-            @click="createnewCol"
-            v-tooltip.top="'Add Column'"
-          />
-        </template>
-        <template #body="{ index }">
-          <Button
-            icon="pi pi-trash"
-            class="p-button-text p-button-sm p-button-danger"
-            @click="deleteRow(index)"
-            v-tooltip.top="'Delete Row'"
-          />
-        </template>
-      </Column>
-    </DataTable>
-
-    <!-- Add new row button -->
-    <div class="add-row-container">
-      <Button
-        icon="pi pi-plus"
-        label="Add Row"
-        @click="createnewRow"
-        class="add-row-btn"
-      />
-    </div>
-  </div>
-
-  <!-- Import Dialog -->
-  <Dialog
-    v-model:visible="showImportDialog"
-    modal
-    header="Import Data"
-    class="import-dialog"
-    :style="{ width: '500px' }"
-  >
-    <div class="import-content">
-      <div class="import-options">
-        <h4>Import from File</h4>
-        <div class="file-input-container">
-          <input
-            ref="fileInput"
-            type="file"
-            accept=".csv,.xlsx,.xls,.json"
-            @change="handleFileImport"
-            class="file-input"
-          />
-          <Button
-            icon="pi pi-upload"
-            label="Choose File"
-            class="file-button"
-            @click="$refs.fileInput.click()"
-          />
-        </div>
-        <small class="file-help">Supported formats: CSV, Excel (.xlsx, .xls), JSON</small>
-      </div>
-
-      <Divider />
-
-      <div class="import-options">
-        <h4>Paste Data</h4>
-        <Textarea
-          v-model="pasteData"
-          placeholder="Paste CSV or tab-separated data here..."
-          rows="6"
-          class="paste-textarea"
-        />
-        <Button
-          icon="pi pi-check"
-          label="Import from Clipboard"
-          @click="importFromClipboard"
-          :disabled="!pasteData.trim()"
-          class="mt-2"
-        />
-      </div>
-    </div>
-
-    <template #footer>
-      <Button
-        label="Cancel"
-        icon="pi pi-times"
-        @click="showImportDialog = false"
-        class="p-button-text"
-      />
-    </template>
-  </Dialog>
-
-  <!-- Export Dialog -->
-  <Dialog
-    v-model:visible="showExportDialog"
-    modal
-    header="Export Data"
-    class="export-dialog"
-    :style="{ width: '400px' }"
-  >
-    <div class="export-content">
-      <div class="export-format">
-        <h4>Choose Export Format</h4>
-        <div class="format-options">
-          <Button
-            icon="pi pi-file"
-            label="CSV"
-            @click="exportData('csv')"
-            class="format-button"
-          />
-          <Button
-            icon="pi pi-file-excel"
-            label="Excel"
-            @click="exportData('excel')"
-            class="format-button"
-          />
-          <Button
-            icon="pi pi-code"
-            label="JSON"
-            @click="exportData('json')"
-            class="format-button"
-          />
-        </div>
-      </div>
-    </div>
-
-    <template #footer>
-      <Button
-        label="Cancel"
-        icon="pi pi-times"
-        @click="showExportDialog = false"
-        class="p-button-text"
-      />
-    </template>
-  </Dialog>
-
-  <!-- Context Menu -->
-  <ContextMenu ref="contextMenuRef" :model="contextMenuItems" />
-</template>
-
 <script setup>
-import { nextTick, ref, computed, onMounted } from 'vue'
-import { useToast } from 'primevue/usetoast'
-import * as XLSX from 'xlsx'
+import { nextTick, ref, computed, onMounted } from 'vue';
+import { toast } from 'vue-sonner';
+import * as XLSX from 'xlsx';
+import { Toaster } from '@/components/ui/sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox'; // Data state
+import { markRaw } from 'vue';
+import { 
+    Table as TableIcon, Pencil, CheckSquare, Save, Upload, Download, 
+    Plus, PlusCircle, Copy, Scissors, Eraser, Trash2, X, 
+    Search, ArrowUpDown, Filter, CheckCircle, BarChart, 
+    ChevronLeft, ChevronRight, Check, File, FileSpreadsheet, Code 
+} from 'lucide-vue-next';
+const MyTitle = ref('Sample Dataset');
+const renderComponent = ref(true);
+const showImportDialog = ref(false);
+const showExportDialog = ref(false);
+const pasteData = ref('');
+const selectedRows = ref([]);
+const clipboard = ref(null);
+const editingCell = ref(null);
+const editingTitle = ref(false);
 
-const toast = useToast()
+// Pagination and Sorting State
+const currentPage = ref(1);
+const rowsPerPage = ref(20);
+const sortField = ref(null);
+const sortOrder = ref(1);
 
-// Data state
-const MyTitle = ref('Sample Dataset')
-const renderComponent = ref(true)
-const showImportDialog = ref(false)
-const showExportDialog = ref(false)
-const pasteData = ref('')
-const selectedRows = ref([])
-const clipboard = ref(null)
-const editingCell = ref(null)
-const contextMenuRef = ref()
+const filteredData = computed(() => {
+    let result = [...jsondata.value];
 
+    // Add sorting logic
+    if (sortField.value) {
+        result.sort((a, b) => {
+            let valA = a[sortField.value];
+            let valB = b[sortField.value];
+
+            if (valA === valB) return 0;
+            if (valA === null || valA === undefined) return sortOrder.value;
+            if (valB === null || valB === undefined) return -sortOrder.value;
+
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                return valA.localeCompare(valB) * sortOrder.value;
+            }
+            return (valA < valB ? -1 : 1) * sortOrder.value;
+        });
+    }
+    return result;
+});
+
+const totalPages = computed(() => Math.ceil(filteredData.value.length / rowsPerPage.value));
+
+const paginatedData = computed(() => {
+    const start = (currentPage.value - 1) * rowsPerPage.value;
+    const end = start + rowsPerPage.value;
+    return filteredData.value.slice(start, end);
+});
+
+// Pagination utilities
+function sortBy(field) {
+    if (sortField.value === field) {
+        if (sortOrder.value === 1) {
+            sortOrder.value = -1;
+        } else {
+            sortField.value = null;
+            sortOrder.value = 1;
+        }
+    } else {
+        sortField.value = field;
+        sortOrder.value = 1;
+    }
+}
+
+// Selection utilities
+const selectAllChecked = computed(() => {
+    return paginatedData.value.length > 0 && selectedRows.value.length >= paginatedData.value.length;
+});
+
+function toggleAllSelection(checked) {
+    if (checked) {
+        // Merge existing selection with current page, avoiding duplicates
+        const currentPageIds = paginatedData.value.map((r) => r.id);
+        const otherSelections = selectedRows.value.filter((r) => !currentPageIds.includes(r.id));
+        selectedRows.value = [...otherSelections, ...paginatedData.value];
+    } else {
+        // Remove current page from selection
+        const currentPageIds = paginatedData.value.map((r) => r.id);
+        selectedRows.value = selectedRows.value.filter((r) => !currentPageIds.includes(r.id));
+    }
+}
+
+function toggleSelection(row) {
+    const index = selectedRows.value.findIndex((r) => r.id === row.id);
+    if (index === -1) {
+        selectedRows.value.push(row);
+    } else {
+        selectedRows.value.splice(index, 1);
+    }
+}
+
+function isSelected(row) {
+    return selectedRows.value.some((r) => r.id === row.id);
+}
+
+function editCell(row, field) {
+    editingCell.value = { id: row.id, field };
+}
+
+function completeCellEdit(event) {
+    if (editingCell.value) {
+        onCellEditComplete({
+            data: jsondata.value.find((r) => r.id === editingCell.value.id),
+            newValue: event.target.value,
+            field: editingCell.value.field
+        });
+    }
+    editingCell.value = null;
+}
+
+function moveToNextCell(rowIndex, currentField) {
+    const columnFields = columns.value.map((c) => c.field);
+    const currentColIndex = columnFields.indexOf(currentField);
+
+    if (currentColIndex < columnFields.length - 1) {
+        // Move to next column in same row
+        editCell(paginatedData.value[rowIndex], columnFields[currentColIndex + 1]);
+    } else if (rowIndex < paginatedData.value.length - 1) {
+        // Move to first column in next row
+        editCell(paginatedData.value[rowIndex + 1], columnFields[0]);
+    } else {
+        editingCell.value = null;
+    }
+}
 
 // Context menu items
 const contextMenuItems = ref([
-  {
-    label: 'Copy',
-    icon: 'pi pi-copy',
-    command: () => copySelection()
-  },
-  {
-    label: 'Paste',
-    icon: 'pi pi-clone',
-    command: () => pasteSelection()
-  },
-  {
-    label: 'Cut',
-    icon: 'pi pi-scissors',
-    command: () => cutSelection()
-  },
-  { separator: true },
-  {
-    label: 'Insert Row',
-    icon: 'pi pi-plus',
-    command: () => insertRowBelow()
-  },
-  {
-    label: 'Insert Column',
-    icon: 'pi pi-plus',
-    command: () => insertColumnRight()
-  },
-  { separator: true },
-  {
-    label: 'Delete Row',
-    icon: 'pi pi-trash',
-    command: () => deleteSelectedRows()
-  },
-  {
-    label: 'Delete Column',
-    icon: 'pi pi-trash',
-    command: () => deleteSelectedColumns()
-  }
-])
+    {
+        label: 'Copy',
+        icon: markRaw(Copy),
+        command: () => copySelection()
+    },
+    {
+        label: 'Paste',
+        icon: markRaw(Copy),
+        command: () => pasteSelection()
+    },
+    {
+        label: 'Cut',
+        icon: markRaw(Scissors),
+        command: () => cutSelection()
+    },
+    { separator: true },
+    {
+        label: 'Insert Row',
+        icon: markRaw(Plus),
+        command: () => insertRowBelow()
+    },
+    {
+        label: 'Insert Column',
+        icon: markRaw(Plus),
+        command: () => insertColumnRight()
+    },
+    { separator: true },
+    {
+        label: 'Delete Row',
+        icon: markRaw(Trash2),
+        command: () => deleteSelectedRows()
+    },
+    {
+        label: 'Delete Column',
+        icon: markRaw(Trash2),
+        command: () => deleteSelectedColumns()
+    }
+]);
 
 // Sample data with more realistic content
 const jsondata = ref([
-  {
-    'Product ID': 'P001',
-    'Product Name': 'Laptop Pro',
-    'Category': 'Electronics',
-    'Price': 1299.99,
-    'Stock': 45,
-    'Supplier': 'TechCorp',
-    'Last Updated': '2024-01-15'
-  },
-  {
-    'Product ID': 'P002',
-    'Product Name': 'Wireless Mouse',
-    'Category': 'Accessories',
-    'Price': 29.99,
-    'Stock': 150,
-    'Supplier': 'GadgetPlus',
-    'Last Updated': '2024-01-14'
-  },
-  {
-    'Product ID': 'P003',
-    'Product Name': 'Monitor 4K',
-    'Category': 'Electronics',
-    'Price': 599.99,
-    'Stock': 22,
-    'Supplier': 'DisplayTech',
-    'Last Updated': '2024-01-13'
-  },
-  {
-    'Product ID': 'P004',
-    'Product Name': 'Keyboard RGB',
-    'Category': 'Accessories',
-    'Price': 89.99,
-    'Stock': 78,
-    'Supplier': 'GamerHub',
-    'Last Updated': '2024-01-12'
-  },
-  {
-    'Product ID': 'P005',
-    'Product Name': 'Webcam HD',
-    'Category': 'Electronics',
-    'Price': 149.99,
-    'Stock': 33,
-    'Supplier': 'VideoTech',
-    'Last Updated': '2024-01-11'
-  }
-])
+    {
+        'Product ID': 'P001',
+        'Product Name': 'Laptop Pro',
+        Category: 'Electronics',
+        Price: 1299.99,
+        Stock: 45,
+        Supplier: 'TechCorp',
+        'Last Updated': '2024-01-15'
+    },
+    {
+        'Product ID': 'P002',
+        'Product Name': 'Wireless Mouse',
+        Category: 'Accessories',
+        Price: 29.99,
+        Stock: 150,
+        Supplier: 'GadgetPlus',
+        'Last Updated': '2024-01-14'
+    },
+    {
+        'Product ID': 'P003',
+        'Product Name': 'Monitor 4K',
+        Category: 'Electronics',
+        Price: 599.99,
+        Stock: 22,
+        Supplier: 'DisplayTech',
+        'Last Updated': '2024-01-13'
+    },
+    {
+        'Product ID': 'P004',
+        'Product Name': 'Keyboard RGB',
+        Category: 'Accessories',
+        Price: 89.99,
+        Stock: 78,
+        Supplier: 'GamerHub',
+        'Last Updated': '2024-01-12'
+    },
+    {
+        'Product ID': 'P005',
+        'Product Name': 'Webcam HD',
+        Category: 'Electronics',
+        Price: 149.99,
+        Stock: 33,
+        Supplier: 'VideoTech',
+        'Last Updated': '2024-01-11'
+    }
+]);
 
 // Computed properties
 const getColumnCount = () => {
-  return jsondata.value.length > 0 ? Object.keys(jsondata.value[0]).length : 0
-}
+    return jsondata.value.length > 0 ? Object.keys(jsondata.value[0]).length : 0;
+};
 
 // Generate columns from data
 const columns = computed(() => {
-  if (jsondata.value.length === 0) return []
-  return Object.keys(jsondata.value[0])
-    .filter(key => key !== 'id')
-    .map(key => ({
-      field: key,
-      header: key
-    }))
-})
+    if (jsondata.value.length === 0) return [];
+    return Object.keys(jsondata.value[0])
+        .filter((key) => key !== 'id')
+        .map((key) => ({
+            field: key,
+            header: key
+        }));
+});
 
 // Utility functions
 function addProperties(data, newProperties) {
-  data.forEach(item => {
-    Object.assign(item, newProperties)
-  })
-  return data
+    data.forEach((item) => {
+        Object.assign(item, newProperties);
+    });
+    return data;
 }
 
 function addRow(data) {
-  if (data.length === 0) {
-    return [{ id: 1, 'Column 1': '', 'Column 2': '', 'Column 3': '' }]
-  }
-
-  const newRow = { id: Math.max(...data.map(row => row.id || 0)) + 1 }
-  Object.keys(data[0]).forEach(key => {
-    if (key !== 'id') {
-      newRow[key] = ''
+    if (data.length === 0) {
+        return [{ id: 1, 'Column 1': '', 'Column 2': '', 'Column 3': '' }];
     }
-  })
-  data.push(newRow)
-  return data
+
+    const newRow = { id: Math.max(...data.map((row) => row.id || 0)) + 1 };
+    Object.keys(data[0]).forEach((key) => {
+        if (key !== 'id') {
+            newRow[key] = '';
+        }
+    });
+    data.push(newRow);
+    return data;
 }
 
 const forceRerender = async () => {
-  renderComponent.value = false
-  await nextTick()
-  renderComponent.value = true
-}
+    renderComponent.value = false;
+    await nextTick();
+    renderComponent.value = true;
+};
 
 // Core data manipulation functions
 const createnewRow = async () => {
-  jsondata.value = addRow([...jsondata.value])
-  await forceRerender()
+    jsondata.value = addRow([...jsondata.value]);
+    await forceRerender();
 
-  toast.add({
-    severity: 'success',
-    summary: 'Row Added',
-    detail: 'New row has been added to the dataset',
-    life: 2000
-  })
-}
+    toast('Row Added', {
+        description: 'New row has been added to the dataset'
+    });
+};
 
 const createnewCol = async () => {
-  const columnCount = getColumnCount()
-  const newColumnName = `Column ${columnCount + 1}`
-  const newColumn = { [newColumnName]: '' }
+    const columnCount = getColumnCount();
+    const newColumnName = `Column ${columnCount + 1}`;
+    const newColumn = { [newColumnName]: '' };
 
-  jsondata.value = addProperties([...jsondata.value], newColumn)
-  await forceRerender()
+    jsondata.value = addProperties([...jsondata.value], newColumn);
+    await forceRerender();
 
-  toast.add({
-    severity: 'success',
-    summary: 'Column Added',
-    detail: `New column '${newColumnName}' has been added`,
-    life: 2000
-  })
-}
+    toast('Column Added', {
+        description: `New column '${newColumnName}' has been added`
+    });
+};
 
 const newDoc = async () => {
-  MyTitle.value = 'New Dataset'
-  jsondata.value = [
-    { 'Column 1': '', 'Column 2': '', 'Column 3': '' },
-    { 'Column 1': '', 'Column 2': '', 'Column 3': '' },
-    { 'Column 1': '', 'Column 2': '', 'Column 3': '' }
-  ]
-  selectedRows.value = []
-  clipboard.value = null
+    MyTitle.value = 'New Dataset';
+    jsondata.value = [
+        { 'Column 1': '', 'Column 2': '', 'Column 3': '' },
+        { 'Column 1': '', 'Column 2': '', 'Column 3': '' },
+        { 'Column 1': '', 'Column 2': '', 'Column 3': '' }
+    ];
+    selectedRows.value = [];
+    clipboard.value = null;
 
-  await forceRerender()
+    await forceRerender();
 
-  toast.add({
-    severity: 'info',
-    summary: 'New Dataset',
-    detail: 'Created a new empty dataset',
-    life: 2000
-  })
-}
+    toast('New Dataset', {
+        description: 'Created a new empty dataset'
+    });
+};
 
 // File operations
 const quickSave = () => {
-  const dataStr = JSON.stringify({
-    name: MyTitle.value,
-    data: jsondata.value,
-    timestamp: new Date().toISOString()
-  }, null, 2)
+    const dataStr = JSON.stringify(
+        {
+            name: MyTitle.value,
+            data: jsondata.value,
+            timestamp: new Date().toISOString()
+        },
+        null,
+        2
+    );
 
-  const blob = new Blob([dataStr], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${MyTitle.value || 'dataset'}-${new Date().toISOString().split('T')[0]}.json`
-  link.click()
-  URL.revokeObjectURL(url)
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${MyTitle.value || 'dataset'}-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
 
-  toast.add({
-    severity: 'success',
-    summary: 'Dataset Saved',
-    detail: 'Dataset has been saved as JSON file',
-    life: 3000
-  })
-}
-
+    toast('Dataset Saved', {
+        description: 'Dataset has been saved as JSON file'
+    });
+};
 
 const handleFileImport = async (event) => {
-  const file = event.target.files[0]
-  if (!file) return
+    const file = event.target.files[0];
+    if (!file) return;
 
-  try {
-    const fileExtension = file.name.split('.').pop().toLowerCase()
-    let importedData = []
+    try {
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        let importedData = [];
 
-    if (fileExtension === 'json') {
-      const text = await file.text()
-      const parsed = JSON.parse(text)
-      importedData = Array.isArray(parsed) ? parsed : parsed.data || [parsed]
-    } else if (fileExtension === 'csv') {
-      const text = await file.text()
-      importedData = parseCSV(text)
-    } else if (['xlsx', 'xls'].includes(fileExtension)) {
-      const arrayBuffer = await file.arrayBuffer()
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' })
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
-      importedData = XLSX.utils.sheet_to_json(worksheet)
+        if (fileExtension === 'json') {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            importedData = Array.isArray(parsed) ? parsed : parsed.data || [parsed];
+        } else if (fileExtension === 'csv') {
+            const text = await file.text();
+            importedData = parseCSV(text);
+        } else if (['xlsx', 'xls'].includes(fileExtension)) {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            importedData = XLSX.utils.sheet_to_json(worksheet);
+        }
+
+        if (importedData.length > 0) {
+            // Add IDs to imported data
+            importedData.forEach((row, index) => {
+                row.id = index + 1;
+            });
+            jsondata.value = importedData;
+            MyTitle.value = file.name.split('.')[0];
+            await forceRerender();
+
+            toast('Import Successful', {
+                description: `Imported ${importedData.length} rows from ${file.name}`
+            });
+
+            showImportDialog.value = false;
+        }
+    } catch (error) {
+        toast.error('Import Failed', {
+            description: 'Error reading file: ' + error.message
+        });
     }
 
-    if (importedData.length > 0) {
-      // Add IDs to imported data
-      importedData.forEach((row, index) => {
-        row.id = index + 1
-      })
-      jsondata.value = importedData
-      MyTitle.value = file.name.split('.')[0]
-      await forceRerender()
-
-      toast.add({
-        severity: 'success',
-        summary: 'Import Successful',
-        detail: `Imported ${importedData.length} rows from ${file.name}`,
-        life: 3000
-      })
-
-      showImportDialog.value = false
-    }
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Import Failed',
-      detail: 'Error reading file: ' + error.message,
-      life: 5000
-    })
-  }
-
-  event.target.value = ''
-}
+    event.target.value = '';
+};
 
 const parseCSV = (text) => {
-  const lines = text.trim().split('\n')
-  if (lines.length === 0) return []
+    const lines = text.trim().split('\n');
+    if (lines.length === 0) return [];
 
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
-  const data = []
+    const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
+    const data = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''))
-    const row = {}
-    headers.forEach((header, index) => {
-      row[header] = values[index] || ''
-    })
-    data.push(row)
-  }
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map((v) => v.trim().replace(/"/g, ''));
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+        });
+        data.push(row);
+    }
 
-  return data
-}
+    return data;
+};
 
 const importFromClipboard = async () => {
-  try {
-    const importedData = parseCSV(pasteData.value)
-    if (importedData.length > 0) {
-      // Add IDs to imported data
-      importedData.forEach((row, index) => {
-        row.id = index + 1
-      })
-      jsondata.value = importedData
-      await forceRerender()
+    try {
+        const importedData = parseCSV(pasteData.value);
+        if (importedData.length > 0) {
+            // Add IDs to imported data
+            importedData.forEach((row, index) => {
+                row.id = index + 1;
+            });
+            jsondata.value = importedData;
+            await forceRerender();
 
-      toast.add({
-        severity: 'success',
-        summary: 'Import Successful',
-        detail: `Imported ${importedData.length} rows from clipboard`,
-        life: 3000
-      })
+            toast('Import Successful', {
+                description: `Imported ${importedData.length} rows from clipboard`
+            });
 
-      showImportDialog.value = false
-      pasteData.value = ''
+            showImportDialog.value = false;
+            pasteData.value = '';
+        }
+    } catch (error) {
+        toast.error('Import Failed', {
+            description: 'Error parsing clipboard data'
+        });
     }
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Import Failed',
-      detail: 'Error parsing clipboard data',
-      life: 3000
-    })
-  }
-}
+};
 
 const exportData = (format) => {
-  try {
-    let content, filename, mimeType
-    const timestamp = new Date().toISOString().split('T')[0]
-    const name = MyTitle.value || 'dataset'
+    try {
+        let content, filename, mimeType;
+        const timestamp = new Date().toISOString().split('T')[0];
+        const name = MyTitle.value || 'dataset';
 
-    switch (format) {
-      case 'csv':
-        content = convertToCSV(jsondata.value)
-        filename = `${name}-${timestamp}.csv`
-        mimeType = 'text/csv'
-        break
-      case 'excel':
-        const workbook = XLSX.utils.book_new()
-        const exportData = jsondata.value.map(row => {
-          const { id, ...rest } = row
-          return rest
-        })
-        const worksheet = XLSX.utils.json_to_sheet(exportData)
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-        content = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-        filename = `${name}-${timestamp}.xlsx`
-        break
-      case 'json':
-        content = JSON.stringify({
-          name: MyTitle.value,
-          data: jsondata.value,
-          exported: new Date().toISOString()
-        }, null, 2)
-        filename = `${name}-${timestamp}.json`
-        mimeType = 'application/json'
-        break
+        switch (format) {
+            case 'csv':
+                content = convertToCSV(jsondata.value);
+                filename = `${name}-${timestamp}.csv`;
+                mimeType = 'text/csv';
+                break;
+            case 'excel':
+                const workbook = XLSX.utils.book_new();
+                const exportData = jsondata.value.map((row) => {
+                    const { id, ...rest } = row;
+                    return rest;
+                });
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+                const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                content = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                filename = `${name}-${timestamp}.xlsx`;
+                break;
+            case 'json':
+                content = JSON.stringify(
+                    {
+                        name: MyTitle.value,
+                        data: jsondata.value,
+                        exported: new Date().toISOString()
+                    },
+                    null,
+                    2
+                );
+                filename = `${name}-${timestamp}.json`;
+                mimeType = 'application/json';
+                break;
+        }
+
+        if (format !== 'excel') {
+            content = new Blob([content], { type: mimeType });
+        }
+
+        const url = URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        toast('Export Successful', {
+            description: `Data exported as ${format.toUpperCase()}`
+        });
+
+        showExportDialog.value = false;
+    } catch (error) {
+        toast.error('Export Failed', {
+            description: 'Error exporting data: ' + error.message
+        });
     }
-
-    if (format !== 'excel') {
-      content = new Blob([content], { type: mimeType })
-    }
-
-    const url = URL.createObjectURL(content)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    link.click()
-    URL.revokeObjectURL(url)
-
-    toast.add({
-      severity: 'success',
-      summary: 'Export Successful',
-      detail: `Data exported as ${format.toUpperCase()}`,
-      life: 3000
-    })
-
-    showExportDialog.value = false
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Export Failed',
-      detail: 'Error exporting data: ' + error.message,
-      life: 5000
-    })
-  }
-}
+};
 
 const convertToCSV = (data) => {
-  if (!data || data.length === 0) return ''
+    if (!data || data.length === 0) return '';
 
-  // Exclude ID field from CSV export
-  const exportData = data.map(row => {
-    const { id, ...rest } = row
-    return rest
-  })
+    // Exclude ID field from CSV export
+    const exportData = data.map((row) => {
+        const { id, ...rest } = row;
+        return rest;
+    });
 
-  const headers = Object.keys(exportData[0]).join(',')
-  const rows = exportData.map(row =>
-    Object.values(row).map(value =>
-      typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-    ).join(',')
-  )
+    const headers = Object.keys(exportData[0]).join(',');
+    const rows = exportData.map((row) =>
+        Object.values(row)
+            .map((value) => (typeof value === 'string' && value.includes(',') ? `"${value}"` : value))
+            .join(',')
+    );
 
-  return [headers, ...rows].join('\n')
-}
+    return [headers, ...rows].join('\n');
+};
 
 // Edit operations
 const onCellEditComplete = (event) => {
-  const { data, newValue, field } = event
-  data[field] = newValue
+    if (!event || !event.data || !event.field) return;
 
-  toast.add({
-    severity: 'success',
-    summary: 'Cell Updated',
-    detail: `Updated ${field}`,
-    life: 1000
-  })
-}
+    const { data, newValue, field } = event;
+    data[field] = newValue;
+
+    toast('Cell Updated', {
+        description: `Updated ${field}`
+    });
+};
 
 const onCellEditInit = (event) => {
-  editingCell.value = event
-}
+    editingCell.value = event;
+};
 
-const onRowContextMenu = (event) => {
-  contextMenuRef.value.show(event.originalEvent)
-}
+const onRowContextMenu = (event, row) => {
+    // Simple fallback since we removed PrimeVue's ContextMenu
+    // In a full implementation, you'd use Shadcn's ContextMenu component
+    event.preventDefault();
+    contextMenuTargetRow.value = row;
+    selectedRows.value = [row];
+
+    toast.info('Context Menu', {
+        description: 'Context menu actions would appear here'
+    });
+};
 
 const editColumnHeader = (column, index) => {
-  const newHeader = prompt('Enter new column name:', column.header)
-  if (newHeader && newHeader.trim() !== '') {
-    const oldHeader = column.header
+    const newHeader = prompt('Enter new column name:', column.header);
+    if (newHeader && newHeader.trim() !== '') {
+        const oldHeader = column.header;
 
-    // Update all rows to use new column name
-    jsondata.value.forEach(row => {
-      if (row[oldHeader] !== undefined) {
-        row[newHeader.trim()] = row[oldHeader]
-        delete row[oldHeader]
-      }
-    })
+        // Update all rows to use new column name
+        jsondata.value.forEach((row) => {
+            if (row[oldHeader] !== undefined) {
+                row[newHeader.trim()] = row[oldHeader];
+                delete row[oldHeader];
+            }
+        });
 
-    toast.add({
-      severity: 'success',
-      summary: 'Column Renamed',
-      detail: `Column renamed from "${oldHeader}" to "${newHeader.trim()}"`,
-      life: 2000
-    })
+        toast.add({
+            severity: 'success',
+            summary: 'Column Renamed',
+            detail: `Column renamed from "${oldHeader}" to "${newHeader.trim()}"`,
+            life: 2000
+        });
 
-    forceRerender()
-  }
-}
+        forceRerender();
+    }
+};
 
 const deleteColumn = (columnIndex) => {
-  if (columns.value.length <= 1) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cannot Delete',
-      detail: 'At least one column must remain',
-      life: 2000
-    })
-    return
-  }
+    if (columns.value.length <= 1) {
+        toast.error('Cannot Delete', {
+            description: 'At least one column must remain'
+        });
+        return;
+    }
 
-  const columnToDelete = columns.value[columnIndex]
-  const fieldToDelete = columnToDelete.field
+    const columnToDelete = columns.value[columnIndex];
+    const fieldToDelete = columnToDelete.field;
 
-  // Remove the field from all rows
-  jsondata.value.forEach(row => {
-    delete row[fieldToDelete]
-  })
+    // Remove the field from all rows
+    jsondata.value.forEach((row) => {
+        delete row[fieldToDelete];
+    });
 
-  toast.add({
-    severity: 'success',
-    summary: 'Column Deleted',
-    detail: `Column "${columnToDelete.header}" has been deleted`,
-    life: 2000
-  })
+    toast('Column Deleted', {
+        description: `Column "${columnToDelete.header}" has been deleted`
+    });
 
-  forceRerender()
-}
+    forceRerender();
+};
 
-const deleteRow = (rowIndex) => {
-  if (jsondata.value.length <= 1) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cannot Delete',
-      detail: 'At least one row must remain',
-      life: 2000
-    })
-    return
-  }
+const deleteRow = (rowIndex, rowOrIndex) => {
+    if (jsondata.value.length <= 1) {
+        toast.error('Cannot Delete', {
+            description: 'At least one row must remain'
+        });
+        return;
+    }
 
-  jsondata.value.splice(rowIndex, 1)
+    // Handle both direct row index and row object passed from paginatedData
+    let globalIndex = rowIndex;
+    if (rowOrIndex && typeof rowOrIndex === 'object') {
+        globalIndex = jsondata.value.findIndex((r) => r.id === rowOrIndex.id);
+    }
 
-  toast.add({
-    severity: 'success',
-    summary: 'Row Deleted',
-    detail: 'Row has been deleted',
-    life: 2000
-  })
-}
+    if (globalIndex >= 0 && globalIndex < jsondata.value.length) {
+        jsondata.value.splice(globalIndex, 1);
+
+        toast('Row Deleted', {
+            description: 'Row has been deleted'
+        });
+
+        // Adjust pagination if deleted last item on page
+        if (paginatedData.value.length === 0 && currentPage.value > 1) {
+            currentPage.value--;
+        }
+    }
+};
 
 const copySelection = () => {
-  if (selectedRows.value.length === 0) {
-    toast.add({
-      severity: 'warn',
-      summary: 'No Selection',
-      detail: 'Please select rows to copy',
-      life: 2000
-    })
-    return
-  }
+    if (selectedRows.value.length === 0) {
+        toast.info('No Selection', {
+            description: 'Please select rows to copy'
+        });
+        return;
+    }
 
-  clipboard.value = selectedRows.value.map(row => ({ ...row }))
+    clipboard.value = selectedRows.value.map((row) => ({ ...row }));
 
-  toast.add({
-    severity: 'info',
-    summary: 'Copied',
-    detail: `${selectedRows.value.length} row(s) copied to clipboard`,
-    life: 2000
-  })
-}
+    toast('Copied', {
+        description: `${selectedRows.value.length} row(s) copied to clipboard`
+    });
+};
 
 const pasteSelection = () => {
-  if (!clipboard.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'No Data',
-      detail: 'No data in clipboard to paste',
-      life: 2000
-    })
-    return
-  }
+    if (!clipboard.value) {
+        toast.info('No Data', {
+            description: 'No data in clipboard to paste'
+        });
+        return;
+    }
 
-  // Implement paste logic here
-  toast.add({
-    severity: 'info',
-    summary: 'Pasted',
-    detail: 'Data pasted successfully',
-    life: 2000
-  })
-}
+    // Implement paste logic here
+    toast('Pasted', {
+        description: 'Data pasted successfully'
+    });
+};
 
 const cutSelection = () => {
-  copySelection()
-  clearSelectedCells()
-}
+    copySelection();
+    clearSelectedCells();
+};
 
 const selectAll = () => {
-  // Implementation depends on excel editor API
-  toast.add({
-    severity: 'info',
-    summary: 'Selected All',
-    detail: 'All cells selected',
-    life: 1000
-  })
-}
+    // Implementation depends on excel editor API
+    toast.info('Selected All', {
+        description: 'All cells selected'
+    });
+};
 
 const clearSelection = () => {
-  selectedRows.value = []
-  toast.add({
-    severity: 'info',
-    summary: 'Selection Cleared',
-    detail: 'Row selection cleared',
-    life: 1000
-  })
-}
+    selectedRows.value = [];
+    toast.info('Selection Cleared', {
+        description: 'Row selection cleared'
+    });
+};
 
 const clearSelectedCells = () => {
-  if (selectedRows.value.length === 0) return
+    if (selectedRows.value.length === 0) return;
 
-  // Clear content of selected rows
-  selectedRows.value.forEach(row => {
-    Object.keys(row).forEach(key => {
-      if (key !== 'id') {
-        row[key] = ''
-      }
-    })
-  })
+    // Clear content of selected rows
+    selectedRows.value.forEach((row) => {
+        Object.keys(row).forEach((key) => {
+            if (key !== 'id') {
+                row[key] = '';
+            }
+        });
+    });
 
-  toast.add({
-    severity: 'info',
-    summary: 'Content Cleared',
-    detail: 'Selected rows cleared',
-    life: 2000
-  })
-}
+    toast.info('Content Cleared', {
+        description: 'Selected rows cleared'
+    });
+};
 
 // Insert operations
 const insertRowAbove = async () => {
-  // Insert row above current selection
-  await createnewRow()
-}
+    // Insert row above current selection
+    await createnewRow();
+};
 
 const insertRowBelow = async () => {
-  await createnewRow()
-}
+    await createnewRow();
+};
 
 const insertColumnLeft = async () => {
-  await createnewCol()
-}
+    await createnewCol();
+};
 
 const insertColumnRight = async () => {
-  await createnewCol()
-}
+    await createnewCol();
+};
 
 // Delete operations
 const deleteSelectedRows = () => {
-  if (selectedRows.value.length === 0) return
+    if (selectedRows.value.length === 0) return;
 
-  // Remove selected rows from data
-  selectedRows.value.forEach(selectedRow => {
-    const index = jsondata.value.findIndex(row => row.id === selectedRow.id)
-    if (index !== -1) {
-      jsondata.value.splice(index, 1)
-    }
-  })
+    // Remove selected rows from data
+    selectedRows.value.forEach((selectedRow) => {
+        const index = jsondata.value.findIndex((row) => row.id === selectedRow.id);
+        if (index !== -1) {
+            jsondata.value.splice(index, 1);
+        }
+    });
 
-  selectedRows.value = []
+    selectedRows.value = [];
 
-  toast.add({
-    severity: 'warn',
-    summary: 'Rows Deleted',
-    detail: 'Selected rows have been deleted',
-    life: 2000
-  })
-}
+    toast.info('Rows Deleted', {
+        description: 'Selected rows have been deleted'
+    });
+};
 
 const deleteSelectedColumns = () => {
-  if (selectedRows.value.length === 0) return
+    if (selectedRows.value.length === 0) return;
 
-  toast.add({
-    severity: 'warn',
-    summary: 'Columns Deleted',
-    detail: 'Selected columns have been deleted',
-    life: 2000
-  })
-}
+    toast.info('Columns Deleted', {
+        description: 'Selected columns have been deleted'
+    });
+};
 
 const confirmClearAll = () => {
-  if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-    newDoc()
-  }
-}
+    if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+        newDoc();
+    }
+};
 
 // Tool functions
 const showFindReplace = () => {
-  toast.add({
-    severity: 'info',
-    summary: 'Find & Replace',
-    detail: 'Find & Replace dialog would open here',
-    life: 2000
-  })
-}
+    toast.info('Find & Replace', {
+        description: 'Find & Replace dialog would open here'
+    });
+};
 
 const showSortDialog = () => {
-  toast.add({
-    severity: 'info',
-    summary: 'Sort Data',
-    detail: 'Sort dialog would open here',
-    life: 2000
-  })
-}
+    toast.info('Sort Data', {
+        description: 'Sort dialog would open here'
+    });
+};
 
 const showFilterDialog = () => {
-  toast.add({
-    severity: 'info',
-    summary: 'Filter Data',
-    detail: 'Filter dialog would open here',
-    life: 2000
-  })
-}
+    toast.info('Filter Data', {
+        description: 'Filter dialog would open here'
+    });
+};
 
 const validateData = () => {
-  let errors = 0
-  let warnings = 0
+    let errors = 0;
+    let warnings = 0;
 
-  jsondata.value.forEach((row, index) => {
-    Object.entries(row).forEach(([key, value]) => {
-      if (value === '' || value === null || value === undefined) {
-        warnings++
-      }
-    })
-  })
+    jsondata.value.forEach((row, index) => {
+        Object.entries(row).forEach(([key, value]) => {
+            if (value === '' || value === null || value === undefined) {
+                warnings++;
+            }
+        });
+    });
 
-  toast.add({
-    severity: warnings > 0 ? 'warn' : 'success',
-    summary: 'Data Validation',
-    detail: `Validation complete. ${warnings} empty cells found.`,
-    life: 3000
-  })
-}
+    if (warnings > 0) {
+        toast.error('Data Validation', {
+            description: `Validation complete. ${warnings} empty cells found.`
+        });
+    } else {
+        toast('Data Validation', {
+            description: 'Validation complete. No empty cells found.'
+        });
+    }
+};
 
 const showDataStats = () => {
-  const stats = {
-    rows: jsondata.value.length,
-    columns: getColumnCount(),
-    totalCells: jsondata.value.length * getColumnCount(),
-    emptyCells: 0
-  }
+    const stats = {
+        rows: jsondata.value.length,
+        columns: getColumnCount(),
+        totalCells: jsondata.value.length * getColumnCount(),
+        emptyCells: 0
+    };
 
-  jsondata.value.forEach(row => {
-    Object.values(row).forEach(value => {
-      if (value === '' || value === null || value === undefined) {
-        stats.emptyCells++
-      }
-    })
-  })
+    jsondata.value.forEach((row) => {
+        Object.values(row).forEach((value) => {
+            if (value === '' || value === null || value === undefined) {
+                stats.emptyCells++;
+            }
+        });
+    });
 
-  toast.add({
-    severity: 'info',
-    summary: 'Dataset Statistics',
-    detail: `${stats.rows} rows, ${stats.columns} columns, ${stats.emptyCells}/${stats.totalCells} empty cells`,
-    life: 5000
-  })
-}
+    toast('Dataset Statistics', {
+        description: `${stats.rows} rows, ${stats.columns} columns, ${stats.emptyCells}/${stats.totalCells} empty cells`
+    });
+};
 </script>
 
-<style>
-/* Dataset container styling */
-.dataset-container {
-  height: calc(100vh - 280px);
-  width: 100%;
-  padding: 1rem;
-  background: var(--surface-ground);
+<template>
+    <Toaster />
+
+    <!-- Main Toolbar -->
+    <div class="dataset-toolbar flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <label class="dataset-label">Dataset:</label>
+            <div class="dataset-name flex items-center gap-2 cursor-pointer">
+                <TableIcon class="w-4 h-4 text-muted-foreground" />
+                <Input v-if="editingTitle" v-model="MyTitle" placeholder="Enter dataset name" @blur="editingTitle = false" @keyup.enter="editingTitle = false" autofocus class="h-8 max-w-[200px]" />
+                <span v-else class="dataset-title" @click="editingTitle = true">{{ MyTitle || 'Untitled Dataset' }}</span>
+                <Pencil v-if="!editingTitle" class="w-3 h-3 text-muted-foreground" @click="editingTitle = true" />
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <Badge variant="secondary" class="stats-tag">
+                <TableIcon class="w-3 h-3 mr-1" />
+                {{ jsondata.length }} rows × {{ getColumnCount() }} columns
+            </Badge>
+            <Badge v-if="selectedRows.length > 0" variant="default" class="stats-tag">
+                <CheckSquare class="w-3 h-3 mr-1" />
+                {{ selectedRows.length }} selected
+            </Badge>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <Button variant="ghost" size="icon" @click="quickSave" title="Save Dataset">
+                <Save class="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" @click="showImportDialog = true" title="Import Data">
+                <Upload class="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" @click="showExportDialog = true" title="Export Data">
+                <Download class="w-4 h-4" />
+            </Button>
+        </div>
+    </div>
+
+    <!-- Secondary Toolbar -->
+    <div class="dataset-secondary-toolbar flex items-center justify-between">
+        <div class="flex items-center gap-1">
+            <Button variant="ghost" size="icon" @click="newDoc" title="New Dataset"><Plus class="w-4 h-4" /></Button>
+            <div class="w-px h-6 bg-border mx-1"></div>
+            <Button variant="ghost" size="icon" @click="createnewRow" title="Add Row"><PlusCircle class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="createnewCol" title="Add Column"><TableIcon class="w-4 h-4" /></Button>
+            <div class="w-px h-6 bg-border mx-1"></div>
+            <Button variant="ghost" size="icon" @click="copySelection" title="Copy Selection" :disabled="selectedRows.length === 0"><Copy class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="pasteSelection" title="Paste" :disabled="!clipboard"><Copy class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="cutSelection" title="Cut Selection" :disabled="selectedRows.length === 0"><Scissors class="w-4 h-4" /></Button>
+        </div>
+
+        <div class="flex items-center gap-1">
+            <Button variant="ghost" size="icon" @click="selectAll" title="Select All"><CheckSquare class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="clearSelection" title="Clear Selection"><Eraser class="w-4 h-4" /></Button>
+            <div class="w-px h-6 bg-border mx-1"></div>
+            <Button variant="ghost" size="icon" @click="deleteSelectedRows" title="Delete Selected Rows" :disabled="selectedRows.length === 0"><Trash2 class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="confirmClearAll" title="Clear All Data" class="text-destructive hover:bg-destructive/10"><X class="w-4 h-4" /></Button>
+        </div>
+
+        <div class="flex items-center gap-1">
+            <Button variant="ghost" size="icon" @click="showFindReplace" title="Find & Replace"><Search class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="showSortDialog" title="Sort Data"><ArrowUpDown class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="showFilterDialog" title="Filter Data"><Filter class="w-4 h-4" /></Button>
+            <div class="w-px h-6 bg-border mx-1"></div>
+            <Button variant="ghost" size="icon" @click="validateData" title="Validate Data"><CheckCircle class="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" @click="showDataStats" title="Show Statistics"><BarChart class="w-4 h-4" /></Button>
+        </div>
+    </div>
+
+    <!-- Data Editor Container -->
+    <div class="dataset-container flex flex-col h-[calc(100vh-140px)]">
+        <div class="border rounded-md bg-card flex-1 overflow-auto relative">
+            <Table>
+                <TableHeader class="sticky top-0 bg-secondary z-10 shadow-sm">
+                    <TableRow>
+                        <TableHead class="w-[50px] text-center">
+                            <Checkbox :checked="selectAllChecked" @update:checked="toggleAllSelection" aria-label="Select all" />
+                        </TableHead>
+                        <TableHead v-for="(column, index) in columns" :key="column.field" class="min-w-[120px] whitespace-nowrap px-4 py-3 font-semibold relative group">
+                            <div class="flex items-center justify-between">
+                                <span @dblclick="editColumnHeader(column, index)" class="cursor-pointer hover:text-primary transition-colors flex-1">
+                                    {{ column.header }}
+                                </span>
+                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button variant="ghost" size="icon" class="h-6 w-6 text-muted-foreground hover:text-foreground" @click.stop="sortBy(column.field)" title="Sort">
+                                        <ArrowUpDown class="w-3 h-3" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" class="h-6 w-6 text-destructive hover:bg-destructive/10" @click.stop="deleteColumn(index)" title="Delete Column">
+                                        <X class="w-3 h-3" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </TableHead>
+                        <TableHead class="w-[50px] text-center p-2">
+                            <Button variant="ghost" size="icon" class="h-8 w-8 hover:bg-primary/10 hover:text-primary" @click="createnewCol" title="Add Column">
+                                <Plus class="w-4 h-4" />
+                            </Button>
+                        </TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-for="(row, rowIndex) in paginatedData" :key="row.id" :class="{ 'bg-primary/5': isSelected(row) }" @contextmenu.prevent="onRowContextMenu($event, row)" class="hover:bg-muted/50 transition-colors group">
+                        <TableCell class="text-center">
+                            <Checkbox :checked="isSelected(row)" @update:checked="toggleSelection(row)" aria-label="Select row" />
+                        </TableCell>
+                        <TableCell v-for="column in columns" :key="column.field" class="p-0 border-r last:border-r-0 border-border/50 bg-background relative" @dblclick="editCell(row, column.field)">
+                            <div class="px-4 py-2 min-h-[40px] flex items-center w-full min-w-[120px]">
+                                <Input
+                                    v-if="editingCell?.id === row.id && editingCell?.field === column.field"
+                                    v-model="row[column.field]"
+                                    class="h-8 w-full border-primary/50 focus-visible:ring-1 focus-visible:ring-primary z-10"
+                                    autofocus
+                                    @blur="completeCellEdit"
+                                    @keydown.enter="completeCellEdit"
+                                    @keydown.tab.prevent="moveToNextCell(rowIndex, column.field)"
+                                />
+                                <span v-else class="truncate w-full block cursor-pointer" :title="row[column.field]">
+                                    {{ row[column.field] }}
+                                </span>
+                            </div>
+                        </TableCell>
+                        <TableCell class="text-center p-2">
+                            <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all" @click="deleteRow(rowIndex, row)" title="Delete Row">
+                                <Trash2 class="w-4 h-4" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+
+                    <TableRow v-if="filteredData.length === 0">
+                        <TableCell :colspan="columns.length + 2" class="h-24 text-center text-muted-foreground"> No data available. Add a row or import data to get started. </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </div>
+
+        <!-- Pagination & Add Row Footer -->
+        <div class="flex items-center justify-between py-3 px-4 bg-card border border-t-0 rounded-b-md">
+            <div class="flex items-center justify-between w-full">
+                <Button class="gap-2" @click="createnewRow"> <Plus class="w-4 h-4" /> Add Row </Button>
+
+                <div class="flex items-center gap-4">
+                    <div class="flexItems-center space-x-2">
+                        <p class="text-sm font-medium">Rows per page</p>
+                        <select v-model="rowsPerPage" class="h-8 w-[70px] rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                            <option :value="10">10</option>
+                            <option :value="20">20</option>
+                            <option :value="50">50</option>
+                            <option :value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="flex w-[100px] items-center justify-center text-sm font-medium">Page {{ currentPage }} of {{ totalPages || 1 }}</div>
+                    <div class="flex items-center space-x-2">
+                        <Button variant="outline" class="h-8 w-8 p-0" @click="currentPage === 1 ? null : currentPage--" :disabled="currentPage === 1">
+                            <span class="sr-only">Go to previous page</span>
+                            <ChevronLeft class="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" class="h-8 w-8 p-0" @click="currentPage === totalPages || totalPages === 0 ? null : currentPage++" :disabled="currentPage === totalPages || totalPages === 0">
+                            <span class="sr-only">Go to next page</span>
+                            <ChevronRight class="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Dialog -->
+    <Dialog :open="showImportDialog" @update:open="showImportDialog = $event">
+        <DialogContent class="sm:max-w-[500px]">
+            <DialogHeader>
+                <DialogTitle>Import Data</DialogTitle>
+            </DialogHeader>
+
+            <div class="grid gap-4 py-4">
+                <div class="flex flex-col gap-2">
+                    <h4 class="font-medium">Import from File</h4>
+                    <div class="flex items-center gap-4">
+                        <input ref="fileInput" type="file" accept=".csv,.xlsx,.xls,.json" @change="handleFileImport" class="hidden" />
+                        <Button variant="outline" @click="$refs.fileInput.click()"> <Upload class="w-4 h-4 mr-2" /> Choose File </Button>
+                    </div>
+                    <p class="text-xs text-muted-foreground italic">Supported formats: CSV, Excel (.xlsx, .xls), JSON</p>
+                </div>
+
+                <div class="h-px bg-border my-2"></div>
+
+                <div class="flex flex-col gap-2">
+                    <h4 class="font-medium">Paste Data</h4>
+                    <Textarea v-model="pasteData" placeholder="Paste CSV or tab-separated data here..." class="min-h-[120px]" />
+                    <Button @click="importFromClipboard" :disabled="!pasteData.trim()" class="mt-2 text-white"> <Check class="w-4 h-4 mr-2" /> Import from Clipboard </Button>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" @click="showImportDialog = false">Cancel</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Export Dialog -->
+    <Dialog :open="showExportDialog" @update:open="showExportDialog = $event">
+        <DialogContent class="sm:max-w-[400px]">
+            <DialogHeader>
+                <DialogTitle>Export Data</DialogTitle>
+            </DialogHeader>
+
+            <div class="grid gap-4 py-4">
+                <div class="flex flex-col gap-4">
+                    <h4 class="font-medium">Choose Export Format</h4>
+                    <div class="flex flex-col gap-2">
+                        <Button variant="outline" class="w-full justify-start" @click="exportData('csv')"> <File class="w-4 h-4 mr-2" /> CSV </Button>
+                        <Button variant="outline" class="w-full justify-start" @click="exportData('excel')"> <FileSpreadsheet class="w-4 h-4 mr-2" /> Excel </Button>
+                        <Button variant="outline" class="w-full justify-start" @click="exportData('json')"> <Code class="w-4 h-4 mr-2" /> JSON </Button>
+                    </div>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" @click="showExportDialog = false">Cancel</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+</template>
+
+<style scoped>
+/* Scoped overrides to fix Shadcn table aesthetics in this context */
+:deep(td.bg-background) {
+    background-color: var(--background) !important;
 }
 
-/* Toolbar styling */
-.dataset-toolbar,
-.dataset-secondary-toolbar {
-  background: var(--surface-card);
-  border-bottom: 1px solid var(--surface-border);
-  padding: 0.75rem 1rem;
+:deep(th),
+:deep(td) {
+    border-color: var(--border) !important;
 }
 
-.dataset-secondary-toolbar {
-  background: var(--surface-section);
-  padding: 0.5rem 1rem;
+.pi {
+    font-family: 'primeicons';
 }
-
-.dataset-label {
-  font-weight: 600;
-  color: var(--text-color);
-  font-size: 0.9rem;
-}
-
-.dataset-name {
-  min-width: 200px;
-}
-
-.dataset-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.dataset-title:hover {
-  background: var(--surface-hover);
-  border-color: var(--surface-border);
-}
-
-.stats-tag {
-  font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
-}
-
-/* DataTable editable styles */
-.editable-datatable {
-  height: 100%;
-  border: 1px solid var(--p-border-color);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--p-surface-card);
-}
-
-.editable-datatable :deep(.p-datatable-table) {
-  font-size: 14px;
-}
-
-.editable-datatable :deep(.p-datatable-thead > tr > th) {
-  background: var(--p-surface-100);
-  border-color: var(--p-border-color);
-  padding: 0.75rem 0.5rem;
-  font-weight: 600;
-}
-
-.editable-datatable :deep(.p-datatable-tbody > tr > td) {
-  background: var(--p-surface-card);
-  border-color: var(--p-border-color);
-  padding: 0.5rem;
-  cursor: pointer;
-}
-
-.editable-datatable :deep(.p-datatable-tbody > tr:hover > td) {
-  background: var(--p-surface-hover);
-}
-
-.editable-datatable :deep(.p-datatable-tbody > tr.p-highlight > td) {
-  background: var(--p-primary-100) !important;
-}
-
-.column-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.column-header span {
-  cursor: pointer;
-  flex: 1;
-  text-align: left;
-}
-
-.delete-column-btn {
-  opacity: 0;
-  transition: opacity 0.2s;
-  margin-left: 0.5rem;
-}
-
-.column-header:hover .delete-column-btn {
-  opacity: 1;
-}
-
-.cell-editor {
-  width: 100%;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-}
-
-.cell-editor:focus {
-  outline: 2px solid var(--p-primary-color);
-  outline-offset: -2px;
-}
-
-.add-row-container {
-  padding: 1rem;
-  text-align: center;
-  background: var(--p-surface-card);
-  border-top: 1px solid var(--p-border-color);
-}
-
-.add-row-btn {
-  min-width: 120px;
-}
-
-/* Dialog styling */
-.import-dialog,
-.export-dialog {
-  background: var(--surface-overlay);
-}
-
-.import-dialog :deep(.p-dialog-content),
-.export-dialog :deep(.p-dialog-content) {
-  background: var(--surface-card);
-  color: var(--text-color);
-}
-
-.import-content,
-.export-content {
-  padding: 1rem 0;
-}
-
-.import-options h4,
-.export-format h4 {
-  color: var(--text-color);
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-}
-
-.file-input-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.file-input {
-  display: none;
-}
-
-.file-button {
-  flex-shrink: 0;
-}
-
-.file-help {
-  color: var(--text-color-secondary);
-  font-style: italic;
-}
-
-.paste-textarea {
-  width: 100%;
-  min-height: 120px;
-  margin: 1rem 0;
-  background: var(--surface-card);
-  color: var(--text-color);
-  border-color: var(--surface-border);
-}
-
-.format-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.format-button {
-  justify-content: flex-start;
-  width: 100%;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .dataset-container {
-    padding: 0.5rem;
-    height: calc(100vh - 240px);
-  }
-
-  .dataset-toolbar,
-  .dataset-secondary-toolbar {
-    padding: 0.5rem;
-  }
-
-  .dataset-toolbar :deep(.flex),
-  .dataset-secondary-toolbar :deep(.flex) {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .dataset-name {
-    min-width: auto;
-    width: 100%;
-  }
-
-  .import-dialog,
-  .export-dialog {
-    width: 95vw !important;
-    max-width: 500px;
-  }
-
-  .file-input-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
-
-
-/* Print styles */
-@media print {
-  .dataset-toolbar,
-  .dataset-secondary-toolbar {
-    display: none;
-  }
-
-  .dataset-container {
-    height: auto;
-    padding: 0;
-  }
-
-  .add-row-container {
-    display: none;
-  }
-}
-
 </style>

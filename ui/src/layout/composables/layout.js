@@ -22,8 +22,6 @@ export function useLayout() {
         layoutState.activeMenuItem = item.value || item;
     };
 
-   
-
     const toggleMenu = () => {
         if (layoutConfig.menuMode === 'overlay') {
             layoutState.overlayMenuActive = !layoutState.overlayMenuActive;
@@ -38,30 +36,38 @@ export function useLayout() {
 
     const isSidebarActive = computed(() => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive);
 
-    
-
     const getPrimary = computed(() => layoutConfig.primary);
 
     const getSurface = computed(() => layoutConfig.surface);
 
-
-
     // Watch for changes and save to localStorage
-    watch(() => layoutConfig.preset, (newValue) => {
-        localStorage.setItem('layout-preset', newValue);
-    });
+    watch(
+        () => layoutConfig.preset,
+        (newValue) => {
+            localStorage.setItem('layout-preset', newValue);
+        }
+    );
 
-    watch(() => layoutConfig.primary, (newValue) => {
-        localStorage.setItem('layout-primary', newValue);
-    });
+    watch(
+        () => layoutConfig.primary,
+        (newValue) => {
+            localStorage.setItem('layout-primary', newValue);
+        }
+    );
 
-    watch(() => layoutConfig.surface, (newValue) => {
-        localStorage.setItem('layout-surface', newValue || '');
-    });
+    watch(
+        () => layoutConfig.surface,
+        (newValue) => {
+            localStorage.setItem('layout-surface', newValue || '');
+        }
+    );
 
-    watch(() => layoutConfig.menuMode, (newValue) => {
-        localStorage.setItem('layout-menu-mode', newValue);
-    });
+    watch(
+        () => layoutConfig.menuMode,
+        (newValue) => {
+            localStorage.setItem('layout-menu-mode', newValue);
+        }
+    );
 
     return {
         layoutConfig,
@@ -70,6 +76,6 @@ export function useLayout() {
         isSidebarActive,
         getPrimary,
         getSurface,
-        setActiveMenuItem,
+        setActiveMenuItem
     };
 }

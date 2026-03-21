@@ -1,5 +1,6 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
+import { Table, CircleHelp, Unlock } from 'lucide-vue-next';
 </script>
 
 <template>
@@ -30,7 +31,7 @@ import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
                     <div class="text-surface-600 mb-8">Requested resource is not available.</div>
                     <router-link to="/" class="w-full flex items-center py-8 border-surface-300 border-b">
                         <span class="flex justify-center items-center border-2 border-primary text-primary rounded-border" style="height: 3.5rem; width: 3.5rem">
-                            <i class="pi pi-fw pi-table !text-2xl"></i>
+                            <Table class="w-8 h-8" />
                         </span>
                         <span class="ml-6 flex flex-col">
                             <span class="text-surface-900 lg:text-xl font-medium mb-0 block">Frequently Asked Questions</span>
@@ -39,7 +40,7 @@ import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
                     </router-link>
                     <router-link to="/" class="w-full flex items-center py-8 border-surface-300 border-b">
                         <span class="flex justify-center items-center border-2 border-primary text-primary rounded-border" style="height: 3.5rem; width: 3.5rem">
-                            <i class="pi pi-fw pi-question-circle !text-2xl"></i>
+                            <CircleHelp class="w-8 h-8" />
                         </span>
                         <span class="ml-6 flex flex-col">
                             <span class="text-surface-900 lg:text-xl font-medium mb-0">Solution Center</span>
@@ -48,7 +49,7 @@ import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
                     </router-link>
                     <router-link to="/" class="w-full flex items-center mb-8 py-8 border-surface-300 border-b">
                         <span class="flex justify-center items-center border-2 border-primary text-primary rounded-border" style="height: 3.5rem; width: 3.5rem">
-                            <i class="pi pi-fw pi-unlock !text-2xl"></i>
+                            <Unlock class="w-8 h-8" />
                         </span>
                         <span class="ml-6 flex flex-col">
                             <span class="text-surface-900 lg:text-xl font-medium mb-0">Permission Manager</span>

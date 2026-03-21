@@ -1,11 +1,9 @@
-
 export class ServerResponse {
-    constructor() {
-    }
+    constructor() {}
 
-   analizeMessage(message) {
+    analizeMessage(message) {
         const MessageType = ['Text', 'Command', 'Notification', 'Response', 'Error', 'Heartbeat', 'Authentication', 'Data'];
-        const MessageStatus =[ 'Success', 'Error', 'Pending', 'Timeout'];
+        const MessageStatus = ['Success', 'Error', 'Pending', 'Timeout'];
 
         // Validar que el envelope tenga la estructura esperada
         if (!message || typeof message !== 'object') {
@@ -25,15 +23,12 @@ export class ServerResponse {
         }
 
         try {
-                       
-
             // Validar que el timestamp sea válido
             const messageDate = new Date(message.Timestamp);
             if (isNaN(messageDate.getTime())) {
                 console.error('Timestamp del mensaje inválido');
                 return null;
             }
-
 
             // Retornar el mensaje deserializado
             return {
@@ -43,13 +38,8 @@ export class ServerResponse {
                 Status: MessageStatus[message.Status],
                 senderId: message.SenderId,
                 // Incluir todas las demás propiedades del mensaje original
-                ...Object.fromEntries(
-                    Object.entries(message).filter(([key]) => 
-                        !['Id', 'Type', 'Timestamp', 'SenderId','Status'].includes(key)
-                    )
-                )
+                ...Object.fromEntries(Object.entries(message).filter(([key]) => !['Id', 'Type', 'Timestamp', 'SenderId', 'Status'].includes(key)))
             };
-
         } catch (error) {
             console.error('Error al deserializar el mensaje:', error);
             return null;

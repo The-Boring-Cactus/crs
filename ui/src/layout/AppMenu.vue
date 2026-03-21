@@ -1,58 +1,59 @@
 <script setup>
-import { ref } from 'vue';
-
+import { ref, markRaw } from 'vue';
 import AppMenuItem from './AppMenuItem.vue';
+import { Home, Server, Briefcase, Table, Database, Code, LineChart } from 'lucide-vue-next';
 
 const model = ref([
     {
         label: 'Home',
-        items: [{ label: 'Home', icon: 'pi pi-fw pi-home', to: '/' }]
+        items: [{ label: 'Home', icon: markRaw(Home), to: '/' }]
     },
     {
         label: 'Admin',
         items: [
             {
                 label: 'Database Connection',
-                icon: 'pi pi-fw pi-server',
+                icon: markRaw(Server),
                 to: '/pages/databases',
                 tooltip: 'Create/Edit Connections'
-            }]
+            }
+        ]
     },
     {
         label: 'Collections',
-        icon: 'pi pi-fw pi-briefcase',
-        
+        icon: markRaw(Briefcase),
+
         items: [
             {
                 label: 'Datasets',
-                icon: 'pi pi-fw pi-table',
+                icon: markRaw(Table),
                 to: '/pages/dataset',
                 tooltip: 'Create/Edit Datasets'
             },
             {
                 label: 'New Datasets',
-                icon: 'pi pi-fw pi-table',
+                icon: markRaw(Table),
                 to: '/pages/myexcel',
                 tooltip: 'Create/Edit Datasets'
             },
             {
                 label: 'SQL Querys',
-                icon: 'pi pi-fw pi-database',
+                icon: markRaw(Database),
                 to: '/pages/sqleditor',
                 tooltip: 'Create/Edit SQL Querys'
             },
             {
                 label: 'Scripts',
-                icon: 'pi pi-fw pi-code',
+                icon: markRaw(Code),
                 to: '/pages/cseditor',
                 tooltip: 'Internal Code Editor'
             },
             {
                 label: 'Dashboards',
-                icon: 'pi pi-fw pi-chart-line',
+                icon: markRaw(LineChart),
                 to: '/pages/dashboard',
                 tooltip: 'Create/Edit Dashboards'
-            },
+            }
         ]
     }
 ]);

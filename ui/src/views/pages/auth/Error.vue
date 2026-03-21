@@ -1,5 +1,6 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
+import { AlertCircle } from 'lucide-vue-next';
 </script>
 
 <template>
@@ -10,7 +11,7 @@ import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
                 <div class="w-full bg-surface-0 py-20 px-8 sm:px-20 flex flex-col items-center" style="border-radius: 53px">
                     <div class="gap-4 flex flex-col items-center">
                         <div class="flex justify-center items-center border-2 border-pink-500 rounded-full" style="height: 3.2rem; width: 3.2rem">
-                            <i class="pi pi-fw pi-exclamation-circle !text-2xl text-pink-500"></i>
+                            <AlertCircle class="w-8 h-8 text-pink-500" />
                         </div>
                         <h1 class="text-surface-900 font-bold text-5xl mb-2">Error Occured</h1>
                         <span class="text-muted-color mb-8">Requested resource is not available.</span>

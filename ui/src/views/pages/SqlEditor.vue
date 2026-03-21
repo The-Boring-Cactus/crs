@@ -1,237 +1,25 @@
-<template>
-    <div class="sql-editor-container">
-        <!-- Top Toolbar with Database Selection -->
-        <Toolbar class="mb-3">
-            <template #start>
-                <div class="flex align-items-center gap-2">
-                    <label for="database-select" class="font-semibold text-sm">Database:</label>
-                    <Select
-                        id="database-select"
-                        v-model="selectedDatabase"
-                        :options="availableDatabases"
-                        optionLabel="name"
-                        optionValue="id"
-                        placeholder="Select Database"
-                        class="w-12rem"
-                        :disabled="isExecuting"
-                    >
-                        <template #value="slotProps">
-                            <div v-if="slotProps.value" class="flex align-items-center gap-2">
-                                <i :class="getDatabaseIcon(getSelectedDatabaseType())" class="text-sm"></i>
-                                <span>{{ getSelectedDatabaseName() }}</span>
-                            </div>
-                            <span v-else>{{ slotProps.placeholder }}</span>
-                        </template>
-                        <template #option="slotProps">
-                            <div class="flex align-items-center gap-2">
-                                <i :class="getDatabaseIcon(slotProps.option.type)" class="text-sm"></i>
-                                <div>
-                                    <div class="font-medium">{{ slotProps.option.name }}</div>
-                                    <div class="text-xs text-muted-color">{{ slotProps.option.host }}:{{ slotProps.option.port }}</div>
-                                </div>
-                            </div>
-                        </template>
-                    </Select>
-                </div>
-            </template>
-
-            <template #end>
-                <div class="flex align-items-center gap-2">
-                    <Button
-                        icon="pi pi-play"
-                        label="Execute"
-                        @click="executeQuery"
-                        :disabled="!selectedDatabase || !code.trim() || isExecuting"
-                        :loading="isExecuting"
-                        severity="success"
-                    />
-                    <Button
-                        icon="pi pi-save"
-                        label="Save Script"
-                        @click="saveScript"
-                        :disabled="!code.trim()"
-                        severity="secondary"
-                    />
-                </div>
-            </template>
-        </Toolbar>
-
-        <!-- Script Management Toolbar -->
-        <Toolbar class="mb-3">
-            <template #start>
-                <div class="flex align-items-center gap-2">
-                    <Inplace>
-                        <template #display>
-                            <div class="flex align-items-center gap-2 cursor-pointer">
-                                <i class="pi pi-file text-muted-color"></i>
-                                <span class="font-medium">{{ currentScript.name || 'Untitled Script' }}</span>
-                                <i class="pi pi-pencil text-xs text-muted-color"></i>
-                            </div>
-                        </template>
-                        <template #content="{ closeCallback }">
-                            <div class="flex align-items-center gap-2">
-                                <InputText v-model="currentScript.name" placeholder="Script name" autofocus />
-                                <Button icon="pi pi-check" text severity="success" @click="closeCallback" />
-                                <Button icon="pi pi-times" text severity="danger" @click="closeCallback" />
-                            </div>
-                        </template>
-                    </Inplace>
-                </div>
-            </template>
-
-            <template #center>
-                <div class="flex align-items-center gap-1">
-                    <Button icon="pi pi-folder-open" text @click="loadScript" v-tooltip.top="'Open Script'" />
-                    <Button icon="pi pi-plus" text @click="newScript" v-tooltip.top="'New Script'" />
-                    <Divider layout="vertical" />
-                    <Button icon="pi pi-undo" text @click="handleUndo" v-tooltip.top="'Undo'" />
-                    <Button icon="pi pi-refresh" text @click="handleRedo" v-tooltip.top="'Redo'" />
-                    <Divider layout="vertical" />
-                    <Button icon="pi pi-copy" text @click="copyText" v-tooltip.top="'Copy'" />
-                    <Button icon="pi pi-clone" text @click="pasteText" v-tooltip.top="'Paste'" />
-                    <Divider layout="vertical" />
-                    <Button icon="pi pi-search" text @click="toggleSearch" v-tooltip.top="'Find'" />
-                </div>
-            </template>
-        </Toolbar>
-
-        <!-- SQL Editor -->
-        <div class="editor-container card mb-3">
-            <codemirror
-                ref="editorRef"
-                v-model="code"
-                :style="editorStyle"
-                placeholder="-- Enter your SQL query here..."
-                :extensions="extensions"
-                :autofocus="config.autofocus"
-                :disabled="config.disabled || isExecuting"
-                :indent-with-tab="config.indentWithTab"
-                :tab-size="config.tabSize"
-                @update="handleStateUpdate"
-                @ready="handleReady"
-            />
-        </div>
-
-        <!-- Results Grid -->
-        <div class="results-container card">
-            <div class="flex justify-content-between align-items-center mb-3">
-                <h6 class="m-0">Query Results</h6>
-                <div class="flex align-items-center gap-2">
-                    <Badge v-if="queryResults.length > 0" :value="`${queryResults.length} rows`" severity="info" />
-                    <Button
-                        icon="pi pi-download"
-                        label="Export"
-                        size="small"
-                        severity="secondary"
-                        @click="exportResults"
-                        :disabled="queryResults.length === 0"
-                    />
-                </div>
-            </div>
-
-            <DataTable
-                v-if="queryResults.length > 0"
-                :value="queryResults"
-                :paginator="true"
-                :rows="20"
-                :rowsPerPageOptions="[10, 20, 50, 100]"
-                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                scrollable
-                scrollHeight="400px"
-                resizableColumns
-                columnResizeMode="expand"
-                class="results-table"
-            >
-                <Column
-                    v-for="col in queryColumns"
-                    :key="col.field"
-                    :field="col.field"
-                    :header="col.header"
-                    :sortable="true"
-                    style="min-width: 120px"
-                >
-                    <template #body="{ data }">
-                        <span class="result-cell" :title="data[col.field]">
-                            {{ formatCellValue(data[col.field]) }}
-                        </span>
-                    </template>
-                </Column>
-            </DataTable>
-
-            <div v-else-if="hasExecuted" class="text-center p-6">
-                <i class="pi pi-info-circle text-4xl text-muted-color mb-3"></i>
-                <div class="text-xl text-muted-color mb-2">No Results</div>
-                <div class="text-muted-color">The query executed successfully but returned no data</div>
-            </div>
-
-            <div v-else class="text-center p-6">
-                <i class="pi pi-database text-4xl text-muted-color mb-3"></i>
-                <div class="text-xl text-muted-color mb-2">Ready to Execute</div>
-                <div class="text-muted-color">Write your SQL query above and click Execute to see results</div>
-            </div>
-        </div>
-
-        <!-- Load Script Dialog -->
-        <Dialog
-            v-model:visible="showLoadDialog"
-            :style="{ width: '600px' }"
-            header="Load Script"
-            :modal="true"
-        >
-            <DataTable
-                v-model:selection="selectedScriptToLoad"
-                :value="savedScripts"
-                selectionMode="single"
-                dataKey="id"
-                :paginator="true"
-                :rows="10"
-                class="mb-3"
-            >
-                <Column field="name" header="Name" :sortable="true"></Column>
-                <Column field="database" header="Database" :sortable="true"></Column>
-                <Column field="updatedAt" header="Last Modified" :sortable="true">
-                    <template #body="{ data }">
-                        {{ formatDate(data.updatedAt) }}
-                    </template>
-                </Column>
-                <Column header="Actions" style="width: 120px">
-                    <template #body="{ data }">
-                        <Button
-                            icon="pi pi-trash"
-                            severity="danger"
-                            size="small"
-                            @click="deleteScript(data.id)"
-                            v-tooltip.top="'Delete'"
-                        />
-                    </template>
-                </Column>
-            </DataTable>
-
-            <template #footer>
-                <Button label="Cancel" icon="pi pi-times" @click="showLoadDialog = false" severity="secondary" />
-                <Button
-                    label="Load"
-                    icon="pi pi-check"
-                    @click="confirmLoadScript"
-                    :disabled="!selectedScriptToLoad"
-                />
-            </template>
-        </Dialog>
-    </div>
-</template>
-
 <script setup>
 import { reactive, shallowRef, ref, computed, onMounted } from 'vue';
 import { redo, undo } from '@codemirror/commands';
 import { search } from '@codemirror/search';
 import { Codemirror } from 'vue-codemirror';
 import { sql } from '@codemirror/lang-sql';
-import { useToast } from 'primevue/usetoast';
+import { toast } from 'vue-sonner';
 import { useDatabaseStore } from '@/store/databaseStore';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+    Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, 
+    Undo, RefreshCw, Copy, Search, Download, ChevronLeft, ChevronRight, 
+    Info, Trash2 
+} from 'lucide-vue-next';
+
 // Stores and services
-const toast = useToast();
 const databaseStore = useDatabaseStore();
 
 // Editor state
@@ -264,6 +52,22 @@ const currentScript = reactive({
 const savedScripts = ref([]);
 const showLoadDialog = ref(false);
 const selectedScriptToLoad = ref(null);
+const editingScriptName = ref(false);
+
+// Pagination logic for results table
+const currentPage = ref(1);
+const rowsPerPage = ref(20);
+
+// Reset pagination when results change
+const paginatedResults = computed(() => {
+    const start = (currentPage.value - 1) * rowsPerPage.value;
+    const end = start + rowsPerPage.value;
+    return queryResults.value.slice(start, end);
+});
+
+const totalPages = computed(() => {
+    return Math.ceil(queryResults.value.length / rowsPerPage.value);
+});
 
 // Theme-aware editor styling
 const editorStyle = computed(() => {
@@ -277,7 +81,7 @@ const editorStyle = computed(() => {
 
 // Available databases from store
 const availableDatabases = computed(() => {
-    return databaseStore.allConnections.filter(conn => conn.status === 'connected');
+    return databaseStore.allConnections.filter((conn) => conn.status === 'connected');
 });
 
 // Editor extensions with search support
@@ -304,7 +108,7 @@ const handleRedo = () => {
     });
 };
 
-const handleStateUpdate = (viewUpdate) => {
+const handleStateUpdate = () => {
     // Auto-save current script content
     currentScript.content = code.value;
 };
@@ -314,24 +118,16 @@ const copyText = async () => {
     if (!cmView.value) return;
 
     const selection = cmView.value.state.selection.main;
-    const selectedText = selection.empty
-        ? cmView.value.state.doc.toString()
-        : cmView.value.state.doc.sliceString(selection.from, selection.to);
+    const selectedText = selection.empty ? cmView.value.state.doc.toString() : cmView.value.state.doc.sliceString(selection.from, selection.to);
 
     try {
         await navigator.clipboard.writeText(selectedText);
-        toast.add({
-            severity: 'success',
-            summary: 'Copied',
-            detail: 'Text copied to clipboard',
-            life: 2000
+        toast('Copied', {
+            description: 'Text copied to clipboard'
         });
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Copy Failed',
-            detail: 'Failed to copy text to clipboard',
-            life: 3000
+        toast.error('Copy Failed', {
+            description: 'Failed to copy text to clipboard'
         });
     }
 };
@@ -351,18 +147,12 @@ const pasteText = async () => {
             }
         });
 
-        toast.add({
-            severity: 'success',
-            summary: 'Pasted',
-            detail: 'Text pasted from clipboard',
-            life: 2000
+        toast('Pasted', {
+            description: 'Text pasted from clipboard'
         });
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Paste Failed',
-            detail: 'Failed to paste text from clipboard',
-            life: 3000
+        toast.error('Paste Failed', {
+            description: 'Failed to paste text from clipboard'
         });
     }
 };
@@ -403,13 +193,7 @@ const getSelectedDatabaseType = () => {
 };
 
 const getDatabaseIcon = (type) => {
-    const icons = {
-        postgresql: 'pi pi-database text-blue-500',
-        oracle: 'pi pi-database text-red-500',
-        mssql: 'pi pi-database text-orange-500',
-        mysql: 'pi pi-database text-green-500'
-    };
-    return icons[type] || 'pi pi-database';
+    return Database;
 };
 
 // Query execution
@@ -423,27 +207,22 @@ const executeQuery = async () => {
 
     try {
         // Simulate query execution - replace with actual database query logic
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Mock data generation for demo
         const mockData = generateMockData(code.value);
         queryResults.value = mockData.rows;
         queryColumns.value = mockData.columns;
+        currentPage.value = 1; // Reset pagination
 
         hasExecuted.value = true;
 
-        toast.add({
-            severity: 'success',
-            summary: 'Query Executed',
-            detail: `Query executed successfully. ${queryResults.value.length} rows returned.`,
-            life: 3000
+        toast('Query Executed', {
+            description: `Query executed successfully. ${queryResults.value.length} rows returned.`
         });
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Query Failed',
-            detail: error.message || 'An error occurred while executing the query',
-            life: 5000
+        toast.error('Query Failed', {
+            description: error.message || 'An error occurred while executing the query'
         });
     } finally {
         isExecuting.value = false;
@@ -500,7 +279,7 @@ const saveScript = () => {
         updatedAt: new Date()
     };
 
-    const existingIndex = savedScripts.value.findIndex(s => s.id === script.id);
+    const existingIndex = savedScripts.value.findIndex((s) => s.id === script.id);
 
     if (existingIndex >= 0) {
         savedScripts.value[existingIndex] = { ...savedScripts.value[existingIndex], ...script };
@@ -511,11 +290,8 @@ const saveScript = () => {
 
     saveScriptsToStorage();
 
-    toast.add({
-        severity: 'success',
-        summary: 'Script Saved',
-        detail: `Script "${script.name}" saved successfully`,
-        life: 3000
+    toast('Script Saved', {
+        description: `Script "${script.name}" saved successfully`
     });
 };
 
@@ -543,26 +319,20 @@ const confirmLoadScript = () => {
     showLoadDialog.value = false;
     selectedScriptToLoad.value = null;
 
-    toast.add({
-        severity: 'success',
-        summary: 'Script Loaded',
-        detail: `Script "${script.name}" loaded successfully`,
-        life: 3000
+    toast('Script Loaded', {
+        description: `Script "${script.name}" loaded successfully`
     });
 };
 
 const deleteScript = (scriptId) => {
-    const index = savedScripts.value.findIndex(s => s.id === scriptId);
+    const index = savedScripts.value.findIndex((s) => s.id === scriptId);
     if (index >= 0) {
         const scriptName = savedScripts.value[index].name;
         savedScripts.value.splice(index, 1);
         saveScriptsToStorage();
 
-        toast.add({
-            severity: 'success',
-            summary: 'Script Deleted',
-            detail: `Script "${scriptName}" deleted successfully`,
-            life: 3000
+        toast('Script Deleted', {
+            description: `Script "${scriptName}" deleted successfully`
         });
     }
 };
@@ -580,7 +350,7 @@ const loadScriptsFromStorage = () => {
     try {
         const saved = localStorage.getItem('sql-scripts');
         if (saved) {
-            savedScripts.value = JSON.parse(saved).map(script => ({
+            savedScripts.value = JSON.parse(saved).map((script) => ({
                 ...script,
                 createdAt: script.createdAt ? new Date(script.createdAt) : new Date(),
                 updatedAt: script.updatedAt ? new Date(script.updatedAt) : new Date()
@@ -613,16 +383,18 @@ const exportResults = () => {
     if (queryResults.value.length === 0) return;
 
     const csv = [
-        queryColumns.value.map(col => col.header).join(','),
-        ...queryResults.value.map(row =>
-            queryColumns.value.map(col => {
-                const value = row[col.field];
-                if (value === null || value === undefined) return '';
-                if (typeof value === 'string' && value.includes(',')) {
-                    return `"${value.replace(/"/g, '""')}"`;
-                }
-                return value;
-            }).join(',')
+        queryColumns.value.map((col) => col.header).join(','),
+        ...queryResults.value.map((row) =>
+            queryColumns.value
+                .map((col) => {
+                    const value = row[col.field];
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'string' && value.includes(',')) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value;
+                })
+                .join(',')
         )
     ].join('\n');
 
@@ -634,11 +406,8 @@ const exportResults = () => {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.add({
-        severity: 'success',
-        summary: 'Export Complete',
-        detail: 'Query results exported to CSV file',
-        life: 3000
+    toast('Export Complete', {
+        description: 'Query results exported to CSV file'
     });
 };
 
@@ -648,127 +417,280 @@ onMounted(() => {
     loadScriptsFromStorage();
 });
 </script>
+
+<template>
+    <div class="sql-editor-container">
+        <!-- Top Toolbar with Database Selection -->
+        <div class="flex items-center justify-between mb-3 bg-card p-3 rounded-md border">
+            <div class="flex items-center gap-3">
+                <label for="database-select" class="font-semibold text-sm">Database:</label>
+                <Select v-model="selectedDatabase" :disabled="isExecuting">
+                    <SelectTrigger class="w-[200px]">
+                        <SelectValue placeholder="Select Database">
+                            <div v-if="selectedDatabase" class="flex items-center gap-2">
+                                <component :is="getDatabaseIcon(getSelectedDatabaseType())" class="w-4 h-4" />
+                                <span>{{ getSelectedDatabaseName() }}</span>
+                            </div>
+                        </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem v-for="db in availableDatabases" :key="db.id" :value="db.id">
+                            <div class="flex items-center gap-2">
+                                <component :is="getDatabaseIcon(db.type)" class="w-4 h-4" />
+                                <div>
+                                    <div class="font-medium">{{ db.name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ db.host }}:{{ db.port }}</div>
+                                </div>
+                            </div>
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <Button @click="executeQuery" :disabled="!selectedDatabase || !code.trim() || isExecuting" class="bg-green-600 hover:bg-green-700 text-white gap-2">
+                    <Loader2 v-if="isExecuting" class="w-4 h-4 animate-spin" />
+                    <Play v-else class="w-4 h-4" />
+                    Execute
+                </Button>
+                <Button variant="secondary" @click="saveScript" :disabled="!code.trim()" class="gap-2">
+                    <Save class="w-4 h-4" />
+                    Save Script
+                </Button>
+            </div>
+        </div>
+
+        <!-- Script Management Toolbar -->
+        <div class="flex items-center justify-between mb-3 bg-card p-2 rounded-md border">
+            <div class="flex items-center gap-2 px-2">
+                <div class="flex items-center gap-2 cursor-pointer group">
+                    <File class="w-4 h-4 text-muted-foreground" />
+                    <Input v-if="editingScriptName" v-model="currentScript.name" class="h-8 w-[200px]" autofocus @blur="editingScriptName = false" @keyup.enter="editingScriptName = false" />
+                    <span v-else class="font-medium" @click="editingScriptName = true">
+                        {{ currentScript.name || 'Untitled Script' }}
+                    </span>
+                    <Pencil v-if="!editingScriptName" class="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" @click="editingScriptName = true" />
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1">
+                <Button variant="ghost" size="icon" @click="loadScript" title="Open Script"><FolderOpen class="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" @click="newScript" title="New Script"><Plus class="w-4 h-4" /></Button>
+                <div class="w-px h-6 bg-border mx-2"></div>
+                <Button variant="ghost" size="icon" @click="handleUndo" title="Undo"><Undo class="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" @click="handleRedo" title="Redo"><RefreshCw class="w-4 h-4" /></Button>
+                <div class="w-px h-6 bg-border mx-2"></div>
+                <Button variant="ghost" size="icon" @click="copyText" title="Copy"><Copy class="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" @click="pasteText" title="Paste"><Copy class="w-4 h-4" /></Button>
+                <div class="w-px h-6 bg-border mx-2"></div>
+                <Button variant="ghost" size="icon" @click="toggleSearch" title="Find"><Search class="w-4 h-4" /></Button>
+            </div>
+        </div>
+        <!-- SQL Editor -->
+        <div class="editor-container border rounded-md mb-3">
+            <codemirror
+                ref="editorRef"
+                v-model="code"
+                :style="editorStyle"
+                placeholder="-- Enter your SQL query here..."
+                :extensions="extensions"
+                :autofocus="config.autofocus"
+                :disabled="config.disabled || isExecuting"
+                :indent-with-tab="config.indentWithTab"
+                :tab-size="config.tabSize"
+                @update="handleStateUpdate"
+                @ready="handleReady"
+            />
+        </div>
+
+        <!-- Results Grid -->
+        <div class="results-container border rounded-md bg-card p-4 flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h6 class="text-sm font-semibold m-0">Query Results</h6>
+                <div class="flex items-center gap-2">
+                    <Badge v-if="queryResults.length > 0" variant="secondary">{{ queryResults.length }} rows</Badge>
+                    <Button variant="outline" size="sm" @click="exportResults" :disabled="queryResults.length === 0" class="gap-2">
+                        <Download class="w-4 h-4" />
+                        Export
+                    </Button>
+                </div>
+            </div>
+
+            <div v-if="queryResults.length > 0" class="flex-1 overflow-auto border rounded-md">
+                <Table>
+                    <TableHeader class="sticky top-0 bg-secondary z-10 shadow-sm">
+                        <TableRow>
+                            <TableHead v-for="col in queryColumns" :key="col.field" class="whitespace-nowrap font-semibold border-r last:border-r-0">
+                                {{ col.header }}
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="(row, i) in paginatedResults" :key="i" class="hover:bg-muted/50">
+                            <TableCell v-for="col in queryColumns" :key="col.field" class="p-2 border-r last:border-r-0 border-border/50 max-w-[200px] truncate" :title="formatCellValue(row[col.field])">
+                                {{ formatCellValue(row[col.field]) }}
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="queryResults.length > 0" class="flex items-center justify-between py-3 px-2 border-t mt-auto">
+                <p class="text-sm text-muted-foreground">Showing {{ (currentPage - 1) * rowsPerPage + 1 }} to {{ Math.min(currentPage * rowsPerPage, queryResults.length) }} of {{ queryResults.length }} entries</p>
+                <div class="flex items-center space-x-2">
+                    <p class="text-sm font-medium mr-2">Rows per page</p>
+                    <select v-model="rowsPerPage" class="h-8 w-[70px] rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring mr-4">
+                        <option :value="10">10</option>
+                        <option :value="20">20</option>
+                        <option :value="50">50</option>
+                        <option :value="100">100</option>
+                    </select>
+
+                    <Button variant="outline" class="h-8 w-8 p-0" @click="currentPage > 1 ? currentPage-- : null" :disabled="currentPage === 1">
+                        <ChevronLeft class="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" class="h-8 w-8 p-0" @click="currentPage < totalPages ? currentPage++ : null" :disabled="currentPage >= totalPages">
+                        <ChevronRight class="w-4 h-4" />
+                    </Button>
+                </div>
+            </div>
+
+            <div v-else-if="hasExecuted" class="text-center p-12 my-auto">
+                <Info class="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <div class="text-xl font-medium mb-2">No Results</div>
+                <div class="text-muted-foreground">The query executed successfully but returned no data</div>
+            </div>
+
+            <div v-else class="text-center p-12 my-auto">
+                <Database class="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <div class="text-xl font-medium mb-2">Ready to Execute</div>
+                <div class="text-muted-foreground">Write your SQL query above and click Execute to see results</div>
+            </div>
+        </div>
+
+        <!-- Load Script Dialog -->
+        <Dialog :open="showLoadDialog" @update:open="showLoadDialog = $event">
+            <DialogContent class="sm:max-w-[700px]">
+                <DialogHeader>
+                    <DialogTitle>Load Script</DialogTitle>
+                </DialogHeader>
+
+                <div class="py-4 max-h-[400px] overflow-auto border rounded-md">
+                    <Table v-if="savedScripts.length > 0">
+                        <TableHeader class="bg-muted">
+                            <TableRow>
+                                <TableHead class="w-[40px]"></TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Database</TableHead>
+                                <TableHead>Last Modified</TableHead>
+                                <TableHead class="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="script in savedScripts" :key="script.id" :class="{ 'bg-primary/10': selectedScriptToLoad?.id === script.id }" @click="selectedScriptToLoad = script" class="cursor-pointer">
+                                <TableCell>
+                                    <div class="h-4 w-4 rounded-full border border-primary flex items-center justify-center">
+                                        <div v-if="selectedScriptToLoad?.id === script.id" class="h-2 w-2 rounded-full bg-primary"></div>
+                                    </div>
+                                </TableCell>
+                                <TableCell class="font-medium">{{ script.name }}</TableCell>
+                                <TableCell>{{ script.database }}</TableCell>
+                                <TableCell class="text-muted-foreground text-sm">{{ formatDate(script.updatedAt) }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Button variant="ghost" size="icon" class="text-destructive hover:bg-destructive/10 h-8 w-8" @click.stop="deleteScript(script.id)">
+                                        <Trash2 class="w-4 h-4" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    <div v-else class="text-center py-8 text-muted-foreground">No saved scripts found.</div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="showLoadDialog = false">Cancel</Button>
+                    <Button @click="confirmLoadScript" :disabled="!selectedScriptToLoad">Load Script</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    </div>
+</template>
 <style lang="scss">
 .sql-editor-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .editor-container {
-  flex: 0 0 auto;
-  min-height: 300px;
-  border: 1px solid var(--p-border-color);
-  border-radius: var(--p-border-radius);
-  overflow: hidden;
+    flex: 0 0 auto;
+    min-height: 300px;
+    border: 1px solid var(--p-border-color);
+    border-radius: var(--p-border-radius);
+    overflow: hidden;
 
-  :deep(.cm-editor) {
-    height: 100%;
-  }
-
-  :deep(.cm-content) {
-    font-family: 'JetBrains Mono', 'Monaco', 'Consolas', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    padding: 1rem;
-  }
-}
-
-.results-container {
-  flex: 1;
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-
-  .results-table {
-    flex: 1;
-
-    :deep(.p-datatable-table) {
-      font-size: 13px;
+    :deep(.cm-editor) {
+        height: 100%;
     }
 
-    :deep(.p-datatable-tbody > tr > td) {
-      padding: 0.5rem;
-      border-bottom: 1px solid var(--p-border-color);
+    :deep(.cm-content) {
+        font-family: 'JetBrains Mono', 'Monaco', 'Consolas', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        padding: 1rem;
     }
-
-    :deep(.p-datatable-thead > tr > th) {
-      padding: 0.75rem 0.5rem;
-      background-color: var(--p-surface-100);
-      font-weight: 600;
-      border-bottom: 2px solid var(--p-border-color);
-    }
-  }
 }
 
 .result-cell {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
 }
-
-
 
 // Responsive design
 @media (max-width: 768px) {
-  .sql-editor-container {
-    gap: 0.5rem;
-  }
-
-  .editor-container {
-    min-height: 250px;
-  }
-
-  .results-container {
-    min-height: 300px;
-  }
-
-  :deep(.p-toolbar) {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-
-    .p-toolbar-group-start,
-    .p-toolbar-group-center,
-    .p-toolbar-group-end {
-      flex-wrap: wrap;
-      gap: 0.25rem;
+    .sql-editor-container {
+        gap: 0.5rem;
     }
-  }
 
-  .result-cell {
-    max-width: 120px;
-  }
+    .editor-container {
+        min-height: 250px;
+    }
+
+    .results-container {
+        min-height: 300px;
+    }
 }
 
 // Syntax highlighting adjustments for SQL
 .editor-container {
-  :deep(.cm-content) {
-    .cm-keyword {
-      color: var(--p-primary-color);
-      font-weight: 600;
-    }
+    :deep(.cm-content) {
+        .cm-keyword {
+            color: var(--p-primary-color);
+            font-weight: 600;
+        }
 
-    .cm-string {
-      color: var(--p-green-500);
-    }
+        .cm-string {
+            color: var(--p-green-500);
+        }
 
-    .cm-number {
-      color: var(--p-orange-500);
-    }
+        .cm-number {
+            color: var(--p-orange-500);
+        }
 
-    .cm-comment {
-      color: var(--p-text-muted-color);
-      font-style: italic;
-    }
+        .cm-comment {
+            color: var(--p-text-muted-color);
+            font-style: italic;
+        }
 
-    .cm-operator {
-      color: var(--p-text-color);
-      font-weight: 500;
+        .cm-operator {
+            color: var(--p-text-color);
+            font-weight: 500;
+        }
     }
-  }
 }
-
 </style>

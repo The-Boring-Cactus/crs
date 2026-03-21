@@ -1,3 +1,7 @@
+<script setup>
+import { ArrowRight } from 'lucide-vue-next';
+</script>
+
 <template>
     <div class="card">
         <div class="font-semibold text-2xl mb-4">Documentation</div>
@@ -120,11 +124,11 @@ import AppLayout from './AppLayout.vue';
 
         <p class="text-lg mb-4">As a final step, copy the following folders:</p>
         <ul class="leading-normal list-disc pl-8 text-lg mb-4">
-            <li><span class="text-primary font-medium">public/demo</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">public</span></li>
-            <li><span class="text-primary font-medium">src/components</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">components</span></li>
-            <li><span class="text-primary font-medium">src/service</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">service</span></li>
-            <li><span class="text-primary font-medium">src/views/uikit</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">pages/uikit</span></li>
-            <li><span class="text-primary font-medium">src/views/pages</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">pages</span></li>
+            <li><span class="text-primary font-medium">public/demo</span> <ArrowRight class="w-4 h-4 inline-block mx-1" /> <span class="text-primary font-medium">public</span></li>
+            <li><span class="text-primary font-medium">src/components</span> <ArrowRight class="w-4 h-4 inline-block mx-1" /> <span class="text-primary font-medium">components</span></li>
+            <li><span class="text-primary font-medium">src/service</span> <ArrowRight class="w-4 h-4 inline-block mx-1" /> <span class="text-primary font-medium">service</span></li>
+            <li><span class="text-primary font-medium">src/views/uikit</span> <ArrowRight class="w-4 h-4 inline-block mx-1" /> <span class="text-primary font-medium">pages/uikit</span></li>
+            <li><span class="text-primary font-medium">src/views/pages</span> <ArrowRight class="w-4 h-4 inline-block mx-1" /> <span class="text-primary font-medium">pages</span></li>
         </ul>
     </div>
 </template>

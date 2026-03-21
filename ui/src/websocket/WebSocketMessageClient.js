@@ -7,7 +7,6 @@ export class WebSocketMessageClient {
         return 'client_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
     }
     sendMessage(messageType, data) {
-       
         const message = {
             ...data,
             id: data.id || this.generateId(),
@@ -76,7 +75,7 @@ export class WebSocketMessageClient {
         });
     }
 
-    sendAuthentication( username = null, password = null) {
+    sendAuthentication(username = null, password = null) {
         return this.sendMessage('Authentication', {
             Password: password,
             Username: username
@@ -89,8 +88,6 @@ export class WebSocketMessageClient {
             status: 'alive'
         });
     }
-    
-    
-}  
+}
 
 export default new WebSocketMessageClient();

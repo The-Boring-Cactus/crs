@@ -2,6 +2,7 @@
 import { useLayout } from '@/layout/composables/layout';
 import { onBeforeMount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { ChevronDown } from 'lucide-vue-next';
 
 const route = useRoute();
 
@@ -71,16 +72,17 @@ function checkActiveRoute(item) {
 <template>
     <li :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }">
         <div v-if="root && item.visible !== false" class="layout-menuitem-root-text">{{ item.label }}</div>
-        <a v-if="(!item.to || item.items) && item.visible !== false" 
-         :href="item.url" @click="itemClick($event, item, index)" :class="item.class" :target="item.target" tabindex="0">
-            <i :class="item.icon" class="layout-menuitem-icon"></i>
+        <a v-if="(!item.to || item.items) && item.visible !== false" :href="item.url" @click="itemClick($event, item, index)" :class="item.class" :target="item.target" tabindex="0">
+            <component v-if="typeof item.icon === 'object'" :is="item.icon" class="layout-menuitem-icon w-5 h-5 mr-3 shrink-0"></component>
+            <i v-else :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ item.label }}</span>
-            <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
+            <ChevronDown class="layout-submenu-toggler w-4 h-4 ml-auto" v-if="item.items" />
         </a>
         <router-link v-if="item.to && !item.items && item.visible !== false" @click="itemClick($event, item, index)" :class="[item.class, { 'active-route': checkActiveRoute(item) }]" tabindex="0" :to="item.to">
-            <i :class="item.icon" class="layout-menuitem-icon"></i>
-            <span v-tooltip="item.tooltip"  class="layout-menuitem-text">{{ item.label }}</span>
-            <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
+            <component v-if="typeof item.icon === 'object'" :is="item.icon" class="layout-menuitem-icon w-4 h-4 mr-3 shrink-0"></component>
+            <i v-else :class="item.icon" class="layout-menuitem-icon"></i>
+            <span v-tooltip="item.tooltip" class="layout-menuitem-text">{{ item.label }}</span>
+            <ChevronDown class="layout-submenu-toggler w-4 h-4 ml-auto" v-if="item.items" />
         </router-link>
         <Transition v-if="item.items && item.visible !== false" name="layout-submenu">
             <ul v-show="root ? true : isActiveMenu" class="layout-submenu">
