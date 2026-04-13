@@ -11,10 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-    FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, 
-    Copy, Search, Code, Info, Square, Trash2, Download, Check 
-} from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 

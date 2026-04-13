@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "tTBTls9E8TQ=",
+  "dgSpecHash": "1LaH8JwrXsI=",
   "success": true,
-  "projectFilePath": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "/home/peyotex/crs/StringUtilities/StringUtilities.csproj",
+  "expectedPackageFiles": [
+    "/home/peyotex/.nuget/packages/microsoft.netcore.app.ref/9.0.12/microsoft.netcore.app.ref.9.0.12.nupkg.sha512",
+    "/home/peyotex/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.12/microsoft.aspnetcore.app.ref.9.0.12.nupkg.sha512"
+  ],
   "logs": []
 }

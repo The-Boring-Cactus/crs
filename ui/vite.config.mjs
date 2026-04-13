@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig({
     optimizeDeps: {
-        noDiscovery: true
+        include: ['sprintf-js']
     },
     plugins: [vue()],
     build: {

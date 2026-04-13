@@ -11,11 +11,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox'; // Data state
 import { markRaw } from 'vue';
-import { 
-    Table as TableIcon, Pencil, CheckSquare, Save, Upload, Download, 
-    Plus, PlusCircle, Copy, Scissors, Eraser, Trash2, X, 
-    Search, ArrowUpDown, Filter, CheckCircle, BarChart, 
-    ChevronLeft, ChevronRight, Check, File, FileSpreadsheet, Code 
+import {
+    Table as TableIcon,
+    Pencil,
+    CheckSquare,
+    Save,
+    Upload,
+    Download,
+    Plus,
+    PlusCircle,
+    Copy,
+    Scissors,
+    Eraser,
+    Trash2,
+    X,
+    Search,
+    ArrowUpDown,
+    Filter,
+    CheckCircle,
+    BarChart,
+    ChevronLeft,
+    ChevronRight,
+    Check,
+    File,
+    FileSpreadsheet,
+    Code
 } from 'lucide-vue-next';
 const MyTitle = ref('Sample Dataset');
 const renderComponent = ref(true);

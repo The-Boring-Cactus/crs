@@ -12,9 +12,12 @@ import { addWindowEventListener, removeWindowEventListener } from '@/helpers/DOM
 
 export default {
     name: 'GridLayout',
+    beforeCreate() {
+        this._eventBus = mitt();
+    },
     provide() {
         return {
-            eventBus: this.eventBus,
+            eventBus: this._eventBus,
             layout: this
         };
     },
@@ -102,7 +105,7 @@ export default {
     },
     data: function () {
         return {
-            eventBus: mitt(),
+            eventBus: this._eventBus,
             width: null,
             mergedStyle: {},
             lastLayoutLength: 0,

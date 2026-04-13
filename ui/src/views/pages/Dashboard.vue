@@ -1,11 +1,56 @@
 <script setup>
 import { markRaw } from 'vue';
-import { Upload, Printer, PieChart, Palette, Pencil, FolderOpen, ChevronLeft, Compass, Settings, Plus, BarChart, Network, Eraser, LineChart, Check, Image, Target, Type, Download, Minus, Table, Trash2, ChevronDown, CircleDot, RefreshCw, Circle, ZoomIn, CheckSquare, ChevronRight, Save, X, ArrowUpDown } from 'lucide-vue-next';
+import {
+    Upload,
+    Printer,
+    PieChart,
+    Palette,
+    Pencil,
+    FolderOpen,
+    ChevronLeft,
+    Compass,
+    Settings,
+    Plus,
+    BarChart,
+    Network,
+    Eraser,
+    LineChart,
+    Check,
+    Image,
+    Target,
+    Type,
+    Download,
+    Minus,
+    Table,
+    Trash2,
+    ChevronDown,
+    CircleDot,
+    RefreshCw,
+    Circle,
+    ZoomIn,
+    CheckSquare,
+    ChevronRight,
+    Save,
+    X,
+    ArrowUpDown
+} from 'lucide-vue-next';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import BaseChart from '@/components/BaseChart.vue';
 import { nextTick, ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
+import { toast as sonnerToast } from 'vue-sonner';
+
+const toast = {
+    add: (options) => {
+        const { severity, summary, detail, life } = options;
+        const opts = { description: detail, duration: life };
+        if (severity === 'success') sonnerToast.success(summary, opts);
+        else if (severity === 'error') sonnerToast.error(summary, opts);
+        else if (severity === 'warn' || severity === 'warning') sonnerToast.warning(summary, opts);
+        else if (severity === 'info') sonnerToast.info(summary, opts);
+        else sonnerToast(summary, opts);
+    }
+};
 import { Toaster } from '@/components/ui/sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';

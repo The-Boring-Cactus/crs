@@ -108,60 +108,50 @@ const isActive = (path) => {
     <div v-else class="app-container flex h-screen">
         <!-- Sidebar Wrap to give floating effect space -->
         <div class="sidebar-wrapper p-4 pr-0 hidden md:flex flex-col h-full shrink-0">
-            <div 
+            <div
                 class="bg-zinc-950 text-zinc-50 rounded-[1.25rem] h-full flex flex-col shadow-xl border border-zinc-800 overflow-hidden relative transition-all duration-300 ease-in-out"
                 :class="isSidebarHovered ? 'w-[260px]' : 'w-[68px]'"
                 @mouseenter="isSidebarHovered = true"
                 @mouseleave="isSidebarHovered = false"
             >
                 <!-- Header -->
-                <div class="py-4 flex items-center border-b border-zinc-800 transition-all duration-300 h-[53px]"
-                     :class="isSidebarHovered ? 'justify-between px-5' : 'justify-center px-0'">
-                    <span class="font-medium text-[13px] tracking-wide text-zinc-100 whitespace-nowrap transition-all duration-300"
-                          :class="isSidebarHovered ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'">
-                        Menu
-                    </span>
+                <div class="py-4 flex items-center border-b border-zinc-800 transition-all duration-300 h-[53px]" :class="isSidebarHovered ? 'justify-between px-5' : 'justify-center px-0'">
+                    <span class="font-medium text-[13px] tracking-wide text-zinc-100 whitespace-nowrap transition-all duration-300" :class="isSidebarHovered ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'"> Menu </span>
                     <AlignRight class="w-4 h-4 text-zinc-400 shrink-0" />
                 </div>
-                
+
                 <!-- Nav Items -->
                 <div class="flex-col p-2 gap-2 flex overflow-y-auto mt-1 custom-scrollbar">
                     <div
                         v-for="item in navItems"
                         :key="item.path"
                         class="group flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200"
-                        :class="[
-                            isActive(item.path) ? 'bg-zinc-900 border-zinc-700 shadow-sm' : 'border-transparent hover:bg-zinc-900/50 hover:border-zinc-800/50',
-                            isSidebarHovered ? 'justify-start' : 'justify-center'
-                        ]"
+                        :class="[isActive(item.path) ? 'bg-zinc-900 border-zinc-700 shadow-sm' : 'border-transparent hover:bg-zinc-900/50 hover:border-zinc-800/50', isSidebarHovered ? 'justify-start' : 'justify-center']"
                         @click="navigateTo(item.path)"
                         :title="!isSidebarHovered ? item.label : ''"
                     >
-                        <component :is="item.icon" class="w-5 h-5 shrink-0 transition-colors"
-                            :class="isActive(item.path) ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'" />
-                        
-                        <div class="flex flex-col justify-center overflow-hidden whitespace-nowrap transition-all duration-300"
-                             :class="isSidebarHovered ? 'w-[160px] opacity-100 ml-3' : 'w-0 opacity-0 ml-0'">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 transition-colors" 
-                                  :class="isActive(item.path) ? 'text-zinc-400' : 'group-hover:text-zinc-400'">
+                        <component :is="item.icon" class="w-5 h-5 shrink-0 transition-colors" :class="isActive(item.path) ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'" />
+
+                        <div class="flex flex-col justify-center overflow-hidden whitespace-nowrap transition-all duration-300" :class="isSidebarHovered ? 'w-[160px] opacity-100 ml-3' : 'w-0 opacity-0 ml-0'">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 transition-colors" :class="isActive(item.path) ? 'text-zinc-400' : 'group-hover:text-zinc-400'">
                                 {{ item.category }}
                             </span>
-                            <span class="text-[13px] font-medium transition-colors"
-                                  :class="isActive(item.path) ? 'text-zinc-50' : 'text-zinc-300 group-hover:text-zinc-100'">
+                            <span class="text-[13px] font-medium transition-colors" :class="isActive(item.path) ? 'text-zinc-50' : 'text-zinc-300 group-hover:text-zinc-100'">
                                 {{ item.label }}
                             </span>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Bottom items -->
                 <div class="mt-auto p-2 border-t border-zinc-800 flex flex-col gap-2">
-                    <div class="group flex items-center justify-center p-3 rounded-lg border border-zinc-800 hover:bg-zinc-900 transition-all duration-200 cursor-pointer overflow-hidden whitespace-nowrap" @click="logout" :title="!isSidebarHovered ? 'Cerrar Sesión' : ''">
+                    <div
+                        class="group flex items-center justify-center p-3 rounded-lg border border-zinc-800 hover:bg-zinc-900 transition-all duration-200 cursor-pointer overflow-hidden whitespace-nowrap"
+                        @click="logout"
+                        :title="!isSidebarHovered ? 'Cerrar Sesión' : ''"
+                    >
                         <LogOut class="w-5 h-5 shrink-0 text-zinc-500 group-hover:text-zinc-300" />
-                        <span class="text-[13px] font-medium text-zinc-300 group-hover:text-zinc-50 transition-all duration-300"
-                              :class="isSidebarHovered ? 'opacity-100 w-auto ml-2' : 'opacity-0 w-0 ml-0'">
-                            Cerrar Sesión
-                        </span>
+                        <span class="text-[13px] font-medium text-zinc-300 group-hover:text-zinc-50 transition-all duration-300" :class="isSidebarHovered ? 'opacity-100 w-auto ml-2' : 'opacity-0 w-0 ml-0'"> Cerrar Sesión </span>
                     </div>
                 </div>
             </div>

@@ -13,11 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-    Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, 
-    Undo, RefreshCw, Copy, Search, Download, ChevronLeft, ChevronRight, 
-    Info, Trash2 
-} from 'lucide-vue-next';
+import { Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Download, ChevronLeft, ChevronRight, Info, Trash2 } from 'lucide-vue-next';
 
 // Stores and services
 const databaseStore = useDatabaseStore();

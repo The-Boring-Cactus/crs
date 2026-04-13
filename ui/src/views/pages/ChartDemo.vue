@@ -277,12 +277,8 @@ function addToEventLog(message) {
             <div class="card-header flex justify-content-between align-items-center p-4">
                 <h2 class="m-0">Chart Component Demo</h2>
                 <div class="flex gap-2">
-                    <Button @click="showAddChartDialog = true" class="gap-2">
-                        <Plus class="w-4 h-4" /> Add Chart
-                    </Button>
-                    <Button variant="secondary" @click="resetCharts" class="gap-2">
-                        <RefreshCw class="w-4 h-4" /> Reset All
-                    </Button>
+                    <Button @click="showAddChartDialog = true" class="gap-2"> <Plus class="w-4 h-4" /> Add Chart </Button>
+                    <Button variant="secondary" @click="resetCharts" class="gap-2"> <RefreshCw class="w-4 h-4" /> Reset All </Button>
                 </div>
             </div>
         </div>
@@ -395,12 +391,8 @@ function addToEventLog(message) {
 
             <template #footer>
                 <div class="flex gap-2 justify-end w-full">
-                    <Button variant="secondary" @click="showAddChartDialog = false" class="gap-2">
-                        <X class="w-4 h-4" /> Cancel
-                    </Button>
-                    <Button @click="addChart" class="gap-2">
-                        <Check class="w-4 h-4" /> Add Chart
-                    </Button>
+                    <Button variant="secondary" @click="showAddChartDialog = false" class="gap-2"> <X class="w-4 h-4" /> Cancel </Button>
+                    <Button @click="addChart" class="gap-2"> <Check class="w-4 h-4" /> Add Chart </Button>
                 </div>
             </template>
         </Dialog>

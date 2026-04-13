@@ -1,13 +1,19 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
-import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, RadialLinearScale, Filler } from 'chart.js';
-import { Line, Bar, Pie, Doughnut, Radar, PolarArea, Scatter, Bubble } from 'vue-chartjs';
+import { computed, ref } from 'vue';
+import VChart from 'vue-echarts';
+// Import core from echarts to avoid full bundle if we want, but since this generic chart handles everything, import all is fine or necessary
+import * as echarts from 'echarts/core';
+import { LineChart, BarChart, PieChart, ScatterChart, RadarChart } from 'echarts/charts';
+import { TitleComponent, TooltipComponent, GridComponent, DatasetComponent, TransformComponent, LegendComponent, RadarComponent } from 'echarts/components';
+import { LabelLayout, UniversalTransition } from 'echarts/features';
+import { CanvasRenderer } from 'echarts/renderers';
+
+echarts.use([LineChart, BarChart, PieChart, ScatterChart, RadarChart, TitleComponent, TooltipComponent, GridComponent, DatasetComponent, TransformComponent, LegendComponent, RadarComponent, LabelLayout, UniversalTransition, CanvasRenderer]);
+
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus, RefreshCw, Pause, Play } from 'lucide-vue-next';
-
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, RadialLinearScale, Filler);
 
 const props = defineProps({
     type: {
@@ -69,98 +75,162 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['chart-created', 'data-updated', 'chart-clicked']);
+const emit = defineEmits(['data-updated', 'chart-clicked', 'chart-created']);
 
 const animationEnabled = ref(true);
 const chartRef = ref(null);
 
-const chartComponent = computed(() => {
-    switch (props.type) {
-        case 'line':
-        case 'area':
-            return Line;
-        case 'bar':
-        case 'mixed':
-            return Bar;
-        case 'pie':
-            return Pie;
-        case 'doughnut':
-            return Doughnut;
-        case 'radar':
-            return Radar;
-        case 'polarArea':
-            return PolarArea;
-        case 'scatter':
-            return Scatter;
-        case 'bubble':
-            return Bubble;
-        default:
-            return Bar;
-    }
+const cssHeight = computed(() => {
+    if (typeof props.height === 'number') return `${props.height}px`;
+    return props.height || '100%';
 });
 
-const chartData = computed(() => {
-    const data = JSON.parse(JSON.stringify(props.data));
-    if (props.type === 'area') {
-        data.datasets.forEach(ds => ds.fill = true);
-    }
-    return data;
-});
+const defaultPalette = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
 
 const chartOptions = computed(() => {
-    return {
-        responsive: props.responsive,
-        maintainAspectRatio: props.maintainAspectRatio,
-        animation: {
-            duration: animationEnabled.value ? props.animationDuration : 0
+    const type = props.type;
+    const datasets = props.data?.datasets || [];
+    const labels = (props.data?.labels || []).map(String);
+
+    const isCategorical = ['line', 'bar', 'area', 'mixed'].includes(type) && labels.length > 0;
+
+    let options = {
+        title: props.title ? { text: props.title, left: 'center' } : undefined,
+        tooltip: {
+            trigger: isCategorical ? 'axis' : 'item'
         },
-        plugins: {
-            legend: {
-                display: props.showLegend,
-                position: 'top',
-                labels: { color: 'var(--foreground)' }
-            },
-            title: {
-                display: !!props.title,
-                text: props.title,
-                color: 'var(--foreground)'
-            },
-            tooltip: {
-                backgroundColor: 'hsl(var(--card))',
-                titleColor: 'hsl(var(--card-foreground))',
-                bodyColor: 'hsl(var(--card-foreground))',
-                borderColor: 'hsl(var(--border))',
-                borderWidth: 1
-            }
+        legend: {
+            show: props.showLegend && datasets.length > 0,
+            bottom: 0
         },
-        scales: props.type !== 'pie' && props.type !== 'doughnut' && props.type !== 'polarArea' && props.type !== 'radar' ? {
-            x: {
-                grid: { color: 'hsl(var(--border))' },
-                ticks: { color: 'hsl(var(--muted-foreground))' }
-            },
-            y: {
-                beginAtZero: true,
-                grid: { color: 'hsl(var(--border))' },
-                ticks: { color: 'hsl(var(--muted-foreground))' }
-            }
-        } : undefined,
-        onClick: (event, elements) => {
-            if (elements.length > 0) {
-                const element = elements[0];
-                emit('chart-clicked', {
-                    event,
-                    element,
-                    datasetIndex: element.datasetIndex,
-                    dataIndex: element.index,
-                    data: chartData.value.datasets[element.datasetIndex].data[element.index]
-                });
-            }
-        },
-        ...props.options
+        animation: animationEnabled.value,
+        animationDuration: props.animationDuration,
+        ...props.options // merge specific echart overrides if any
     };
+
+    if (isCategorical) {
+        options.xAxis = {
+            type: 'category',
+            data: labels
+        };
+        options.yAxis = {
+            type: 'value'
+        };
+        options.grid = {
+            left: '3%',
+            right: '4%',
+            bottom: props.showLegend ? '15%' : '3%',
+            containLabel: true
+        };
+    } else if (['scatter', 'bubble'].includes(type)) {
+        options.xAxis = { type: 'value' };
+        options.yAxis = { type: 'value' };
+        options.grid = { left: '3%', right: '4%', bottom: '15%', containLabel: true };
+    }
+
+    let series = [];
+
+    if (type === 'radar') {
+        const maxVals = [];
+        datasets.forEach((ds) => {
+            ds.data.forEach((val, i) => {
+                if (!maxVals[i] || val > maxVals[i]) maxVals[i] = val;
+            });
+        });
+
+        options.radar = {
+            indicator: labels.length ? labels.map((l, i) => ({ name: l, max: maxVals[i] ? maxVals[i] * 1.2 : undefined })) : [{ name: 'Indicator' }]
+        };
+    }
+
+    datasets.forEach((ds, idx) => {
+        let dsType = ds.type || type;
+        const color = ds.backgroundColor || defaultPalette[idx % defaultPalette.length];
+        const lineColor = ds.borderColor || color;
+        const pLabel = ds.label || `Series ${idx + 1}`;
+
+        let s = {
+            name: pLabel,
+            type: dsType === 'area' ? 'line' : dsType,
+            data: ds.data,
+            itemStyle: {}
+        };
+
+        if (['line', 'area'].includes(dsType) || (dsType === 'mixed' && !ds.type)) {
+            s.type = 'line';
+            s.lineStyle = { color: lineColor, width: 2 };
+            s.itemStyle = { color: lineColor };
+            if (dsType === 'area' || ds.fill) {
+                s.areaStyle = {
+                    color: Array.isArray(color) ? color[0] : color,
+                    opacity: 0.3
+                };
+            }
+            s.symbolSize = 6;
+        } else if (dsType === 'bar') {
+            s.type = 'bar';
+            if (Array.isArray(color)) {
+                s.itemStyle = {
+                    color: (params) => color[params.dataIndex % color.length]
+                };
+            } else {
+                s.itemStyle = { color: color };
+            }
+            s.barWidth = '60%';
+        } else if (['scatter', 'bubble'].includes(dsType)) {
+            s.type = 'scatter';
+            if (ds.data[0] && typeof ds.data[0] === 'object') {
+                s.data = ds.data.map((d, i) => [d.x !== undefined ? d.x : i, d.y !== undefined ? d.y : d, d.r || 5]);
+                s.symbolSize = (data) => data[2] * 2;
+            } else {
+                s.data = ds.data.map((y, i) => [i, y]);
+                s.symbolSize = 10;
+            }
+            s.itemStyle = { color: Array.isArray(color) ? color[0] : color, opacity: 0.6 };
+            if (lineColor) s.itemStyle.borderColor = lineColor;
+        } else if (['pie', 'doughnut'].includes(dsType)) {
+            s.type = 'pie';
+            s.radius = dsType === 'doughnut' ? ['40%', '70%'] : '50%';
+            s.data = ds.data.map((val, i) => ({
+                value: val,
+                name: labels[i] || `Category ${i + 1}`,
+                itemStyle: {
+                    color: Array.isArray(color) ? color[i % color.length] : color
+                }
+            }));
+            options.tooltip.trigger = 'item';
+        } else if (dsType === 'polarArea') {
+            s.type = 'pie';
+            s.radius = [20, '70%'];
+            s.roseType = 'area';
+            s.data = ds.data.map((val, i) => ({
+                value: val,
+                name: labels[i] || `Category ${i + 1}`,
+                itemStyle: {
+                    color: Array.isArray(color) ? color[i % color.length] : color
+                }
+            }));
+            options.tooltip.trigger = 'item';
+        } else if (dsType === 'radar') {
+            s.type = 'radar';
+            s.data = [
+                {
+                    value: ds.data,
+                    name: pLabel,
+                    itemStyle: { color: Array.isArray(color) ? color[0] : color },
+                    areaStyle: { color: Array.isArray(color) ? color[0] : color, opacity: 0.3 }
+                }
+            ];
+        }
+
+        series.push(s);
+    });
+
+    options.series = series;
+
+    return options;
 });
 
-// Emulate old control requests
 function addRandomData() {
     emit('data-updated', { action: 'add' });
 }
@@ -176,26 +246,42 @@ function toggleAnimation() {
 
 function getChartTypeName(type) {
     const names = {
-        line: 'Line Chart', bar: 'Bar Chart', pie: 'Pie Chart', doughnut: 'Doughnut Chart',
-        polarArea: 'Polar Area Chart', radar: 'Radar Chart', scatter: 'Scatter Plot', bubble: 'Bubble Chart',
-        area: 'Area Chart', mixed: 'Mixed Chart'
+        line: 'Line Chart',
+        bar: 'Bar Chart',
+        pie: 'Pie Chart',
+        doughnut: 'Doughnut Chart',
+        polarArea: 'Polar Area Chart',
+        radar: 'Radar Chart',
+        scatter: 'Scatter Plot',
+        bubble: 'Bubble Chart',
+        area: 'Area Chart',
+        mixed: 'Mixed Chart'
     };
     return names[type] || type;
 }
 
 function getChartDescription(type) {
     const descriptions = {
-        line: 'Perfect for showing trends over time', bar: 'Great for comparing categories',
-        pie: 'Ideal for showing proportions of a whole', doughnut: 'Similar to pie chart with a hollow center',
-        polarArea: 'Combines pie and radar chart features', radar: 'Useful for showing multiple metrics',
-        scatter: 'Shows correlation between two variables', bubble: 'Displays three dimensions of data',
-        area: 'Line chart with filled area underneath', mixed: 'Combines different chart types'
+        line: 'Perfect for showing trends over time',
+        bar: 'Great for comparing categories',
+        pie: 'Ideal for showing proportions of a whole',
+        doughnut: 'Similar to pie chart with a hollow center',
+        polarArea: 'Combines pie and radar chart features',
+        radar: 'Useful for showing multiple metrics',
+        scatter: 'Shows correlation between two variables',
+        bubble: 'Displays three dimensions of data',
+        area: 'Line chart with filled area underneath',
+        mixed: 'Combines different chart types'
     };
     return descriptions[type] || 'Chart visualization';
 }
 
+function onChartReady() {
+    emit('chart-created');
+}
+
 defineExpose({
-    chartInstance: () => chartRef.value?.chart,
+    chartInstance: () => chartRef.value,
     addRandomData,
     removeData,
     randomizeData,
@@ -204,7 +290,7 @@ defineExpose({
 </script>
 
 <template>
-    <Card class="flex flex-col h-full shadow-sm hover:shadow-md transition-shadow">
+    <Card class="flex flex-col h-full shadow-sm hover:shadow-md transition-shadow bg-card text-card-foreground">
         <CardHeader v-if="showHeader" class="pb-2">
             <div class="flex justify-between items-center w-full">
                 <div>
@@ -229,18 +315,13 @@ defineExpose({
             </div>
         </CardHeader>
         <CardContent class="flex-grow flex items-center justify-center p-4">
-            <div class="w-full relative" :style="{ height: height }">
-                <component 
-                    :is="chartComponent" 
-                    :data="chartData" 
-                    :options="chartOptions" 
-                    ref="chartRef" 
-                />
+            <div class="w-full relative" :style="{ height: cssHeight }">
+                <v-chart ref="chartRef" class="w-full h-full min-h-[200px]" :option="chartOptions" :autoresize="true" @ready="onChartReady" />
             </div>
         </CardContent>
         <CardFooter v-if="showFooter" class="pt-4 border-t flex justify-between text-sm text-muted-foreground">
             <span>{{ getChartDescription(type) }}</span>
-            <Badge v-if="chartData?.datasets?.[0]?.data" variant="secondary">{{ chartData.datasets[0].data.length }} data points</Badge>
+            <Badge v-if="data?.datasets?.[0]?.data" variant="secondary">{{ data.datasets[0].data.length }} data points</Badge>
         </CardFooter>
     </Card>
 </template>

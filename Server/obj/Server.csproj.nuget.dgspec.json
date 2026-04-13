@@ -1,40 +1,33 @@
 {
   "format": 1,
   "restore": {
-    "F:\\Reportes\\crs\\Server\\Server.csproj": {}
+    "/home/peyotex/crs/Server/Server.csproj": {}
   },
   "projects": {
-    "F:\\Reportes\\crs\\DataTableFunctions\\DataTableFunctions.csproj": {
+    "/home/peyotex/crs/DataTableFunctions/DataTableFunctions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\DataTableFunctions\\DataTableFunctions.csproj",
+        "projectUniqueName": "/home/peyotex/crs/DataTableFunctions/DataTableFunctions.csproj",
         "projectName": "DataTableFunctions",
-        "projectPath": "F:\\Reportes\\crs\\DataTableFunctions\\DataTableFunctions.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\DataTableFunctions\\obj\\",
+        "projectPath": "/home/peyotex/crs/DataTableFunctions/DataTableFunctions.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/DataTableFunctions/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+              "/home/peyotex/crs/FunctEngine/FunctEngine.csproj": {
+                "projectPath": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj"
               }
             }
           }
@@ -49,7 +42,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -65,46 +58,49 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj": {
+    "/home/peyotex/crs/DateTimeFunctions/DateTimeFunctions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj",
+        "projectUniqueName": "/home/peyotex/crs/DateTimeFunctions/DateTimeFunctions.csproj",
         "projectName": "DateTimeFunctions",
-        "projectPath": "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\DateTimeFunctions\\obj\\",
+        "projectPath": "/home/peyotex/crs/DateTimeFunctions/DateTimeFunctions.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/DateTimeFunctions/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+              "/home/peyotex/crs/FunctEngine/FunctEngine.csproj": {
+                "projectPath": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj"
               }
             }
           }
@@ -119,7 +115,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -135,46 +131,49 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\Reportes\\crs\\DoeFunctions\\DoeFunctions.csproj": {
+    "/home/peyotex/crs/DoeFunctions/DoeFunctions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\DoeFunctions\\DoeFunctions.csproj",
+        "projectUniqueName": "/home/peyotex/crs/DoeFunctions/DoeFunctions.csproj",
         "projectName": "DoeFunctions",
-        "projectPath": "F:\\Reportes\\crs\\DoeFunctions\\DoeFunctions.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\DoeFunctions\\obj\\",
+        "projectPath": "/home/peyotex/crs/DoeFunctions/DoeFunctions.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/DoeFunctions/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+              "/home/peyotex/crs/FunctEngine/FunctEngine.csproj": {
+                "projectPath": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj"
               }
             }
           }
@@ -189,7 +188,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -205,46 +204,49 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\Reportes\\crs\\FinancialFunctions\\FinancialFunctions.csproj": {
+    "/home/peyotex/crs/FinancialFunctions/FinancialFunctions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\FinancialFunctions\\FinancialFunctions.csproj",
+        "projectUniqueName": "/home/peyotex/crs/FinancialFunctions/FinancialFunctions.csproj",
         "projectName": "FinancialFunctions",
-        "projectPath": "F:\\Reportes\\crs\\FinancialFunctions\\FinancialFunctions.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\FinancialFunctions\\obj\\",
+        "projectPath": "/home/peyotex/crs/FinancialFunctions/FinancialFunctions.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/FinancialFunctions/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+              "/home/peyotex/crs/FunctEngine/FunctEngine.csproj": {
+                "projectPath": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj"
               }
             }
           }
@@ -259,7 +261,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -275,38 +277,41 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
+    "/home/peyotex/crs/FunctEngine/FunctEngine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj",
+        "projectUniqueName": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj",
         "projectName": "FunctEngine",
-        "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\FunctEngine\\obj\\",
+        "projectPath": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/FunctEngine/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -325,7 +330,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -359,46 +364,49 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj": {
+    "/home/peyotex/crs/MathFunctions/MathFunctions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj",
+        "projectUniqueName": "/home/peyotex/crs/MathFunctions/MathFunctions.csproj",
         "projectName": "MathFunctions",
-        "projectPath": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\MathFunctions\\obj\\",
+        "projectPath": "/home/peyotex/crs/MathFunctions/MathFunctions.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/MathFunctions/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+              "/home/peyotex/crs/FunctEngine/FunctEngine.csproj": {
+                "projectPath": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj"
               }
             }
           }
@@ -413,7 +421,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -435,64 +443,67 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\Reportes\\crs\\Server\\Server.csproj": {
+    "/home/peyotex/crs/Server/Server.csproj": {
       "version": "0.1.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\Server\\Server.csproj",
+        "projectUniqueName": "/home/peyotex/crs/Server/Server.csproj",
         "projectName": "Server",
-        "projectPath": "F:\\Reportes\\crs\\Server\\Server.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\Server\\obj\\",
+        "projectPath": "/home/peyotex/crs/Server/Server.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/Server/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\Reportes\\crs\\DataTableFunctions\\DataTableFunctions.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\DataTableFunctions\\DataTableFunctions.csproj"
+              "/home/peyotex/crs/DataTableFunctions/DataTableFunctions.csproj": {
+                "projectPath": "/home/peyotex/crs/DataTableFunctions/DataTableFunctions.csproj"
               },
-              "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\DateTimeFunctions\\DateTimeFunctions.csproj"
+              "/home/peyotex/crs/DateTimeFunctions/DateTimeFunctions.csproj": {
+                "projectPath": "/home/peyotex/crs/DateTimeFunctions/DateTimeFunctions.csproj"
               },
-              "F:\\Reportes\\crs\\DoeFunctions\\DoeFunctions.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\DoeFunctions\\DoeFunctions.csproj"
+              "/home/peyotex/crs/DoeFunctions/DoeFunctions.csproj": {
+                "projectPath": "/home/peyotex/crs/DoeFunctions/DoeFunctions.csproj"
               },
-              "F:\\Reportes\\crs\\FinancialFunctions\\FinancialFunctions.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\FinancialFunctions\\FinancialFunctions.csproj"
+              "/home/peyotex/crs/FinancialFunctions/FinancialFunctions.csproj": {
+                "projectPath": "/home/peyotex/crs/FinancialFunctions/FinancialFunctions.csproj"
               },
-              "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\FunctEngine\\FunctEngine.csproj"
+              "/home/peyotex/crs/FunctEngine/FunctEngine.csproj": {
+                "projectPath": "/home/peyotex/crs/FunctEngine/FunctEngine.csproj"
               },
-              "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\MathFunctions\\MathFunctions.csproj"
+              "/home/peyotex/crs/MathFunctions/MathFunctions.csproj": {
+                "projectPath": "/home/peyotex/crs/MathFunctions/MathFunctions.csproj"
               },
-              "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj": {
-                "projectPath": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj"
+              "/home/peyotex/crs/StringUtilities/StringUtilities.csproj": {
+                "projectPath": "/home/peyotex/crs/StringUtilities/StringUtilities.csproj"
               }
             }
           }
@@ -507,7 +518,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -589,38 +600,45 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj": {
+    "/home/peyotex/crs/StringUtilities/StringUtilities.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj",
+        "projectUniqueName": "/home/peyotex/crs/StringUtilities/StringUtilities.csproj",
         "projectName": "StringUtilities",
-        "projectPath": "F:\\Reportes\\crs\\StringUtilities\\StringUtilities.csproj",
-        "packagesPath": "C:\\Users\\ricardo.rodriguez\\.nuget\\packages\\",
-        "outputPath": "F:\\Reportes\\crs\\StringUtilities\\obj\\",
+        "projectPath": "/home/peyotex/crs/StringUtilities/StringUtilities.csproj",
+        "packagesPath": "/home/peyotex/.nuget/packages/",
+        "outputPath": "/home/peyotex/crs/StringUtilities/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ricardo.rodriguez\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/peyotex/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -639,7 +657,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -655,12 +673,22 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.12, 9.0.12]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/peyotex/.dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
