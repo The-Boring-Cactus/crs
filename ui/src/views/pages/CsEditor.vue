@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue';
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue';
 import { getCurrentInstance } from 'vue';
 import { toast } from 'vue-sonner';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
@@ -74,38 +74,16 @@ const editorTheme = computed(() => {
     return basicLight;
 });
 
-// WebSocket message handling
-proxy.$socket.onmessage = (data) => {
-    const payload = JSON.parse(data.data);
-    console.log('WebSocket message:', payload);
+const handleSocketDebug = (e) => {
+    const timestamp = new Date().toLocaleTimeString();
+    debugText.value += `[${timestamp}] ${e.detail}\n`;
 
-    if (payload.TypeMsg === 'FinishCode') {
-        isExecuting.value = false;
-        hasExecuted.value = true;
-
-        if (payload.status === 'Fail') {
-            toast.error('Execution Failed', {
-                description: 'An error occurred during script execution'
-            });
-        } else {
-            toast.success('Execution Complete', {
-                description: 'Script executed successfully'
-            });
+    setTimeout(() => {
+        const textarea = document.querySelector('.debug-textarea textarea');
+        if (textarea) {
+            textarea.scrollTop = textarea.scrollHeight;
         }
-    }
-
-    if (payload.TypeMsg === 'Debug') {
-        const timestamp = new Date().toLocaleTimeString();
-        debugText.value += `[${timestamp}] ${payload.data}\n`;
-
-        // Auto-scroll to bottom
-        setTimeout(() => {
-            const textarea = document.querySelector('.debug-textarea textarea');
-            if (textarea) {
-                textarea.scrollTop = textarea.scrollHeight;
-            }
-        }, 100);
-    }
+    }, 100);
 };
 
 // Editor operations
@@ -198,7 +176,7 @@ const formatCode = () => {
 };
 
 // Execution operations
-const handleExecute = () => {
+const handleExecute = async () => {
     if (!code.value.trim()) return;
 
     console.log('Executing code:', code.value);
@@ -209,15 +187,27 @@ const handleExecute = () => {
     const timestamp = new Date().toLocaleTimeString();
     debugText.value = `[${timestamp}] Starting script execution...\n`;
 
-    proxy.$socket.sendObj({
-        type: 'CodeScript',
-        data: code.value,
-        name: currentScript.name || 'Untitled Script'
-    });
-
     toast('Execution Started', {
         description: 'Script execution has been initiated'
     });
+
+    try {
+        await userStore.executeCommand('ExecuteCs', {
+            code: code.value,
+            name: currentScript.name || 'Untitled Script'
+        }, proxy.$socket);
+
+        hasExecuted.value = true;
+        toast.success('Execution Complete', {
+            description: 'Script executed successfully'
+        });
+    } catch (error) {
+        toast.error('Execution Failed', {
+            description: error.message || 'An error occurred during script execution'
+        });
+    } finally {
+        isExecuting.value = false;
+    }
 };
 
 const stopExecution = () => {
@@ -259,7 +249,7 @@ const newScript = () => {
     }
 };
 
-const saveScript = () => {
+const saveScript = async () => {
     const script = {
         id: currentScript.id || generateId(),
         name: currentScript.name || 'Untitled C# Script',
@@ -269,20 +259,23 @@ const saveScript = () => {
         updatedAt: new Date()
     };
 
-    const existingIndex = savedScripts.value.findIndex((s) => s.id === script.id);
+    try {
+        await userStore.executeCommand('SaveScript', { language: 'csharp', script }, proxy.$socket);
 
-    if (existingIndex >= 0) {
-        savedScripts.value[existingIndex] = { ...savedScripts.value[existingIndex], ...script };
-    } else {
-        savedScripts.value.push(script);
-        currentScript.id = script.id;
+        const existingIndex = savedScripts.value.findIndex((s) => s.id === script.id);
+        if (existingIndex >= 0) {
+            savedScripts.value[existingIndex] = { ...savedScripts.value[existingIndex], ...script };
+        } else {
+            savedScripts.value.push(script);
+            currentScript.id = script.id;
+        }
+
+        toast('Script Saved', {
+            description: `Script "${script.name}" saved successfully`
+        });
+    } catch (error) {
+        toast.error('Save Failed', { description: error.message });
     }
-
-    saveScriptsToStorage();
-
-    toast('Script Saved', {
-        description: `Script "${script.name}" saved successfully`
-    });
 };
 
 const loadScript = () => {
@@ -315,16 +308,20 @@ const confirmLoadScript = () => {
     });
 };
 
-const deleteScript = (scriptId) => {
-    const index = savedScripts.value.findIndex((s) => s.id === scriptId);
-    if (index >= 0) {
-        const scriptName = savedScripts.value[index].name;
-        savedScripts.value.splice(index, 1);
-        saveScriptsToStorage();
+const deleteScript = async (scriptId) => {
+    try {
+        await userStore.executeCommand('DeleteScript', { language: 'csharp', id: scriptId }, proxy.$socket);
+        const index = savedScripts.value.findIndex((s) => s.id === scriptId);
+        if (index >= 0) {
+            const scriptName = savedScripts.value[index].name;
+            savedScripts.value.splice(index, 1);
 
-        toast('Script Deleted', {
-            description: `Script "${scriptName}" deleted successfully`
-        });
+            toast('Script Deleted', {
+                description: `Script "${scriptName}" deleted successfully`
+            });
+        }
+    } catch (error) {
+        toast.error('Delete Failed', { description: error.message });
     }
 };
 
@@ -337,11 +334,11 @@ const saveScriptsToStorage = () => {
     }
 };
 
-const loadScriptsFromStorage = () => {
+const loadScriptsFromStorage = async () => {
     try {
-        const saved = localStorage.getItem('cs-scripts');
-        if (saved) {
-            savedScripts.value = JSON.parse(saved).map((script) => ({
+        const result = await userStore.executeCommand('LoadScripts', { language: 'csharp' }, proxy.$socket);
+        if (result && result.Data) {
+            savedScripts.value = result.Data.map((script) => ({
                 ...script,
                 createdAt: script.createdAt ? new Date(script.createdAt) : new Date(),
                 updatedAt: script.updatedAt ? new Date(script.updatedAt) : new Date()
@@ -383,7 +380,12 @@ const formatDate = (date) => {
 
 // Initialize component
 onMounted(() => {
+    window.addEventListener('socket-debug', handleSocketDebug);
     loadScriptsFromStorage();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('socket-debug', handleSocketDebug);
 });
 </script>
 

@@ -1,25 +1,17 @@
-using RocksDbSharp;
+using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Text;
 
 namespace Server.Core;
 
 public class ReportsCache : IDisposable
 {
-    private readonly RocksDb _db;
+    private readonly ConcurrentDictionary<string, byte[]> _store;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly CacheMetrics _metrics;
     
-    public ReportsCache(string cachePath)
+    public ReportsCache(string cacheName)
     {
-        var options = new DbOptions()
-            .SetCreateIfMissing(true)
-            .SetCompression(Compression.Lz4)
-            .SetWriteBufferSize(32 * 1024 * 1024)
-            .SetMaxWriteBufferNumber(2)
-            .SetTargetFileSizeBase(128 * 1024 * 1024);
-            
-        _db = RocksDb.Open(options, cachePath);
+        _store = new ConcurrentDictionary<string, byte[]>();
         _jsonOptions = new JsonSerializerOptions 
         { 
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -54,17 +46,17 @@ public class ReportsCache : IDisposable
     private CacheEntry<T> GetCacheEntry<T>(string key)
     {
         var entryKey = $"entry:{key}";
-        var json = _db.Get(Encoding.UTF8.GetBytes(entryKey));
-        if (json == null) return null;
+        if (!_store.TryGetValue(entryKey, out var json) || json == null)
+            return null;
         
         try 
         {
-            var jsonString = Encoding.UTF8.GetString(json);
+            var jsonString = System.Text.Encoding.UTF8.GetString(json);
             return JsonSerializer.Deserialize<CacheEntry<T>>(jsonString, _jsonOptions);
         }
         catch
         {
-            _db.Remove(Encoding.UTF8.GetBytes(entryKey));
+            _store.TryRemove(entryKey, out _);
             return null;
         }
     }
@@ -79,11 +71,10 @@ public class ReportsCache : IDisposable
         };
         
         var json = JsonSerializer.Serialize(entry, _jsonOptions);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(json);
         
-        using var batch = new WriteBatch();
-        batch.Put(Encoding.UTF8.GetBytes($"entry:{key}"), Encoding.UTF8.GetBytes(json));
-        batch.Put(Encoding.UTF8.GetBytes($"timestamp:{key}"), Encoding.UTF8.GetBytes(entry.Timestamp.ToUnixTimeMilliseconds().ToString()));
-        _db.Write(batch);
+        _store[$"entry:{key}"] = bytes;
+        _store[$"timestamp:{key}"] = System.Text.Encoding.UTF8.GetBytes(entry.Timestamp.ToUnixTimeMilliseconds().ToString());
     }
     
     private bool IsExpired(DateTimeOffset timestamp, TimeSpan maxAge)
@@ -93,10 +84,8 @@ public class ReportsCache : IDisposable
     
     public void InvalidateQuery(string queryKey)
     {
-        using var batch = new WriteBatch();
-        batch.Delete(Encoding.UTF8.GetBytes($"entry:{queryKey}"));
-        batch.Delete(Encoding.UTF8.GetBytes($"timestamp:{queryKey}"));
-        _db.Write(batch);
+        _store.TryRemove($"entry:{queryKey}", out _);
+        _store.TryRemove($"timestamp:{queryKey}", out _);
     }
     
     public CacheMetrics GetMetrics()
@@ -106,6 +95,6 @@ public class ReportsCache : IDisposable
     
     public void Dispose()
     {
-        _db?.Dispose();
+        _store.Clear();
     }
 }

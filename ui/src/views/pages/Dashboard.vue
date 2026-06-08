@@ -37,8 +37,9 @@ import {
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import BaseChart from '@/components/BaseChart.vue';
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, ref, watch, getCurrentInstance } from 'vue';
 import { toast as sonnerToast } from 'vue-sonner';
+import { useDashboardStore } from '@/store/dashboardStore';
 
 const toast = {
     add: (options) => {
@@ -75,6 +76,12 @@ watch(editingTitle, (val) => {
     }
 });
 const renderComponent = ref(true);
+const dashboardId = ref(null);
+const showLoadDialog = ref(false);
+
+const dashboardStore = useDashboardStore();
+const { proxy } = getCurrentInstance();
+
 let layout = ref({
     componentes: [{ x: 6, y: 0, w: 3, h: 1, i: '0', static: false, type: 'Text', value: 'Sample Text' }],
     formvalues: {
@@ -223,13 +230,23 @@ const componentMenuItems = ref([
         icon: markRaw(Settings),
         items: [
             {
-                label: 'Save Layout',
+                label: 'Save To Server',
                 icon: markRaw(Save),
-                command: () => saveDashboardLayout(),
-                badge: 'New'
+                command: () => saveToServer(),
+                badge: 'Cloud'
             },
             {
-                label: 'Load Layout',
+                label: 'Load From Server',
+                icon: markRaw(FolderOpen),
+                command: () => openLoadDialog()
+            },
+            {
+                label: 'Export Local Layout',
+                icon: markRaw(Download),
+                command: () => saveDashboardLayout()
+            },
+            {
+                label: 'Import Local Layout',
                 icon: markRaw(FolderOpen),
                 command: () => loadDashboardLayout()
             },
@@ -239,7 +256,7 @@ const componentMenuItems = ref([
                 command: () => resetDashboard()
             },
             {
-                label: 'Export Dashboard',
+                label: 'Export Dashboard (All)',
                 icon: markRaw(Download),
                 command: () => exportDashboard()
             }
@@ -1304,6 +1321,60 @@ function saveDashboardLayout() {
     }
 }
 
+async function saveToServer() {
+    try {
+        const layoutData = {
+            id: dashboardId.value,
+            title: MyTitle.value,
+            components: layout.value.componentes,
+            timestamp: new Date().toISOString()
+        };
+
+        await dashboardStore.saveDashboard(layoutData, proxy.$socket);
+
+        toast.add({
+            severity: 'success',
+            summary: 'Saved to Server',
+            detail: 'Dashboard layout has been saved successfully to the server',
+            life: 3000
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Save Failed',
+            detail: 'Failed to save dashboard to the server',
+            life: 3000
+        });
+    }
+}
+
+async function openLoadDialog() {
+    await dashboardStore.loadDashboards(proxy.$socket);
+    showLoadDialog.value = true;
+}
+
+async function loadFromServer(dash) {
+    if (dash && dash.components) {
+        dashboardId.value = dash.id;
+        MyTitle.value = dash.title || 'Imported Dashboard';
+        layout.value.componentes = dash.components;
+        
+        showLoadDialog.value = false;
+        
+        // Force re-render
+        renderComponent.value = false;
+        await nextTick();
+        renderComponent.value = true;
+
+        toast.add({
+            severity: 'success',
+            summary: 'Layout Loaded',
+            detail: 'Dashboard layout has been loaded successfully from server',
+            life: 3000
+        });
+    }
+}
+
 function loadDashboardLayout() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -1947,6 +2018,27 @@ const itemTitle = (item) => {
             <DialogFooter>
                 <Button @click="closeSettingsDialog">Done</Button>
             </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Load Dialog -->
+    <Dialog v-model:open="showLoadDialog">
+        <DialogContent class="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Load Dashboard from Server</DialogTitle>
+            </DialogHeader>
+            <div class="flex flex-col gap-4 py-4 max-h-[300px] overflow-y-auto">
+                <div v-if="dashboardStore.dashboards.length === 0" class="text-center text-muted-foreground p-4">
+                    No dashboards saved on the server.
+                </div>
+                <div v-for="dash in dashboardStore.dashboards" :key="dash.id" class="flex justify-between items-center p-3 border rounded hover:bg-muted cursor-pointer" @click="loadFromServer(dash)">
+                    <div>
+                        <div class="font-medium">{{ dash.title }}</div>
+                        <div class="text-xs text-muted-foreground">{{ dash.components?.length || 0 }} components • {{ new Date(dash.timestamp).toLocaleDateString() }}</div>
+                    </div>
+                    <Button variant="ghost" size="sm" @click.stop="loadFromServer(dash)">Load</Button>
+                </div>
+            </div>
         </DialogContent>
     </Dialog>
 </template>

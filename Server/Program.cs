@@ -1,4 +1,4 @@
-﻿using GenHTTP.Engine.Internal;
+using GenHTTP.Engine.Internal;
 using GenHTTP.Modules.IO;
 using GenHTTP.Modules.Layouting;
 using GenHTTP.Modules.Practices;
@@ -6,7 +6,6 @@ using GenHTTP.Modules.Security;
 using GenHTTP.Modules.Webservices;
 using GenHTTP.Modules.Websockets;
 using GenHTTP.Modules.OpenApi;
-using Microsoft.Data.SqlClient;
 using Server.Core;
 using System.Net;
 using GenHTTP.Modules.ApiBrowsing;
@@ -20,13 +19,11 @@ internal class Program
         var authService = new AuthService(cache);
         var reportsService = new UserReportsService(cache, dataSource);
         var backgroundWorker = new ReportsBackgroundWorker(cache, reportsService);
-        var webSocketManager = new WebSocketManager(authService, reportsService); 
-
-        // Configurar conexiones de base de datos
-        dataSource.AddConnection("mssql-main",
-            new SqlConnection("Server=.;Database=Reports;Integrated Security=true"));
+        
+        var webSocketManager = new WebSocketManager(authService, reportsService, dataSource); 
 
         // Configurar servicios web
+        var setupController = new SetupController();
         var authController = new AuthController(authService);
         var reportsController = new ReportsController(reportsService, cache, authService);
 
@@ -55,6 +52,7 @@ internal class Program
                            .Add("/srv", websocketHandler)
                            .Add("/api/reports", ServiceResource.From(reportsController).Build())
                            .Add("/api/auth", ServiceResource.From(authController).Build())
+                           .Add("/api/setup", ServiceResource.From(setupController).Build())
                            .Add("/", files)
                            .AddOpenApi() //Open to all
                            .AddSwaggerUI() //Open to all

@@ -1,0 +1,13 @@
+/home/peyotex/Documents/GitHub/crs/FunctEngine/bin/Debug/net10.0/FunctEngine.deps.json
+/home/peyotex/Documents/GitHub/crs/FunctEngine/bin/Debug/net10.0/FunctEngine.dll
+/home/peyotex/Documents/GitHub/crs/FunctEngine/bin/Debug/net10.0/FunctEngine.pdb
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.csproj.AssemblyReference.cache
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.AssemblyInfoInputs.cache
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.AssemblyInfo.cs
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.csproj.CoreCompileInputs.cache
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.sourcelink.json
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.dll
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/refint/FunctEngine.dll
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/FunctEngine.pdb
+/home/peyotex/Documents/GitHub/crs/FunctEngine/obj/Debug/net10.0/ref/FunctEngine.dll

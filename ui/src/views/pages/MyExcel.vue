@@ -1,8 +1,8 @@
 <script setup>
-import { markRaw } from 'vue';
+import { markRaw, ref, computed, nextTick, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { Upload, Grid, Search, Filter, Pencil, RefreshCcw, Scissors, Plus, BarChart, PlusCircle, Eraser, Check, Copy, SortDesc, Download, File, Table, Trash2, FileSpreadsheet, CheckSquare, Save, SortAsc, Code } from 'lucide-vue-next';
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { toast } from 'vue-sonner';
+import { useExcelStore } from '@/store/excelStore';
 import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,11 @@ const replaceText = ref('');
 const sortColumn = ref(null);
 const sortOrder = ref('asc');
 const lastSelectedCell = ref(null);
+const showLoadDialog = ref(false);
+const excelId = ref(null);
+
+const excelStore = useExcelStore();
+const { proxy } = getCurrentInstance();
 
 // Initialize with default data
 const initializeSheet = () => {
@@ -447,9 +452,51 @@ const quickSave = () => {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast('Saved', {
+    toast('Saved Locally', {
         description: 'Spreadsheet saved as JSON'
     });
+};
+
+const saveToServer = async () => {
+    try {
+        const payload = {
+            id: excelId.value,
+            name: sheetTitle.value,
+            columns: columnHeaders.value,
+            data: sheetData.value,
+            timestamp: new Date().toISOString()
+        };
+        await excelStore.saveExcel(payload, proxy.$socket);
+        toast.success('Saved to Server', {
+            description: 'Spreadsheet successfully saved to the server.'
+        });
+    } catch (error) {
+        toast.error('Save Failed', {
+            description: 'Failed to save spreadsheet to the server.'
+        });
+    }
+};
+
+const openLoadDialog = async () => {
+    await excelStore.loadExcels(proxy.$socket);
+    showLoadDialog.value = true;
+};
+
+const loadFromServer = async (excel) => {
+    if (excel && excel.data) {
+        excelId.value = excel.id;
+        sheetTitle.value = excel.name || 'Imported Spreadsheet';
+        columnHeaders.value = excel.columns || [];
+        sheetData.value = excel.data;
+        showLoadDialog.value = false;
+        
+        selectedCells.value.clear();
+        lastSelectedCell.value = null;
+
+        toast.success('Loaded', {
+            description: `Spreadsheet ${excel.name} loaded from server.`
+        });
+    }
 };
 
 const handleFileImport = async (event) => {
@@ -844,8 +891,14 @@ onUnmounted(() => {
         </div>
 
         <div class="flex items-center gap-2">
-            <Button variant="ghost" size="icon" @click="quickSave" title="Save Spreadsheet">
+            <Button variant="ghost" size="icon" @click="openLoadDialog" title="Load From Server">
+                <Download class="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" @click="saveToServer" title="Save To Server">
                 <Save class="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" @click="quickSave" title="Export Local JSON">
+                <Download class="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" @click="showImportDialog = true" title="Import Data">
                 <Upload class="w-4 h-4" />
@@ -1108,6 +1161,27 @@ onUnmounted(() => {
             <DialogFooter>
                 <Button @click="showFilterDialog = false">Close</Button>
             </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Load Dialog -->
+    <Dialog v-model:open="showLoadDialog">
+        <DialogContent class="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Load Spreadsheet from Server</DialogTitle>
+            </DialogHeader>
+            <div class="flex flex-col gap-4 py-4 max-h-[300px] overflow-y-auto">
+                <div v-if="excelStore.excels.length === 0" class="text-center text-muted-foreground p-4">
+                    No spreadsheets saved on the server.
+                </div>
+                <div v-for="ex in excelStore.excels" :key="ex.id" class="flex justify-between items-center p-3 border rounded hover:bg-muted cursor-pointer" @click="loadFromServer(ex)">
+                    <div>
+                        <div class="font-medium">{{ ex.name }}</div>
+                        <div class="text-xs text-muted-foreground">{{ ex.data?.length || 0 }} rows • {{ new Date(ex.timestamp).toLocaleDateString() }}</div>
+                    </div>
+                    <Button variant="ghost" size="sm" @click.stop="loadFromServer(ex)">Load</Button>
+                </div>
+            </div>
         </DialogContent>
     </Dialog>
 </template>

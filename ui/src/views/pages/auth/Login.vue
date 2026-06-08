@@ -4,8 +4,6 @@ import { getCurrentInstance } from 'vue';
 import { userStoreMe } from '@/store/userStore';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
-import { WebSocketMessageClient } from '@/websocket/WebSocketMessageClient';
-import { ServerResponse } from '@/websocket/ServerResponse';
 import LogoSvg from '@/components/LogoSvg.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,26 +18,17 @@ const loading = ref(false);
 
 var { proxy } = getCurrentInstance();
 
-proxy.$socket.onmessage = (data) => {
-    const responseHandler = new ServerResponse();
-    var jResponse = JSON.parse(data.data);
-    if (jResponse.Type == 3) {
-        var response = responseHandler.analizeMessage(jResponse);
-        console.log(response);
-        loading.value = false;
-        if (response.Type == 'Response' || response.Status == 'Success') {
-            toast.success('Welcome', { description: 'OK' });
-            userStore.setCurr(true, 'User', 'admin', response.Data.Functions);
-            router.push({ path: '/', replace: true });
-        }
-    }
-};
-
-const client = new WebSocketMessageClient(proxy.$socket);
-
-const handleReady = () => {
-    client.sendAuthentication(loging.value, password.value);
+const handleReady = async () => {
     loading.value = true;
+    try {
+        await userStore.authenticate(loging.value, password.value, proxy.$socket);
+        toast.success('Welcome', { description: 'OK' });
+        router.push({ path: '/', replace: true });
+    } catch (error) {
+        toast.error('Authentication Failed', { description: 'Please check your credentials.' });
+    } finally {
+        loading.value = false;
+    }
 };
 </script>
 

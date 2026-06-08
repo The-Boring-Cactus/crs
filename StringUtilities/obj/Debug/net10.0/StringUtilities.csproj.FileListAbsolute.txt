@@ -1,0 +1,12 @@
+/home/peyotex/Documents/GitHub/crs/StringUtilities/bin/Debug/net10.0/StringUtilities.deps.json
+/home/peyotex/Documents/GitHub/crs/StringUtilities/bin/Debug/net10.0/StringUtilities.dll
+/home/peyotex/Documents/GitHub/crs/StringUtilities/bin/Debug/net10.0/StringUtilities.pdb
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/StringUtilities.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/StringUtilities.AssemblyInfoInputs.cache
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/StringUtilities.AssemblyInfo.cs
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/StringUtilities.csproj.CoreCompileInputs.cache
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/StringUtilities.sourcelink.json
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/StringUtilities.dll
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/refint/StringUtilities.dll
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/StringUtilities.pdb
+/home/peyotex/Documents/GitHub/crs/StringUtilities/obj/Debug/net10.0/ref/StringUtilities.dll

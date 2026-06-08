@@ -13,6 +13,8 @@ const router = useRouter();
 const route = useRoute();
 const userStore = userStoreMe();
 
+const isSetupRoute = computed(() => route.path === '/setup');
+
 const loading = ref(false);
 const loginData = ref({
     username: '',
@@ -74,8 +76,13 @@ const isActive = (path) => {
 <template>
     <Toaster position="top-right" />
 
+    <!-- Setup Wizard (full screen, no chrome) -->
+    <div v-if="isSetupRoute" class="setup-fullscreen">
+        <RouterView />
+    </div>
+
     <!-- Login Screen -->
-    <div v-if="!isLoggedIn" class="login-container">
+    <div v-else-if="!isLoggedIn" class="login-container">
         <div class="login-card">
             <div class="text-center mb-4">
                 <BarChart class="mx-auto" style="width: 3rem; height: 3rem; color: #8b5cf6" />
@@ -197,5 +204,9 @@ const isActive = (path) => {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #52525b;
+}
+.setup-fullscreen {
+    width: 100vw;
+    min-height: 100vh;
 }
 </style>

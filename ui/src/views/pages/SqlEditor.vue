@@ -6,17 +6,23 @@ import { Codemirror } from 'vue-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import { toast } from 'vue-sonner';
 import { useDatabaseStore } from '@/store/databaseStore';
+import { userStoreMe } from '@/store/userStore';
+import { getCurrentInstance } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Download, ChevronLeft, ChevronRight, Info, Trash2 } from 'lucide-vue-next';
+import BaseChart from '@/components/BaseChart.vue';
+import { Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Download, ChevronLeft, ChevronRight, Info, Trash2, Grid, BarChart } from 'lucide-vue-next';
 
 // Stores and services
 const databaseStore = useDatabaseStore();
+const userStore = userStoreMe();
+var { proxy } = getCurrentInstance();
 
 // Editor state
 const code = ref('SELECT 1;');
@@ -36,6 +42,56 @@ const isExecuting = ref(false);
 const hasExecuted = ref(false);
 const queryResults = ref([]);
 const queryColumns = ref([]);
+
+// View mode and Chart config
+const currentViewMode = ref('table');
+const chartType = ref('bar');
+const chartData = computed(() => {
+    if (queryResults.value.length === 0 || queryColumns.value.length === 0) return null;
+
+    let labelCol = null;
+    const dataCols = [];
+
+    const firstRow = queryResults.value[0];
+    for (const col of queryColumns.value) {
+        const val = firstRow[col.field];
+        if (typeof val === 'string' && !labelCol) {
+            labelCol = col.field;
+        } else if (typeof val === 'number') {
+            dataCols.push(col.field);
+        } else if (!labelCol) {
+            labelCol = col.field;
+        }
+    }
+
+    if (!labelCol && dataCols.length > 0) labelCol = dataCols.shift();
+    if (dataCols.length === 0 && queryColumns.value.length > 0) {
+        dataCols.push(queryColumns.value[0].field);
+    }
+
+    const labels = queryResults.value.map(row => String(row[labelCol] || ''));
+    
+    const colors = [
+        { border: 'rgba(75, 192, 192, 1)', bg: 'rgba(75, 192, 192, 0.6)' },
+        { border: 'rgba(255, 99, 132, 1)', bg: 'rgba(255, 99, 132, 0.6)' },
+        { border: 'rgba(54, 162, 235, 1)', bg: 'rgba(54, 162, 235, 0.6)' },
+        { border: 'rgba(255, 205, 86, 1)', bg: 'rgba(255, 205, 86, 0.6)' },
+    ];
+
+    const datasets = dataCols.map((colField, i) => {
+        const color = colors[i % colors.length];
+        return {
+            label: queryColumns.value.find(c => c.field === colField)?.header || colField,
+            data: queryResults.value.map(row => Number(row[colField]) || 0),
+            borderColor: color.border,
+            backgroundColor: chartType.value === 'line' ? 'transparent' : color.bg,
+            borderWidth: 1,
+            fill: chartType.value === 'line' ? false : true
+        };
+    });
+
+    return { labels, datasets };
+});
 
 // Script management
 const currentScript = reactive({
@@ -202,15 +258,17 @@ const executeQuery = async () => {
     queryColumns.value = [];
 
     try {
-        // Simulate query execution - replace with actual database query logic
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const result = await userStore.executeCommand('ExecuteSql', {
+            database: selectedDatabase.value,
+            code: code.value
+        }, proxy.$socket);
 
-        // Mock data generation for demo
-        const mockData = generateMockData(code.value);
-        queryResults.value = mockData.rows;
-        queryColumns.value = mockData.columns;
+        if (result && result.Data) {
+            queryResults.value = result.Data.rows || [];
+            queryColumns.value = result.Data.columns || [];
+        }
+        
         currentPage.value = 1; // Reset pagination
-
         hasExecuted.value = true;
 
         toast('Query Executed', {
@@ -234,16 +292,18 @@ const generateMockData = (query) => {
         const columns = [
             { field: 'id', header: 'ID' },
             { field: 'name', header: 'Name' },
-            { field: 'email', header: 'Email' },
-            { field: 'created_at', header: 'Created At' }
+            { field: 'sales', header: 'Sales ($)' },
+            { field: 'expenses', header: 'Expenses ($)' },
+            { field: 'created_at', header: 'Date' }
         ];
 
         // Generate mock rows
-        const rows = Array.from({ length: Math.floor(Math.random() * 50) + 1 }, (_, i) => ({
+        const rows = Array.from({ length: Math.floor(Math.random() * 20) + 10 }, (_, i) => ({
             id: i + 1,
-            name: `User ${i + 1}`,
-            email: `user${i + 1}@example.com`,
-            created_at: new Date(Date.now() - Math.random() * 1000000000).toISOString()
+            name: `Entity ${String.fromCharCode(65 + (i % 26))}${i + 1}`,
+            sales: Math.floor(Math.random() * 8000) + 2000,
+            expenses: Math.floor(Math.random() * 5000) + 1000,
+            created_at: new Date(Date.now() - Math.random() * 10000000000).toISOString().split('T')[0]
         }));
 
         return { columns, rows };
@@ -264,7 +324,7 @@ const newScript = () => {
     hasExecuted.value = false;
 };
 
-const saveScript = () => {
+const saveScript = async () => {
     const script = {
         id: currentScript.id || generateId(),
         name: currentScript.name || 'Untitled Script',
@@ -275,20 +335,23 @@ const saveScript = () => {
         updatedAt: new Date()
     };
 
-    const existingIndex = savedScripts.value.findIndex((s) => s.id === script.id);
+    try {
+        await userStore.executeCommand('SaveScript', { language: 'sql', script }, proxy.$socket);
 
-    if (existingIndex >= 0) {
-        savedScripts.value[existingIndex] = { ...savedScripts.value[existingIndex], ...script };
-    } else {
-        savedScripts.value.push(script);
-        currentScript.id = script.id;
+        const existingIndex = savedScripts.value.findIndex((s) => s.id === script.id);
+        if (existingIndex >= 0) {
+            savedScripts.value[existingIndex] = { ...savedScripts.value[existingIndex], ...script };
+        } else {
+            savedScripts.value.push(script);
+            currentScript.id = script.id;
+        }
+
+        toast('Script Saved', {
+            description: `Script "${script.name}" saved successfully`
+        });
+    } catch (error) {
+        toast.error('Save Failed', { description: error.message });
     }
-
-    saveScriptsToStorage();
-
-    toast('Script Saved', {
-        description: `Script "${script.name}" saved successfully`
-    });
 };
 
 const loadScript = () => {
@@ -320,33 +383,28 @@ const confirmLoadScript = () => {
     });
 };
 
-const deleteScript = (scriptId) => {
-    const index = savedScripts.value.findIndex((s) => s.id === scriptId);
-    if (index >= 0) {
-        const scriptName = savedScripts.value[index].name;
-        savedScripts.value.splice(index, 1);
-        saveScriptsToStorage();
-
-        toast('Script Deleted', {
-            description: `Script "${scriptName}" deleted successfully`
-        });
-    }
-};
-
-// Storage management
-const saveScriptsToStorage = () => {
+const deleteScript = async (scriptId) => {
     try {
-        localStorage.setItem('sql-scripts', JSON.stringify(savedScripts.value));
+        await userStore.executeCommand('DeleteScript', { language: 'sql', id: scriptId }, proxy.$socket);
+        const index = savedScripts.value.findIndex((s) => s.id === scriptId);
+        if (index >= 0) {
+            const scriptName = savedScripts.value[index].name;
+            savedScripts.value.splice(index, 1);
+
+            toast('Script Deleted', {
+                description: `Script "${scriptName}" deleted successfully`
+            });
+        }
     } catch (error) {
-        console.error('Failed to save scripts:', error);
+        toast.error('Delete Failed', { description: error.message });
     }
 };
 
-const loadScriptsFromStorage = () => {
+const loadScriptsFromStorage = async () => {
     try {
-        const saved = localStorage.getItem('sql-scripts');
-        if (saved) {
-            savedScripts.value = JSON.parse(saved).map((script) => ({
+        const result = await userStore.executeCommand('LoadScripts', { language: 'sql' }, proxy.$socket);
+        if (result && result.Data) {
+            savedScripts.value = result.Data.map((script) => ({
                 ...script,
                 createdAt: script.createdAt ? new Date(script.createdAt) : new Date(),
                 updatedAt: script.updatedAt ? new Date(script.updatedAt) : new Date()
@@ -409,7 +467,7 @@ const exportResults = () => {
 
 // Initialize component
 onMounted(() => {
-    databaseStore.loadConnections();
+    databaseStore.loadConnections(proxy.$socket);
     loadScriptsFromStorage();
 });
 </script>
@@ -503,36 +561,77 @@ onMounted(() => {
         <div class="results-container border rounded-md bg-card p-4 flex flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h6 class="text-sm font-semibold m-0">Query Results</h6>
-                <div class="flex items-center gap-2">
-                    <Badge v-if="queryResults.length > 0" variant="secondary">{{ queryResults.length }} rows</Badge>
-                    <Button variant="outline" size="sm" @click="exportResults" :disabled="queryResults.length === 0" class="gap-2">
-                        <Download class="w-4 h-4" />
-                        Export
-                    </Button>
+                <div class="flex items-center gap-3">
+                    <Tabs v-if="queryResults.length > 0" v-model="currentViewMode" class="w-[200px]">
+                        <TabsList class="grid w-full grid-cols-2 h-8">
+                            <TabsTrigger value="table" class="text-xs py-1"><Grid class="w-3 h-3 mr-1"/> Table</TabsTrigger>
+                            <TabsTrigger value="chart" class="text-xs py-1"><BarChart class="w-3 h-3 mr-1"/> Chart</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+
+                    <div v-if="currentViewMode === 'chart' && queryResults.length > 0" class="flex items-center gap-2">
+                         <Select v-model="chartType">
+                            <SelectTrigger class="w-[130px] h-8 text-xs">
+                                <SelectValue placeholder="Chart Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="bar">Bar Chart</SelectItem>
+                                <SelectItem value="line">Line Chart</SelectItem>
+                                <SelectItem value="pie">Pie Chart</SelectItem>
+                                <SelectItem value="doughnut">Doughnut Chart</SelectItem>
+                            </SelectContent>
+                         </Select>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <Badge v-if="queryResults.length > 0" variant="secondary">{{ queryResults.length }} rows</Badge>
+                        <Button variant="outline" size="sm" @click="exportResults" :disabled="queryResults.length === 0" class="gap-2">
+                            <Download class="w-4 h-4" />
+                            Export
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            <div v-if="queryResults.length > 0" class="flex-1 overflow-auto border rounded-md">
-                <Table>
-                    <TableHeader class="sticky top-0 bg-secondary z-10 shadow-sm">
-                        <TableRow>
-                            <TableHead v-for="col in queryColumns" :key="col.field" class="whitespace-nowrap font-semibold border-r last:border-r-0">
-                                {{ col.header }}
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="(row, i) in paginatedResults" :key="i" class="hover:bg-muted/50">
-                            <TableCell v-for="col in queryColumns" :key="col.field" class="p-2 border-r last:border-r-0 border-border/50 max-w-[200px] truncate" :title="formatCellValue(row[col.field])">
+            <div v-if="queryResults.length > 0 && currentViewMode === 'table'" class="flex-1 overflow-auto border rounded-md excel-grid-wrapper bg-background">
+                <div class="excel-grid-header">
+                    <div class="excel-corner-cell"></div>
+                    <div v-for="col in queryColumns" :key="col.field" class="excel-column-header">
+                        {{ col.header }}
+                    </div>
+                </div>
+                <div class="excel-grid-body">
+                    <div v-for="(row, i) in paginatedResults" :key="i" class="excel-row">
+                        <div class="excel-row-header">{{ (currentPage - 1) * rowsPerPage + i + 1 }}</div>
+                        <div v-for="col in queryColumns" :key="col.field" class="excel-cell">
+                            <span class="excel-cell-value px-2 truncate w-full pointer-events-none" :title="formatCellValue(row[col.field])">
                                 {{ formatCellValue(row[col.field]) }}
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div v-else-if="queryResults.length > 0 && currentViewMode === 'chart'" class="flex-1 overflow-auto border rounded-md bg-card p-4 flex items-center justify-center">
+                <div class="w-full h-[400px]">
+                    <BaseChart
+                        v-if="chartData"
+                        :type="chartType"
+                        :data="chartData"
+                        title="Query Results Chart"
+                        :show-controls="false"
+                        :show-data-labels="false"
+                        :show-legend="true"
+                        height="400px"
+                    />
+                    <div v-else class="text-center text-muted-foreground p-8">
+                        Not enough numeric data to render a chart.
+                    </div>
+                </div>
             </div>
 
             <!-- Pagination -->
-            <div v-if="queryResults.length > 0" class="flex items-center justify-between py-3 px-2 border-t mt-auto">
+            <div v-if="queryResults.length > 0 && currentViewMode === 'table'" class="flex items-center justify-between py-3 px-2 border-t mt-auto">
                 <p class="text-sm text-muted-foreground">Showing {{ (currentPage - 1) * rowsPerPage + 1 }} to {{ Math.min(currentPage * rowsPerPage, queryResults.length) }} of {{ queryResults.length }} entries</p>
                 <div class="flex items-center space-x-2">
                     <p class="text-sm font-medium mr-2">Rows per page</p>
@@ -689,4 +788,80 @@ onMounted(() => {
         }
     }
 }
+
+/* Excel-like Grid Styles */
+.excel-grid-wrapper {
+    position: relative;
+    min-height: 200px;
+}
+
+.excel-grid-header {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--secondary, #f1f5f9);
+}
+
+.excel-corner-cell {
+    width: 50px;
+    min-width: 50px;
+    height: 32px;
+    border-right: 1px solid var(--border, #e2e8f0);
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    background: var(--secondary, #f1f5f9);
+}
+
+.excel-column-header {
+    min-width: 150px;
+    flex: 1;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    border-right: 1px solid var(--border, #e2e8f0);
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    background: var(--secondary, #f1f5f9);
+    color: var(--foreground, #0f172a);
+    font-size: 0.85rem;
+    user-select: none;
+}
+
+.excel-row {
+    display: flex;
+}
+
+.excel-row:hover .excel-cell {
+    background: var(--muted, #f8fafc);
+}
+
+.excel-row-header {
+    width: 50px;
+    min-width: 50px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-right: 1px solid var(--border, #e2e8f0);
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    background: var(--secondary, #f1f5f9);
+    color: var(--muted-foreground, #64748b);
+    user-select: none;
+}
+
+.excel-cell {
+    min-width: 150px;
+    flex: 1;
+    height: 30px;
+    border-right: 1px solid var(--border, #e2e8f0);
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
 </style>

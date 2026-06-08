@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { userStoreMe } from "@/store/userStore";
 
 export interface DatabaseConnection {
   id: string;
@@ -39,11 +40,12 @@ export const useDatabaseStore = defineStore({
   },
 
   actions: {
-    loadConnections() {
+    async loadConnections(socket: any) {
       try {
-        const saved = localStorage.getItem('database-connections');
-        if (saved) {
-          this.connections = JSON.parse(saved).map((conn: any) => ({
+        const userStore = userStoreMe();
+        const result = await userStore.executeCommand('LoadDatabaseConnections', {}, socket);
+        if (result && result.Data) {
+          this.connections = result.Data.map((conn: any) => ({
             ...conn,
             createdAt: new Date(conn.createdAt),
             updatedAt: new Date(conn.updatedAt),
@@ -56,15 +58,7 @@ export const useDatabaseStore = defineStore({
       }
     },
 
-    saveConnections() {
-      try {
-        localStorage.setItem('database-connections', JSON.stringify(this.connections));
-      } catch (error) {
-        console.error('Error saving database connections:', error);
-      }
-    },
-
-    addConnection(connection: Omit<DatabaseConnection, 'id' | 'createdAt' | 'updatedAt' | 'status'>) {
+    async addConnection(connection: Omit<DatabaseConnection, 'id' | 'createdAt' | 'updatedAt' | 'status'>, socket: any) {
       const newConnection: DatabaseConnection = {
         ...connection,
         id: this.generateId(),
@@ -73,36 +67,55 @@ export const useDatabaseStore = defineStore({
         updatedAt: new Date()
       };
 
-      this.connections.push(newConnection);
-      this.saveConnections();
-      return newConnection;
+      try {
+        const userStore = userStoreMe();
+        await userStore.executeCommand('SaveDatabaseConnection', { connection: newConnection }, socket);
+        this.connections.push(newConnection);
+        return newConnection;
+      } catch (error) {
+        console.error('Error adding database connection:', error);
+        throw error;
+      }
     },
 
-    updateConnection(id: string, updates: Partial<DatabaseConnection>) {
+    async updateConnection(id: string, updates: Partial<DatabaseConnection>, socket: any) {
       const index = this.connections.findIndex(conn => conn.id === id);
       if (index !== -1) {
-        this.connections[index] = {
+        const updatedConnection = {
           ...this.connections[index],
           ...updates,
           updatedAt: new Date()
         };
-        this.saveConnections();
-        return this.connections[index];
+        try {
+          const userStore = userStoreMe();
+          await userStore.executeCommand('SaveDatabaseConnection', { connection: updatedConnection }, socket);
+          this.connections[index] = updatedConnection;
+          return updatedConnection;
+        } catch (error) {
+          console.error('Error updating database connection:', error);
+          throw error;
+        }
       }
       return null;
     },
 
-    deleteConnection(id: string) {
+    async deleteConnection(id: string, socket: any) {
       const index = this.connections.findIndex(conn => conn.id === id);
       if (index !== -1) {
-        this.connections.splice(index, 1);
-        this.saveConnections();
-        return true;
+        try {
+          const userStore = userStoreMe();
+          await userStore.executeCommand('DeleteDatabaseConnection', { id }, socket);
+          this.connections.splice(index, 1);
+          return true;
+        } catch (error) {
+          console.error('Error deleting database connection:', error);
+          throw error;
+        }
       }
       return false;
     },
 
-    duplicateConnection(id: string) {
+    async duplicateConnection(id: string, socket: any) {
       const original = this.connectionById(id);
       if (original) {
         const duplicate = {
@@ -114,36 +127,39 @@ export const useDatabaseStore = defineStore({
         delete (duplicate as any).id;
         delete (duplicate as any).createdAt;
         delete (duplicate as any).updatedAt;
-        return this.addConnection(duplicate);
+        return this.addConnection(duplicate, socket);
       }
       return null;
     },
 
-    async testConnection(id: string): Promise<boolean> {
+    async testConnection(id: string, socket: any): Promise<boolean> {
       const connection = this.connectionById(id);
       if (!connection) return false;
 
-      this.updateConnection(id, { status: 'testing' });
+      // Update state locally first to show testing UI
+      const index = this.connections.findIndex(conn => conn.id === id);
+      if (index !== -1) {
+          this.connections[index].status = 'testing';
+      }
+      
       this.loading = true;
 
       try {
-        // Simulate connection test - replace with actual connection logic
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // For demo purposes, randomly succeed or fail
-        const success = Math.random() > 0.3;
-
-        this.updateConnection(id, {
+        const userStore = userStoreMe();
+        const result = await userStore.executeCommand('TestDatabaseConnection', { id }, socket);
+        const success = result?.Data?.success === true;
+        
+        await this.updateConnection(id, {
           status: success ? 'connected' : 'error',
           lastTested: new Date()
-        });
+        }, socket);
 
         return success;
       } catch (error) {
-        this.updateConnection(id, {
+        await this.updateConnection(id, {
           status: 'error',
           lastTested: new Date()
-        });
+        }, socket);
         return false;
       } finally {
         this.loading = false;
@@ -162,11 +178,11 @@ export const useDatabaseStore = defineStore({
       return JSON.stringify(this.connections, null, 2);
     },
 
-    importConnections(data: string): boolean {
+    async importConnections(data: string, socket: any): Promise<boolean> {
       try {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed)) {
-          this.connections = parsed.map((conn: any) => ({
+          const newConnections = parsed.map((conn: any) => ({
             ...conn,
             id: this.generateId(), // Generate new IDs to avoid conflicts
             createdAt: new Date(conn.createdAt || new Date()),
@@ -174,7 +190,13 @@ export const useDatabaseStore = defineStore({
             lastTested: conn.lastTested ? new Date(conn.lastTested) : undefined,
             status: 'disconnected' // Reset status on import
           }));
-          this.saveConnections();
+          
+          for (const conn of newConnections) {
+             const userStore = userStoreMe();
+             await userStore.executeCommand('SaveDatabaseConnection', { connection: conn }, socket);
+          }
+          
+          this.connections = newConnections;
           return true;
         }
       } catch (error) {

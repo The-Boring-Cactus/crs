@@ -1,6 +1,7 @@
 <script setup>
-import { nextTick, ref, computed, onMounted } from 'vue';
+import { nextTick, ref, computed, onMounted, getCurrentInstance } from 'vue';
 import { toast } from 'vue-sonner';
+import { useDatasetStore } from '@/store/datasetStore';
 import * as XLSX from 'xlsx';
 import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
@@ -38,10 +39,15 @@ import {
     Code
 } from 'lucide-vue-next';
 const MyTitle = ref('Sample Dataset');
+const datasetId = ref(null);
 const renderComponent = ref(true);
 const showImportDialog = ref(false);
 const showExportDialog = ref(false);
+const showLoadDialog = ref(false);
 const pasteData = ref('');
+
+const datasetStore = useDatasetStore();
+const { proxy } = getCurrentInstance();
 const selectedRows = ref([]);
 const clipboard = ref(null);
 const editingCell = ref(null);
@@ -354,9 +360,46 @@ const quickSave = () => {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast('Dataset Saved', {
+    toast('Dataset Saved Locally', {
         description: 'Dataset has been saved as JSON file'
     });
+};
+
+const saveToServer = async () => {
+    try {
+        const payload = {
+            id: datasetId.value,
+            name: MyTitle.value,
+            data: jsondata.value,
+            timestamp: new Date().toISOString()
+        };
+        await datasetStore.saveDataset(payload, proxy.$socket);
+        toast.success('Saved to Server', {
+            description: 'Dataset successfully saved to the server.'
+        });
+    } catch (error) {
+        toast.error('Save Failed', {
+            description: 'Failed to save dataset to the server.'
+        });
+    }
+};
+
+const openLoadDialog = async () => {
+    await datasetStore.loadDatasets(proxy.$socket);
+    showLoadDialog.value = true;
+};
+
+const loadFromServer = async (dataset) => {
+    if (dataset && dataset.data) {
+        datasetId.value = dataset.id;
+        MyTitle.value = dataset.name || 'Imported Dataset';
+        jsondata.value = dataset.data;
+        showLoadDialog.value = false;
+        await forceRerender();
+        toast.success('Loaded', {
+            description: `Dataset ${dataset.name} loaded from server.`
+        });
+    }
 };
 
 const handleFileImport = async (event) => {
@@ -841,8 +884,14 @@ const showDataStats = () => {
         </div>
 
         <div class="flex items-center gap-2">
-            <Button variant="ghost" size="icon" @click="quickSave" title="Save Dataset">
+            <Button variant="ghost" size="icon" @click="openLoadDialog" title="Load From Server">
+                <Download class="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" @click="saveToServer" title="Save To Server">
                 <Save class="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" @click="quickSave" title="Export Local JSON">
+                <Download class="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" @click="showImportDialog = true" title="Import Data">
                 <Upload class="w-4 h-4" />
@@ -1035,6 +1084,25 @@ const showDataStats = () => {
                 <Button variant="outline" @click="showExportDialog = false">Cancel</Button>
             </DialogFooter>
         </DialogContent>
+        <Dialog v-model:open="showLoadDialog">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Load Dataset from Server</DialogTitle>
+                </DialogHeader>
+                <div class="flex flex-col gap-4 py-4 max-h-[300px] overflow-y-auto">
+                    <div v-if="datasetStore.datasets.length === 0" class="text-center text-muted-foreground p-4">
+                        No datasets saved on the server.
+                    </div>
+                    <div v-for="ds in datasetStore.datasets" :key="ds.id" class="flex justify-between items-center p-3 border rounded hover:bg-muted cursor-pointer" @click="loadFromServer(ds)">
+                        <div>
+                            <div class="font-medium">{{ ds.name }}</div>
+                            <div class="text-xs text-muted-foreground">{{ ds.data?.length || 0 }} rows • {{ new Date(ds.timestamp).toLocaleDateString() }}</div>
+                        </div>
+                        <Button variant="ghost" size="sm" @click.stop="loadFromServer(ds)">Load</Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
     </Dialog>
 </template>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, reactive, computed } from 'vue';
+import { onMounted, ref, reactive, computed, getCurrentInstance } from 'vue';
 import { useDatabaseStore } from '@/store/databaseStore';
 import { toast } from 'vue-sonner';
 import { Toaster } from '@/components/ui/sonner';
@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Database, Plus, Trash2, Download, Upload, RefreshCw, Search, ArrowUpDown, Check, Pencil, Copy, X, Save, AlertTriangle, Loader2 } from 'lucide-vue-next';
 
 const databaseStore = useDatabaseStore();
+const { proxy } = getCurrentInstance();
 
 const fileInput = ref();
 const connectionDialog = ref(false);
@@ -121,7 +122,7 @@ const databaseTypes = ref([
 ]);
 
 onMounted(() => {
-    databaseStore.loadConnections();
+    databaseStore.loadConnections(proxy.$socket);
 });
 
 function openNew() {
@@ -163,25 +164,30 @@ function onTypeChange() {
     }
 }
 
-function saveConnection() {
+async function saveConnection() {
     submitted.value = true;
 
     if (isValidConnection()) {
         const connectionData = { ...connection };
 
-        if (editMode.value) {
-            databaseStore.updateConnection(connection.id, connectionData);
-            toast('Success', {
-                description: 'Connection updated successfully'
-            });
-        } else {
-            databaseStore.addConnection(connectionData);
-            toast('Success', {
-                description: 'Connection created successfully'
+        try {
+            if (editMode.value) {
+                await databaseStore.updateConnection(connection.id, connectionData, proxy.$socket);
+                toast('Success', {
+                    description: 'Connection updated successfully'
+                });
+            } else {
+                await databaseStore.addConnection(connectionData, proxy.$socket);
+                toast('Success', {
+                    description: 'Connection created successfully'
+                });
+            }
+            hideDialog();
+        } catch (error) {
+            toast.error('Error', {
+                description: 'Failed to save connection'
             });
         }
-
-        hideDialog();
     }
 }
 
@@ -195,12 +201,12 @@ async function testAndSave() {
             let connectionToTest;
 
             if (editMode.value) {
-                connectionToTest = databaseStore.updateConnection(connection.id, { ...connection });
+                connectionToTest = await databaseStore.updateConnection(connection.id, { ...connection }, proxy.$socket);
             } else {
-                connectionToTest = databaseStore.addConnection({ ...connection });
+                connectionToTest = await databaseStore.addConnection({ ...connection }, proxy.$socket);
             }
 
-            const success = await databaseStore.testConnection(connectionToTest.id);
+            const success = await databaseStore.testConnection(connectionToTest.id, proxy.$socket);
 
             if (success) {
                 toast('Success', {
@@ -212,6 +218,10 @@ async function testAndSave() {
                     description: 'Could not connect to database. Connection saved anyway.'
                 });
             }
+        } catch (error) {
+            toast.error('Error', {
+                description: 'Failed to save or test connection.'
+            });
         } finally {
             testing.value = false;
         }
@@ -223,7 +233,7 @@ function isValidConnection() {
 }
 
 async function testConnection(conn) {
-    const success = await databaseStore.testConnection(conn.id);
+    const success = await databaseStore.testConnection(conn.id, proxy.$socket);
 
     if (success) {
         toast('Success', {
@@ -236,8 +246,8 @@ async function testConnection(conn) {
     }
 }
 
-function duplicateConnection(conn) {
-    const duplicate = databaseStore.duplicateConnection(conn.id);
+async function duplicateConnection(conn) {
+    const duplicate = await databaseStore.duplicateConnection(conn.id, proxy.$socket);
     if (duplicate) {
         toast('Success', {
             description: 'Connection duplicated successfully'
@@ -250,12 +260,16 @@ function confirmDeleteConnection(conn) {
     deleteConnectionDialog.value = true;
 }
 
-function deleteConnection() {
-    const success = databaseStore.deleteConnection(connection.id);
-    if (success) {
-        toast('Success', {
-            description: 'Connection deleted successfully'
-        });
+async function deleteConnection() {
+    try {
+        const success = await databaseStore.deleteConnection(connection.id, proxy.$socket);
+        if (success) {
+            toast('Success', {
+                description: 'Connection deleted successfully'
+            });
+        }
+    } catch (error) {
+        toast.error('Error', { description: 'Failed to delete connection' });
     }
     deleteConnectionDialog.value = false;
     resetConnection();
@@ -265,21 +279,25 @@ function confirmDeleteSelected() {
     deleteSelectedDialog.value = true;
 }
 
-function deleteSelectedConnections() {
-    selectedConnections.value.forEach((conn) => {
-        databaseStore.deleteConnection(conn.id);
-    });
+async function deleteSelectedConnections() {
+    try {
+        for (const conn of selectedConnections.value) {
+            await databaseStore.deleteConnection(conn.id, proxy.$socket);
+        }
 
-    toast('Success', {
-        description: `${selectedConnections.value.length} connection(s) deleted successfully`
-    });
+        toast('Success', {
+            description: `${selectedConnections.value.length} connection(s) deleted successfully`
+        });
 
-    selectedConnections.value = [];
-    deleteSelectedDialog.value = false;
+        selectedConnections.value = [];
+        deleteSelectedDialog.value = false;
+    } catch (error) {
+        toast.error('Error', { description: 'Failed to delete some connections' });
+    }
 }
 
 function refreshConnections() {
-    databaseStore.loadConnections();
+    databaseStore.loadConnections(proxy.$socket);
     toast('Refreshed', {
         description: 'Connections list refreshed'
     });
@@ -304,8 +322,8 @@ function importConnections(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-            const success = databaseStore.importConnections(e.target.result);
+        reader.onload = async (e) => {
+            const success = await databaseStore.importConnections(e.target.result, proxy.$socket);
             if (success) {
                 toast('Success', {
                     description: 'Connections imported successfully'

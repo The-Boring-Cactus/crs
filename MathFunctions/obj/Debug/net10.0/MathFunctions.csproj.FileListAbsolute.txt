@@ -1,0 +1,16 @@
+/home/peyotex/Documents/GitHub/crs/MathFunctions/bin/Debug/net10.0/MathFunctions.deps.json
+/home/peyotex/Documents/GitHub/crs/MathFunctions/bin/Debug/net10.0/MathFunctions.dll
+/home/peyotex/Documents/GitHub/crs/MathFunctions/bin/Debug/net10.0/MathFunctions.pdb
+/home/peyotex/Documents/GitHub/crs/MathFunctions/bin/Debug/net10.0/FunctEngine.dll
+/home/peyotex/Documents/GitHub/crs/MathFunctions/bin/Debug/net10.0/FunctEngine.pdb
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.csproj.AssemblyReference.cache
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.AssemblyInfoInputs.cache
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.AssemblyInfo.cs
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.csproj.CoreCompileInputs.cache
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.sourcelink.json
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunc.A73B07B0.Up2Date
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.dll
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/refint/MathFunctions.dll
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/MathFunctions.pdb
+/home/peyotex/Documents/GitHub/crs/MathFunctions/obj/Debug/net10.0/ref/MathFunctions.dll

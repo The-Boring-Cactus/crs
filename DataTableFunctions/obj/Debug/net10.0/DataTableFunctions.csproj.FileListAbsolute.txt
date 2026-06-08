@@ -1,0 +1,16 @@
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/bin/Debug/net10.0/DataTableFunctions.deps.json
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/bin/Debug/net10.0/DataTableFunctions.dll
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/bin/Debug/net10.0/DataTableFunctions.pdb
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/bin/Debug/net10.0/FunctEngine.dll
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/bin/Debug/net10.0/FunctEngine.pdb
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.csproj.AssemblyReference.cache
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.GeneratedMSBuildEditorConfig.editorconfig
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.AssemblyInfoInputs.cache
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.AssemblyInfo.cs
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.csproj.CoreCompileInputs.cache
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.sourcelink.json
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTabl.4656DED0.Up2Date
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.dll
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/refint/DataTableFunctions.dll
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/DataTableFunctions.pdb
+/home/peyotex/Documents/GitHub/crs/DataTableFunctions/obj/Debug/net10.0/ref/DataTableFunctions.dll

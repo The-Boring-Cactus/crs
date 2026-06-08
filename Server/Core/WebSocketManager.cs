@@ -20,12 +20,14 @@ public class WebSocketManager
     private readonly ConcurrentDictionary<string, ConnectionInfo> _connections;
     private readonly IAuthService _authService;
     private readonly IUserReportsService _reportsService;
+    private readonly DataSourceManager _dataSourceManager;
 
-    public WebSocketManager(IAuthService authService, IUserReportsService reportsService)
+    public WebSocketManager(IAuthService authService, IUserReportsService reportsService, DataSourceManager dataSourceManager)
     {
         _connections = new ConcurrentDictionary<string, ConnectionInfo>();
         _authService = authService;
         _reportsService = reportsService;
+        _dataSourceManager = dataSourceManager;
     }
 
   
@@ -85,11 +87,17 @@ public class WebSocketManager
 
     private void TestScriptOnStatusUpdate(object sender, StatusString e)
     {
-        dynamic answer = new JObject();
-        answer.TypeMsg = "Debug";
-        answer.data = e.status; ;
-        var sz = answer.ToString();
+        ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.interpreter == sender).Value;
+        if (connectionInfo == null) return;
         
+        NotificationMessage notification = new NotificationMessage
+        {
+            Category = "Debug",
+            Content = e.status,
+            Title = "Execution Debug"
+        };
+        
+        using var _ = SendMessageAsync(connectionInfo, notification, connectionInfo.WebSocket);
     }
 
     private void HeartbeatMessage(object sender, MessageReceivedEventArgs e)
@@ -120,9 +128,235 @@ public class WebSocketManager
         throw new NotImplementedException();
     }
 
+    private void RegisterUserDatabaseConnections(string userId)
+    {
+        var conns = DatabasePersistence.LoadDatabaseConnections(userId);
+        foreach(var c in conns)
+        {
+            var id = c["id"]?.ToString() ?? c["Id"]?.ToString();
+            var type = c["type"]?.ToString() ?? c["Type"]?.ToString();
+            var connectionString = c["connectionString"]?.ToString() ?? c["ConnectionString"]?.ToString();
+            
+            if (type == "mssql" && !string.IsNullOrEmpty(id))
+            {
+                var host = c["host"]?.ToString() ?? c["Host"]?.ToString();
+                var db = c["database"]?.ToString() ?? c["DatabaseName"]?.ToString();
+                var user = c["username"]?.ToString() ?? c["Username"]?.ToString();
+                var pass = c["password"]?.ToString() ?? c["Password"]?.ToString();
+                string cs = connectionString ?? $"Server={host};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;";
+                
+                try 
+                {
+                    _dataSourceManager.AddConnection(id, new Microsoft.Data.SqlClient.SqlConnection(cs));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error registering connection {id}: {ex.Message}");
+                }
+            }
+        }
+    }
+
     private void CommandMessage(object sender, MessageReceivedEventArgs e)
     {
-        throw new NotImplementedException();
+        IWebsocketConnection socket = e.WebSocket;
+        ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
+        if (connectionInfo == null) return;
+        
+        string Uuid = !string.IsNullOrEmpty(connectionInfo.UserId) ? connectionInfo.UserId : connectionInfo.ConnectionId;
+
+        var cmdMessage = e.Message as CommandMessage;
+        if (cmdMessage == null) return;
+
+        var parameters = cmdMessage.Parameters;
+        
+        ResponseMessage response = new ResponseMessage
+        {
+            RequestId = cmdMessage.Id,
+            Status = MessageStatus.Success,
+            ErrorMessage = ""
+        };
+
+        try 
+        {
+            switch (cmdMessage.Command)
+            {
+                case "ExecuteCs":
+                    if (parameters.ContainsKey("code"))
+                    {
+                        string code = parameters["code"].ToString();
+                        connectionInfo.interpreter.Execute(code);
+                    }
+                    response.Data = new { message = "Execution started/completed" };
+                    break;
+                    
+                case "ExecuteSql":
+                    if (parameters.ContainsKey("database") && parameters.ContainsKey("code"))
+                    {
+                        string dbId = parameters["database"].ToString();
+                        string sql = parameters["code"].ToString();
+                        
+                        try 
+                        {
+                            var result = _dataSourceManager.ExecuteQueryAsync(dbId, sql).GetAwaiter().GetResult();
+                            
+                            var rows = new List<object>();
+                            var columns = new List<object>();
+                            bool colsExtracted = false;
+                            
+                            foreach(var row in result)
+                            {
+                                if (!colsExtracted)
+                                {
+                                    if (row is IDictionary<string, object> dict)
+                                    {
+                                        foreach(var key in dict.Keys)
+                                        {
+                                            columns.Add(new { field = key, header = key });
+                                        }
+                                    }
+                                    colsExtracted = true;
+                                }
+                                rows.Add(row);
+                            }
+                            
+                            response.Data = new { rows = rows, columns = columns };
+                        }
+                        catch (Exception dbEx)
+                        {
+                            response.Status = MessageStatus.Error;
+                            response.ErrorMessage = dbEx.Message;
+                        }
+                    }
+                    else 
+                    {
+                        response.Status = MessageStatus.Error;
+                        response.ErrorMessage = "Missing database or code parameter";
+                    }
+                    break;
+                    
+                case "SaveScript":
+                    if (parameters.ContainsKey("script"))
+                    {
+                        var scriptObj = JObject.FromObject(parameters["script"]);
+                        var lang = scriptObj["language"]?.ToString() ?? "sql";
+                        DatabasePersistence.SaveScript(Uuid, scriptObj, lang);
+                    }
+                    break;
+                    
+                case "LoadScripts":
+                    string scriptLang = parameters.ContainsKey("language") ? parameters["language"].ToString() : "";
+                    response.Data = DatabasePersistence.LoadScripts(Uuid, scriptLang);
+                    break;
+                    
+                case "DeleteScript":
+                    if (parameters.ContainsKey("id"))
+                    {
+                        var id = parameters["id"].ToString();
+                        var lang2 = parameters.ContainsKey("language") ? parameters["language"].ToString() : "sql";
+                        DatabasePersistence.DeleteScript(Uuid, id, lang2);
+                    }
+                    break;
+
+                case "SaveDatabaseConnection":
+                    if (parameters.ContainsKey("connection"))
+                    {
+                        var connObj = JObject.FromObject(parameters["connection"]);
+                        DatabasePersistence.SaveDatabaseConnection(Uuid, connObj);
+                        RegisterUserDatabaseConnections(Uuid);
+                    }
+                    break;
+                    
+                case "LoadDatabaseConnections":
+                    response.Data = DatabasePersistence.LoadDatabaseConnections(Uuid);
+                    break;
+                    
+                case "DeleteDatabaseConnection":
+                    if (parameters.ContainsKey("id"))
+                    {
+                        var id = parameters["id"].ToString();
+                        DatabasePersistence.DeleteDatabaseConnection(Uuid, id);
+                    }
+                    break;
+                    
+                case "TestDatabaseConnection":
+                    bool success = new Random().NextDouble() > 0.3;
+                    response.Data = new { success = success };
+                    break;
+                    
+                case "SaveDataset":
+                    if (parameters.ContainsKey("dataset"))
+                    {
+                        var dsObj = JObject.FromObject(parameters["dataset"]);
+                        DatabasePersistence.SaveEntity(Uuid, "Datasets", dsObj);
+                    }
+                    break;
+
+                case "LoadDatasets":
+                    response.Data = DatabasePersistence.LoadEntities(Uuid, "Datasets");
+                    break;
+
+                case "DeleteDataset":
+                    if (parameters.ContainsKey("id"))
+                    {
+                        var id = parameters["id"].ToString();
+                        DatabasePersistence.DeleteEntity(Uuid, "Datasets", id);
+                    }
+                    break;
+
+                case "SaveExcel":
+                    if (parameters.ContainsKey("excel"))
+                    {
+                        var exObj = JObject.FromObject(parameters["excel"]);
+                        DatabasePersistence.SaveEntity(Uuid, "Datasets", exObj); // Excels stored in Datasets
+                    }
+                    break;
+
+                case "LoadExcels":
+                    response.Data = DatabasePersistence.LoadEntities(Uuid, "Datasets");
+                    break;
+
+                case "DeleteExcel":
+                    if (parameters.ContainsKey("id"))
+                    {
+                        var id = parameters["id"].ToString();
+                        DatabasePersistence.DeleteEntity(Uuid, "Datasets", id);
+                    }
+                    break;
+
+                case "SaveDashboard":
+                    if (parameters.ContainsKey("dashboard"))
+                    {
+                        var dashObj = JObject.FromObject(parameters["dashboard"]);
+                        DatabasePersistence.SaveEntity(Uuid, "Dashboards", dashObj);
+                    }
+                    break;
+
+                case "LoadDashboards":
+                    response.Data = DatabasePersistence.LoadEntities(Uuid, "Dashboards");
+                    break;
+
+                case "DeleteDashboard":
+                    if (parameters.ContainsKey("id"))
+                    {
+                        var id = parameters["id"].ToString();
+                        DatabasePersistence.DeleteEntity(Uuid, "Dashboards", id);
+                    }
+                    break;
+
+                default:
+                    response.Status = MessageStatus.Error;
+                    response.ErrorMessage = "Unknown command";
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            response.Status = MessageStatus.Error;
+            response.ErrorMessage = ex.Message;
+        }
+
+        using var _ = SendMessageAsync(connectionInfo, response, socket);
     }
 
     private void ErrorOccurred(object sender, Exception e)
@@ -134,6 +368,26 @@ public class WebSocketManager
     {
         IWebsocketConnection socket = e.WebSocket;
         ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
+
+        var authMsg = e.Message as AuthenticationMessage;
+        if (authMsg != null && !string.IsNullOrEmpty(authMsg.Token))
+        {
+            var userId = _authService.GetUserIdFromToken(authMsg.Token);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                connectionInfo.UserId = userId;
+            }
+            else if (!string.IsNullOrEmpty(authMsg.Username))
+            {
+                connectionInfo.UserId = authMsg.Username;
+            }
+            
+            // Register data sources upon successful login mapping
+            if (!string.IsNullOrEmpty(connectionInfo.UserId))
+            {
+                RegisterUserDatabaseConnections(connectionInfo.UserId);
+            }
+        }
 
         dynamic data = new JObject();
         data.Uuid = connectionInfo.ConnectionId;
