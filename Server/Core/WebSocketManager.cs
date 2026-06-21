@@ -425,6 +425,7 @@ public class WebSocketManager
                     {
                         var dashObj = JObject.FromObject(parameters["dashboard"]);
                         DatabasePersistence.SaveEntity(uuid, "Dashboards", dashObj);
+                        response.Data = dashObj;
                     }
                     break;
 
@@ -439,6 +440,26 @@ public class WebSocketManager
                         DatabasePersistence.DeleteEntity(uuid, "Dashboards", id);
                     }
                     break;
+
+                case "ShareDashboard":
+                {
+                    var id = parameters.ContainsKey("id") ? parameters["id"].ToString() : null;
+                    var enable = parameters.ContainsKey("enable") && Convert.ToBoolean(parameters["enable"]);
+                    if (!string.IsNullOrEmpty(id))
+                    {
+                        if (enable)
+                        {
+                            var token = DatabasePersistence.GenerateShareToken(uuid, "Dashboards", id);
+                            response.Data = new { shareToken = token };
+                        }
+                        else
+                        {
+                            DatabasePersistence.RevokeShareToken(uuid, "Dashboards", id);
+                            response.Data = new { shareToken = (string)null, shareUrl = (string)null };
+                        }
+                    }
+                    break;
+                }
 
                 default:
                     response.Status = MessageStatus.Error;

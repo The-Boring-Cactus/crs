@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 
@@ -31,7 +31,7 @@ const handleSocketOutput = (e) => {
     const dataType = response.DataType || response.dataType;
     const payload = response.Payload || response.payload;
     if (!dataType || !payload) return;
-    scriptOutputs.value.push({ id: Date.now(), type: dataType, payload });
+    scriptOutputs.value.push({ id: Date.now() + Math.random(), type: dataType, payload });
 };
 
 const handleExecutionComplete = () => {
@@ -378,6 +378,24 @@ const loadScriptsFromStorage = async () => {
     }
 };
 
+const exportTableCsv = (output) => {
+    const { columns, rows } = output.payload;
+    if (!columns?.length) return;
+    const header = columns.join(',');
+    const body = rows.map(row => columns.map(c => {
+        const val = row[c] ?? '';
+        return String(val).includes(',') ? `"${val}"` : val;
+    }).join(',')).join('\n');
+    const blob = new Blob([`${header}\n${body}`], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${output.payload.title || 'table'}-${Date.now()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast('CSV exported');
+};
+
 const exportDebugLog = () => {
     if (!debugText.value.trim()) return;
 
@@ -526,6 +544,9 @@ onUnmounted(() => {
                         <TableIcon class="w-4 h-4 text-muted-foreground" />
                         <span class="font-medium text-sm">{{ output.payload.title || 'Table' }}</span>
                         <Badge variant="outline" class="text-xs">{{ output.payload.rows?.length || 0 }} rows</Badge>
+                        <Button variant="ghost" size="icon" class="h-6 w-6 ml-auto" title="Export CSV" @click="exportTableCsv(output)">
+                            <Download class="w-3 h-3" />
+                        </Button>
                     </div>
                     <div class="border rounded overflow-auto max-h-80">
                         <Table>
@@ -562,6 +583,36 @@ onUnmounted(() => {
                             :show-footer="false"
                             height="100%"
                         />
+                    </div>
+                </template>
+
+                <!-- StatReport output -->
+                <template v-else-if="output.type === 'StatReport'">
+                    <div class="flex items-center gap-2 mb-3">
+                        <FlaskConical class="w-4 h-4 text-muted-foreground" />
+                        <span class="font-semibold text-sm">{{ output.payload.title || 'Statistical Report' }}</span>
+                    </div>
+                    <div class="space-y-4 border rounded p-4 bg-muted/20">
+                        <div v-for="(section, si) in output.payload.sections" :key="si" class="space-y-2">
+                            <h4 v-if="section.heading" class="font-medium text-sm border-b pb-1">{{ section.heading }}</h4>
+                            <!-- Table section -->
+                            <div v-if="section.type === 'table'" class="overflow-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead v-for="col in section.columns" :key="col" class="text-xs">{{ col }}</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow v-for="(row, ri) in section.rows" :key="ri">
+                                            <TableCell v-for="col in section.columns" :key="col" class="text-xs font-mono">{{ row[col] }}</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+                            <!-- Text section -->
+                            <p v-else-if="section.type === 'text'" class="text-sm text-muted-foreground font-mono bg-muted/50 p-2 rounded">{{ section.content }}</p>
+                        </div>
                     </div>
                 </template>
             </div>

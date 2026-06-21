@@ -66,6 +66,74 @@ namespace FunctEngine
             return null;
         }
 
+        // StatReport(title, data)
+        // Emits a formatted statistical report. 'data' can be:
+        //   - A Dictionary<string,object> from DoeFunctions (ANOVA, regression, etc.)
+        //   - A List<object> of section Dictionaries: { heading, type, content/columns/rows }
+        public object EmitStatReport(object[] args)
+        {
+            if (args.Length == 0) return null;
+
+            var title = args[0]?.ToString() ?? "Statistical Report";
+            var sections = new List<object>();
+
+            if (args.Length > 1)
+            {
+                var data = args[1];
+
+                if (data is List<object> sectionList)
+                {
+                    // Pre-structured sections list
+                    foreach (var s in sectionList)
+                    {
+                        if (s is Dictionary<string, object> sd)
+                            sections.Add(sd);
+                    }
+                }
+                else if (data is Dictionary<string, object> dict)
+                {
+                    // Auto-format a DoeFunctions result dictionary
+                    sections.AddRange(FormatStatDict(dict));
+                }
+            }
+
+            engine.EmitOutput("StatReport", new { title, sections });
+            return null;
+        }
+
+        private List<object> FormatStatDict(Dictionary<string, object> dict)
+        {
+            var sections = new List<object>();
+            foreach (var kv in dict)
+            {
+                if (kv.Value is Dictionary<string, object> nested)
+                {
+                    var cols = nested.Keys.ToList();
+                    sections.Add(new
+                    {
+                        heading = kv.Key,
+                        type = "table",
+                        columns = cols,
+                        rows = new List<object> { nested.ToDictionary(k => k.Key, k => k.Value?.ToString() as object) }
+                    });
+                }
+                else if (kv.Value is List<object> list && list.Count > 0 && list[0] is Dictionary<string, object>)
+                {
+                    var firstRow = (Dictionary<string, object>)list[0];
+                    var cols = firstRow.Keys.ToList();
+                    var rows = list.OfType<Dictionary<string, object>>()
+                                   .Select(r => r.ToDictionary(k => k.Key, k => k.Value?.ToString() as object))
+                                   .ToList<object>();
+                    sections.Add(new { heading = kv.Key, type = "table", columns = cols, rows });
+                }
+                else
+                {
+                    sections.Add(new { heading = kv.Key, type = "text", content = kv.Value?.ToString() ?? "" });
+                }
+            }
+            return sections;
+        }
+
         private (List<string> columns, List<object> rows) ExtractTableData(object data)
         {
             var columns = new List<string>();

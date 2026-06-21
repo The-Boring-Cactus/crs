@@ -33,12 +33,18 @@ import {
     Save,
     X,
     ArrowUpDown,
-    Code
+    Code,
+    Share2,
+    Globe,
+    Lock,
+    Copy,
+    FileText,
+    Clock
 } from 'lucide-vue-next';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import BaseChart from '@/components/BaseChart.vue';
-import { nextTick, ref, watch, getCurrentInstance, onMounted, onUnmounted } from 'vue';
+import { nextTick, ref, watch, computed, getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import { toast as sonnerToast } from 'vue-sonner';
 import { useDashboardStore } from '@/store/dashboardStore';
 
@@ -1337,7 +1343,8 @@ async function saveToServer() {
             timestamp: new Date().toISOString()
         };
 
-        await dashboardStore.saveDashboard(layoutData, proxy.$socket);
+        const saveResult = await dashboardStore.saveDashboard(layoutData, proxy.$socket);
+        if (saveResult?.Data?.id && !dashboardId.value) dashboardId.value = saveResult.Data.id;
 
         toast.add({
             severity: 'success',
@@ -1498,9 +1505,87 @@ const itemTitle = (item) => {
 };
 
 // Widget script execution state
+// Share dialog
+const showShareDialog = ref(false);
+const currentShareToken = ref('');
+const shareUrl = computed(() =>
+    currentShareToken.value ? `${window.location.origin}/public/${currentShareToken.value}` : ''
+);
+
+async function openShareDialog() {
+    // Ensure dashboard is saved before sharing
+    if (!dashboardId.value) await saveToServer();
+    currentShareToken.value = layout.value.formvalues?.shareToken || '';
+    showShareDialog.value = true;
+}
+
+async function enableSharing() {
+    if (!dashboardId.value) return;
+    try {
+        const result = await userStore.executeCommand('ShareDashboard', { id: dashboardId.value, enable: true }, proxy.$socket);
+        const token = result?.Data?.shareToken;
+        if (token) {
+            currentShareToken.value = token;
+            layout.value.formvalues = { ...layout.value.formvalues, shareToken: token, isPublic: true };
+        }
+        sonnerToast.success('Dashboard is now public');
+    } catch { sonnerToast.error('Failed to enable sharing'); }
+}
+
+async function disableSharing() {
+    if (!dashboardId.value) return;
+    try {
+        await userStore.executeCommand('ShareDashboard', { id: dashboardId.value, enable: false }, proxy.$socket);
+        currentShareToken.value = '';
+        layout.value.formvalues = { ...layout.value.formvalues, shareToken: null, isPublic: false };
+        sonnerToast.success('Sharing disabled');
+    } catch { sonnerToast.error('Failed to disable sharing'); }
+}
+
+function copyShareUrl() {
+    navigator.clipboard.writeText(shareUrl.value);
+    sonnerToast.success('Link copied to clipboard');
+}
+
 const widgetScriptDialog = ref(false);
 const editingScriptWidget = ref(null);
 const widgetExecutingId = ref(null);
+
+// StatReport viewer
+const showStatReportDialog = ref(false);
+const viewingStatReport = ref(null);
+
+function viewWidgetStatReport(item) {
+    viewingStatReport.value = item.statReportData;
+    showStatReportDialog.value = true;
+}
+
+// Auto-refresh timers per widget
+const widgetTimers = {};
+
+function startAutoRefresh(item) {
+    if (!item.refreshInterval || item.refreshInterval <= 0) return;
+    stopAutoRefresh(item);
+    widgetTimers[item.i] = setInterval(() => {
+        runWidgetScript(item);
+    }, item.refreshInterval * 60 * 1000);
+}
+
+function stopAutoRefresh(item) {
+    if (widgetTimers[item.i]) {
+        clearInterval(widgetTimers[item.i]);
+        delete widgetTimers[item.i];
+    }
+}
+
+function applyWidgetScript() {
+    const item = editingScriptWidget.value;
+    widgetScriptDialog.value = false;
+    if (item) {
+        startAutoRefresh(item);
+        runWidgetScript(item);
+    }
+}
 
 const handleWidgetOutput = (e) => {
     const response = e.detail;
@@ -1519,6 +1604,10 @@ const handleWidgetOutput = (e) => {
     } else if (dataType === 'Table' && widget.type === 'DataTable') {
         widget.columns = (payload.columns || []).map(col => ({ field: col, header: col }));
         widget.tableData = payload.rows || [];
+    } else if (dataType === 'StatReport') {
+        widget.statReportData = payload;
+        showStatReportDialog.value = true;
+        viewingStatReport.value = payload;
     }
 };
 
@@ -1534,6 +1623,7 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('socket-output', handleWidgetOutput);
     window.removeEventListener('socket-execution-complete', handleWidgetExecutionComplete);
+    Object.keys(widgetTimers).forEach(id => clearInterval(widgetTimers[id]));
 });
 
 async function runWidgetScript(item) {
@@ -1604,11 +1694,11 @@ function openWidgetScriptEditor(item) {
     <div class="flex items-center justify-between p-2 border-b mb-4">
         <div class="flex items-center gap-2">
             <Button variant="outline" size="sm" @click="visibleCompo = true"> <Plus class="w-4 h-4 mr-2" /> Add Elements </Button>
-            <Button variant="ghost" size="icon">
-                <Printer class="w-4 h-4" />
+            <Button variant="ghost" size="sm" class="gap-1" @click="saveToServer" title="Save to server">
+                <Save class="w-4 h-4" /><span class="hidden sm:inline">Save</span>
             </Button>
-            <Button variant="ghost" size="icon" @click="addcomponent(2)">
-                <Upload class="w-4 h-4" />
+            <Button variant="ghost" size="sm" class="gap-1" @click="openLoadDialog" title="Load from server">
+                <FolderOpen class="w-4 h-4" /><span class="hidden sm:inline">Load</span>
             </Button>
         </div>
 
@@ -1624,8 +1714,12 @@ function openWidgetScriptEditor(item) {
             </div>
         </div>
 
-        <div class="w-[150px]"></div>
-        <!-- Spacer for flex-between balance -->
+        <div class="flex items-center gap-2">
+            <Button variant="outline" size="sm" class="gap-2" @click="openShareDialog">
+                <Share2 class="w-4 h-4" />
+                Share
+            </Button>
+        </div>
     </div>
     <grid-layout v-model:layout="layout.componentes" :col-num="15" :row-height="40" :auto-size="true" is-draggable is-resizable vertical-compact use-css-transforms v-if="renderComponent">
         <grid-item v-for="item in layout.componentes" :static="item.static" :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i" :key="item.i" class="grid-item-container">
@@ -1662,6 +1756,9 @@ function openWidgetScriptEditor(item) {
                         </Button>
                     </div>
                     <div class="chart-controls flex gap-1">
+                        <Button v-if="item.statReportData" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Stat Report">
+                            <FileText class="w-3 h-3 text-xs" />
+                        </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script bound'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
                             <RefreshCw class="w-3 h-3 text-xs" />
                         </Button>
@@ -1706,6 +1803,9 @@ function openWidgetScriptEditor(item) {
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="exportDataTable(item)" title="Export CSV">
                             <Download class="w-3 h-3 text-xs" />
+                        </Button>
+                        <Button v-if="item.statReportData" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Stat Report">
+                            <FileText class="w-3 h-3 text-xs" />
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script bound'">
                             <RefreshCw class="w-3 h-3 text-xs" />
@@ -2113,6 +2213,38 @@ function openWidgetScriptEditor(item) {
         </DialogContent>
     </Dialog>
 
+    <!-- Share Dialog -->
+    <Dialog v-model:open="showShareDialog">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle class="flex items-center gap-2"><Share2 class="w-4 h-4" /> Share Dashboard</DialogTitle>
+            </DialogHeader>
+            <div class="py-4 space-y-4">
+                <div v-if="currentShareToken" class="space-y-2">
+                    <label class="text-sm font-medium">Public Link</label>
+                    <div class="flex gap-2">
+                        <Input :model-value="shareUrl" readonly class="font-mono text-xs" />
+                        <Button variant="outline" size="icon" @click="copyShareUrl" title="Copy"><Copy class="w-4 h-4" /></Button>
+                    </div>
+                    <p class="text-xs text-muted-foreground">Anyone with this link can view without logging in.</p>
+                </div>
+                <div v-else class="text-center py-4">
+                    <Lock class="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p class="text-sm text-muted-foreground">This dashboard is private. Generate a link to share it publicly.</p>
+                </div>
+            </div>
+            <DialogFooter>
+                <Button v-if="!currentShareToken" @click="enableSharing" class="gap-2 w-full">
+                    <Globe class="w-4 h-4" /> Generate Public Link
+                </Button>
+                <div v-else class="flex gap-2 w-full">
+                    <Button variant="destructive" @click="disableSharing" class="gap-2 flex-1"><Lock class="w-4 h-4" /> Revoke</Button>
+                    <Button variant="outline" @click="showShareDialog = false" class="flex-1">Done</Button>
+                </div>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
     <!-- Widget Script Editor Dialog -->
     <Dialog :open="widgetScriptDialog" @update:open="widgetScriptDialog = $event">
         <DialogContent class="sm:max-w-[700px]">
@@ -2120,7 +2252,7 @@ function openWidgetScriptEditor(item) {
                 <DialogTitle>Bind Script to Widget: {{ editingScriptWidget?.title || editingScriptWidget?.type }}</DialogTitle>
             </DialogHeader>
             <div class="py-2 text-sm text-muted-foreground mb-2">
-                Write a script using <code class="bg-muted px-1 rounded">Table(data, "title")</code> or <code class="bg-muted px-1 rounded">Chart("bar", labels, values, "title")</code> to populate this widget.
+                Write a script using <code class="bg-muted px-1 rounded">Table(data, "title")</code>, <code class="bg-muted px-1 rounded">Chart("bar", labels, values, "title")</code>, or <code class="bg-muted px-1 rounded">StatReport("title", sections)</code>.
             </div>
             <div v-if="editingScriptWidget">
                 <Textarea
@@ -2128,12 +2260,59 @@ function openWidgetScriptEditor(item) {
                     placeholder="// Example:&#10;var data = ExecuteQuery(&quot;mydb&quot;, &quot;SELECT name, value FROM my_table&quot;);&#10;Chart(&quot;bar&quot;, Array(&quot;A&quot;,&quot;B&quot;,&quot;C&quot;), Array(10,20,30), &quot;My Chart&quot;);"
                     class="font-mono text-sm h-64 resize-none"
                 />
+                <div class="flex items-center gap-2 mt-3">
+                    <Clock class="w-4 h-4 text-muted-foreground" />
+                    <span class="text-sm text-muted-foreground">Auto-refresh every</span>
+                    <Input
+                        type="number"
+                        :model-value="editingScriptWidget.refreshInterval || 0"
+                        @update:model-value="val => editingScriptWidget.refreshInterval = parseInt(val) || 0"
+                        class="h-7 w-20 text-sm"
+                        min="0"
+                    />
+                    <span class="text-sm text-muted-foreground">minutes (0 = off)</span>
+                </div>
             </div>
             <DialogFooter class="gap-2">
                 <Button variant="outline" @click="widgetScriptDialog = false">Cancel</Button>
-                <Button @click="() => { widgetScriptDialog = false; runWidgetScript(editingScriptWidget); }">
+                <Button @click="applyWidgetScript">
                     Save &amp; Run
                 </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- StatReport Viewer Dialog -->
+    <Dialog v-model:open="showStatReportDialog">
+        <DialogContent class="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+                <DialogTitle class="flex items-center gap-2">
+                    <FileText class="w-4 h-4 text-violet-500" />
+                    {{ viewingStatReport?.title || 'Statistical Report' }}
+                </DialogTitle>
+            </DialogHeader>
+            <div v-if="viewingStatReport" class="py-2 space-y-4">
+                <div v-for="(section, si) in viewingStatReport.sections" :key="si" class="space-y-1">
+                    <h3 v-if="section.heading" class="font-semibold text-sm border-b pb-1">{{ section.heading }}</h3>
+                    <div v-if="section.type === 'table' && Array.isArray(section.rows)" class="overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead v-if="section.headers">
+                                <tr>
+                                    <th v-for="h in section.headers" :key="h" class="text-left px-2 py-1 bg-muted font-medium border">{{ h }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(row, ri) in section.rows" :key="ri" class="border-t">
+                                    <td v-for="(cell, ci) in row" :key="ci" class="px-2 py-1 border">{{ typeof cell === 'number' ? cell.toFixed(4) : cell }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p v-else class="text-sm text-muted-foreground whitespace-pre-wrap">{{ section.content || section.text }}</p>
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" @click="showStatReportDialog = false">Close</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

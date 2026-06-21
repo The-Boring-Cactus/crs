@@ -84,6 +84,18 @@ const router = createRouter({
         },
 
         {
+            path: '/pages/reports',
+            name: 'reports',
+            component: () => import('@/views/pages/Reports.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/public/:shareToken',
+            name: 'public-view',
+            component: () => import('@/views/pages/PublicView.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/auth/login',
             name: 'login',
             redirect: '/'

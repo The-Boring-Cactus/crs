@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight } from 'lucide-vue-next';
+import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight, FileText } from 'lucide-vue-next';
 
 const router = useRouter();
 const route = useRoute();
@@ -99,6 +99,7 @@ const navigateTo = (path) => {
 const navItems = [
     { icon: Home, path: '/', name: 'home', label: 'Home', category: 'General' },
     { icon: BarChart, path: '/pages/dashboard', name: 'dashboard', label: 'Dashboard', category: 'Pages' },
+    { icon: FileText, path: '/pages/reports', name: 'reports', label: 'Reports', category: 'Pages' },
     { icon: Database, path: '/pages/databases', name: 'databases', label: 'Databases', category: 'Data' },
     { icon: Table, path: '/pages/dataset', name: 'dataset', label: 'Dataset', category: 'Data' },
     { icon: FileSpreadsheet, path: '/pages/myexcel', name: 'myexcel', label: 'Excel', category: 'Tools' },

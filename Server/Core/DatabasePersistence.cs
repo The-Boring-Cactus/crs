@@ -170,7 +170,9 @@ public static class DatabasePersistence
             new { Id = dbId, UserId = dbUserId });
     }
 
-    // ── Generic JSON-blob entities (Datasets, Excels, Dashboards) ──────
+    // ── Generic JSON-blob entities (Datasets, Excels, Dashboards, Reports) ──────
+
+    private static readonly HashSet<string> ShareableTables = new() { "Dashboards", "Reports" };
 
     public static List<JObject> LoadEntities(string userId, string tableName)
     {
@@ -182,7 +184,7 @@ public static class DatabasePersistence
         var rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId",
             new { UserId = dbUserId }).ToList();
         var list = rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).ToList();
-        return  list.Cast<JObject>().ToList();;
+        return list.Cast<JObject>().ToList();
     }
 
     public static void SaveEntity(string userId, string tableName, JObject obj)
@@ -206,9 +208,21 @@ public static class DatabasePersistence
 
         conn.Execute($"DELETE FROM {tableName} WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
-        conn.Execute($@"INSERT INTO {tableName} (Id, UserId, Name, Config) 
-                        VALUES (@Id, @UserId, @Name, @Config)",
-            new { Id = dbId, UserId = dbUserId, Name = name, Config = config });
+
+        if (ShareableTables.Contains(tableName))
+        {
+            var isPublic = (obj["isPublic"] ?? obj["IsPublic"])?.Value<bool>() ?? false;
+            var shareToken = (obj["shareToken"] ?? obj["ShareToken"])?.ToString();
+            conn.Execute($@"INSERT INTO {tableName} (Id, UserId, Name, Config, IsPublic, ShareToken)
+                            VALUES (@Id, @UserId, @Name, @Config, @IsPublic, @ShareToken)",
+                new { Id = dbId, UserId = dbUserId, Name = name, Config = config, IsPublic = isPublic, ShareToken = shareToken });
+        }
+        else
+        {
+            conn.Execute($@"INSERT INTO {tableName} (Id, UserId, Name, Config)
+                            VALUES (@Id, @UserId, @Name, @Config)",
+                new { Id = dbId, UserId = dbUserId, Name = name, Config = config });
+        }
     }
 
     public static void DeleteEntity(string userId, string tableName, string id)
@@ -219,8 +233,61 @@ public static class DatabasePersistence
         conn.Open();
         object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
         object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
-        
+
         conn.Execute($"DELETE FROM {tableName} WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
     }
+
+    // ── Public sharing ──────────────────────────────────────────────────
+
+    public static string GenerateShareToken(string userId, string tableName, string id)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return null;
+
+        conn.Open();
+        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
+        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+
+        var token = Guid.NewGuid().ToString("N")[..16];
+        conn.Execute($"UPDATE {tableName} SET ShareToken = @Token, IsPublic = @True WHERE Id = @Id AND UserId = @UserId",
+            new { Token = token, True = true, Id = dbId, UserId = dbUserId });
+        return token;
+    }
+
+    public static void RevokeShareToken(string userId, string tableName, string id)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return;
+
+        conn.Open();
+        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
+        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+
+        conn.Execute($"UPDATE {tableName} SET ShareToken = NULL, IsPublic = @False WHERE Id = @Id AND UserId = @UserId",
+            new { False = false, Id = dbId, UserId = dbUserId });
+    }
+
+    public static JObject LoadEntityByShareToken(string tableName, string shareToken)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return null;
+
+        conn.Open();
+        var row = conn.QueryFirstOrDefault($"SELECT * FROM {tableName} WHERE ShareToken = @Token",
+            new { Token = shareToken });
+        if (row == null) return null;
+        return JObject.Parse(JsonConvert.SerializeObject(row));
+    }
+
+    // ── Reports (DB-backed UserReport) ─────────────────────────────────
+
+    public static List<JObject> LoadReports(string userId)
+        => LoadEntities(userId, "Reports");
+
+    public static void SaveReport(string userId, JObject reportObj)
+        => SaveEntity(userId, "Reports", reportObj);
+
+    public static void DeleteReport(string userId, string id)
+        => DeleteEntity(userId, "Reports", id);
 }

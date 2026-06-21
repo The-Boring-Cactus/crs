@@ -210,11 +210,55 @@ namespace DoeFunctions
                 matrixW[i] = new double[p];
             }
 
-            // Calcular Wilks' Lambda (simplificado)
-            double wilksLambda = 0.5; // Valor aproximado para demostración
+            // Between-groups scatter matrix (B)
+            for (int g = 0; g < k; g++)
+            {
+                int ng = groups[g].Length;
+                double[] groupMean = new double[p];
+                for (int v = 0; v < p; v++)
+                    groupMean[v] = groups[g].Select(obs => obs[v]).Average();
+                for (int i = 0; i < p; i++)
+                    for (int j = 0; j < p; j++)
+                        matrixB[i][j] += ng * (groupMean[i] - totalMean[0][i]) * (groupMean[j] - totalMean[0][j]);
+            }
 
-            // Calcular Pillai's Trace (simplificado)
-            double pillaiTrace = 0.5; // Valor aproximado para demostración
+            // Within-groups scatter matrix (W)
+            for (int g = 0; g < k; g++)
+            {
+                double[] groupMean = new double[p];
+                for (int v = 0; v < p; v++)
+                    groupMean[v] = groups[g].Select(obs => obs[v]).Average();
+                foreach (var obs in groups[g])
+                    for (int i = 0; i < p; i++)
+                        for (int j = 0; j < p; j++)
+                            matrixW[i][j] += (obs[i] - groupMean[i]) * (obs[j] - groupMean[j]);
+            }
+
+            // W + B = total scatter matrix
+            double[][] matrixT = new double[p][];
+            for (int i = 0; i < p; i++)
+            {
+                matrixT[i] = new double[p];
+                for (int j = 0; j < p; j++)
+                    matrixT[i][j] = matrixW[i][j] + matrixB[i][j];
+            }
+
+            // Wilks' Lambda = det(W) / det(T)
+            double detW = MatrixDeterminant(matrixW);
+            double detT = MatrixDeterminant(matrixT);
+            double wilksLambda = Math.Abs(detT) > 1e-12 ? Math.Max(0, Math.Min(1, detW / detT)) : 1.0;
+
+            // Pillai's Trace = trace(B * inv(T))
+            double pillaiTrace = 0;
+            try
+            {
+                double[][] tInv = MatrixInverse(matrixT);
+                double[][] bTimesInv = MatrixMultiply(matrixB, tInv);
+                for (int i = 0; i < p; i++)
+                    pillaiTrace += bTimesInv[i][i];
+                pillaiTrace = Math.Max(0, Math.Min((double)p, pillaiTrace));
+            }
+            catch { pillaiTrace = 1.0 - wilksLambda; }
 
             return (wilksLambda, pillaiTrace);
         }
@@ -490,14 +534,256 @@ namespace DoeFunctions
             return inverse;
         }
 
-        private static double FDistributionCDF(double x, int df1, int df2)
+        private static double MatrixDeterminant(double[][] m)
         {
-            // Aproximación simple del p-value de la distribución F
-            // En una implementación completa se usaría una función beta incompleta
-            if (x < 1)
-                return x / 2;
-            else
-                return 1 - 1 / (1 + x);
+            int n = m.Length;
+            if (n == 1) return m[0][0];
+            if (n == 2) return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+            // LU decomposition for larger matrices
+            double[][] a = m.Select(r => r.ToArray()).ToArray();
+            double det = 1.0;
+            for (int col = 0; col < n; col++)
+            {
+                int pivot = col;
+                for (int row = col + 1; row < n; row++)
+                    if (Math.Abs(a[row][col]) > Math.Abs(a[pivot][col])) pivot = row;
+                if (pivot != col) { var tmp = a[col]; a[col] = a[pivot]; a[pivot] = tmp; det = -det; }
+                if (Math.Abs(a[col][col]) < 1e-12) return 0;
+                det *= a[col][col];
+                for (int row = col + 1; row < n; row++)
+                {
+                    double f = a[row][col] / a[col][col];
+                    for (int j = col; j < n; j++) a[row][j] -= f * a[col][j];
+                }
+            }
+            return det;
+        }
+
+        private static double FDistributionCDF(double f, int df1, int df2)
+        {
+            if (f <= 0) return 0;
+            double x = (double)df1 * f / ((double)df1 * f + df2);
+            return BetaInc(df1 / 2.0, df2 / 2.0, x);
+        }
+
+        private static double LogGamma(double x)
+        {
+            double[] c = { 76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 1.208650973866179e-3, -5.395239384953e-6 };
+            double y = x;
+            double tmp = x + 5.5 - (x + 0.5) * Math.Log(x + 5.5);
+            double ser = 1.000000000190015;
+            for (int j = 0; j < 6; j++) ser += c[j] / ++y;
+            return -tmp + Math.Log(2.5066282746310005 * ser / x);
+        }
+
+        private static double BetaCF(double a, double b, double x)
+        {
+            const double fpmin = 1e-30;
+            double qab = a + b, qap = a + 1.0, qam = a - 1.0;
+            double c = 1.0, d = 1.0 - qab * x / qap;
+            if (Math.Abs(d) < fpmin) d = fpmin;
+            d = 1.0 / d;
+            double h = d;
+            for (int m = 1; m <= 200; m++)
+            {
+                int m2 = 2 * m;
+                double aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+                d = 1.0 + aa * d; if (Math.Abs(d) < fpmin) d = fpmin;
+                c = 1.0 + aa / c; if (Math.Abs(c) < fpmin) c = fpmin;
+                d = 1.0 / d; h *= d * c;
+                aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+                d = 1.0 + aa * d; if (Math.Abs(d) < fpmin) d = fpmin;
+                c = 1.0 + aa / c; if (Math.Abs(c) < fpmin) c = fpmin;
+                d = 1.0 / d;
+                double del = d * c; h *= del;
+                if (Math.Abs(del - 1.0) <= 3e-7) break;
+            }
+            return h;
+        }
+
+        private static double BetaInc(double a, double b, double x)
+        {
+            if (x <= 0) return 0; if (x >= 1) return 1;
+            double lbeta = LogGamma(a + b) - LogGamma(a) - LogGamma(b);
+            double bt = Math.Exp(lbeta + a * Math.Log(x) + b * Math.Log(1.0 - x));
+            return x < (a + 1.0) / (a + b + 2.0)
+                ? bt * BetaCF(a, b, x) / a
+                : 1.0 - bt * BetaCF(b, a, 1.0 - x) / b;
+        }
+
+        private static double GammaIncSeries(double a, double x)
+        {
+            double sum = 1.0 / a, del = 1.0 / a, ap = a;
+            for (int n = 1; n <= 200; n++) { ap++; del *= x / ap; sum += del; if (Math.Abs(del) < Math.Abs(sum) * 3e-7) break; }
+            return sum * Math.Exp(-x + a * Math.Log(x) - LogGamma(a));
+        }
+
+        private static double GammaIncCF(double a, double x)
+        {
+            const double fpmin = 1e-30;
+            double b = x + 1.0 - a, c = 1.0 / fpmin, d = 1.0 / b, h = d;
+            for (int i = 1; i <= 200; i++)
+            {
+                double an = -i * (i - a); b += 2.0;
+                d = an * d + b; if (Math.Abs(d) < fpmin) d = fpmin;
+                c = b + an / c; if (Math.Abs(c) < fpmin) c = fpmin;
+                d = 1.0 / d; double del = d * c; h *= del;
+                if (Math.Abs(del - 1.0) < 3e-7) break;
+            }
+            return Math.Exp(-x + a * Math.Log(x) - LogGamma(a)) * h;
+        }
+
+        private static double GammaInc(double a, double x)
+        {
+            if (x < 0) return 0; if (x == 0) return 0;
+            return x < a + 1.0 ? GammaIncSeries(a, x) : 1.0 - GammaIncCF(a, x);
+        }
+
+        private static double TDistPValue(double t, double df)
+            => BetaInc(df / 2.0, 0.5, df / (df + t * t));
+
+        private static double ChiSquarePValue(double x, double df)
+            => 1.0 - GammaInc(df / 2.0, x / 2.0);
+
+        private static double NormalCDF(double z)
+        {
+            double t = 1.0 / (1.0 + 0.2316419 * Math.Abs(z));
+            double d = 0.3989422820 * Math.Exp(-z * z / 2.0);
+            double poly = t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+            double p = 1.0 - d * poly;
+            return z >= 0 ? p : 1.0 - p;
+        }
+
+        // ─── Statistical Tests ────────────────────────────────────────────────────
+
+        [FunctEngineExport("IndependentTTest", "Two-sample independent t-test: returns t, df, pValue, cohensD")]
+        public static (double t, double df, double pValue, double cohensD) IndependentTTest(double[] a, double[] b)
+        {
+            if (a.Length < 2 || b.Length < 2) throw new ArgumentException("Each group needs at least 2 observations");
+            double meanA = a.Average(), meanB = b.Average();
+            double varA = a.Sum(x => Math.Pow(x - meanA, 2)) / (a.Length - 1);
+            double varB = b.Sum(x => Math.Pow(x - meanB, 2)) / (b.Length - 1);
+            double se = Math.Sqrt(varA / a.Length + varB / b.Length);
+            double t = (meanA - meanB) / se;
+            // Welch's degrees of freedom
+            double df = Math.Pow(varA / a.Length + varB / b.Length, 2)
+                / (Math.Pow(varA / a.Length, 2) / (a.Length - 1) + Math.Pow(varB / b.Length, 2) / (b.Length - 1));
+            double pValue = TDistPValue(Math.Abs(t), df);
+            double pooledSd = Math.Sqrt(((a.Length - 1) * varA + (b.Length - 1) * varB) / (a.Length + b.Length - 2));
+            double cohensD = pooledSd > 0 ? (meanA - meanB) / pooledSd : 0;
+            return (t, df, pValue, cohensD);
+        }
+
+        [FunctEngineExport("PairedTTest", "Paired (dependent) t-test: returns t, df, pValue")]
+        public static (double t, double df, double pValue) PairedTTest(double[] before, double[] after)
+        {
+            if (before.Length != after.Length) throw new ArgumentException("Arrays must be the same length");
+            double[] diffs = before.Zip(after, (a, b) => a - b).ToArray();
+            double mean = diffs.Average();
+            double se = Math.Sqrt(diffs.Sum(d => Math.Pow(d - mean, 2)) / (diffs.Length - 1)) / Math.Sqrt(diffs.Length);
+            double t = mean / se;
+            double df = diffs.Length - 1;
+            return (t, df, TDistPValue(Math.Abs(t), df));
+        }
+
+        [FunctEngineExport("ChiSquareTest", "Chi-square goodness-of-fit test: returns chiSquared, df, pValue")]
+        public static (double chiSquared, int df, double pValue) ChiSquareTest(double[] observed, double[] expected)
+        {
+            if (observed.Length != expected.Length) throw new ArgumentException("Arrays must be the same length");
+            double chi2 = observed.Zip(expected, (o, e) => Math.Pow(o - e, 2) / e).Sum();
+            int df = observed.Length - 1;
+            return (chi2, df, ChiSquarePValue(chi2, df));
+        }
+
+        [FunctEngineExport("MannWhitneyU", "Mann-Whitney U test (non-parametric): returns U, pValue")]
+        public static (double u, double pValue) MannWhitneyU(double[] groupA, double[] groupB)
+        {
+            int n1 = groupA.Length, n2 = groupB.Length;
+            double u1 = 0;
+            foreach (var a in groupA)
+                foreach (var b in groupB)
+                    u1 += a > b ? 1 : a == b ? 0.5 : 0;
+            double u2 = n1 * n2 - u1;
+            double u = Math.Min(u1, u2);
+            double meanU = n1 * n2 / 2.0;
+            double sdU = Math.Sqrt((double)n1 * n2 * (n1 + n2 + 1) / 12.0);
+            double z = (u - meanU) / sdU;
+            double pValue = 2.0 * (1.0 - NormalCDF(Math.Abs(z)));
+            return (u, pValue);
+        }
+
+        [FunctEngineExport("ConfidenceInterval", "Confidence interval for a sample: returns lower, upper, mean, marginOfError")]
+        public static (double lower, double upper, double mean, double marginOfError) ConfidenceInterval(double[] data, double? confidence = null)
+        {
+            if (data.Length < 2) throw new ArgumentException("Need at least 2 observations");
+            double mean = data.Average();
+            double se = Math.Sqrt(data.Sum(x => Math.Pow(x - mean, 2)) / (data.Length - 1)) / Math.Sqrt(data.Length);
+            double alpha = 1.0 - (confidence ?? 0.95);
+            double z = CriticalZ(1.0 - alpha / 2.0);
+            double margin = z * se;
+            return (mean - margin, mean + margin, mean, margin);
+        }
+
+        private static double CriticalZ(double p)
+        {
+            // Beasley-Springer-Moro algorithm approximation
+            double a0 = 2.515517, a1 = 0.802853, a2 = 0.010328;
+            double b1 = 1.432788, b2 = 0.189269, b3 = 0.001308;
+            double t = p < 0.5 ? Math.Sqrt(-2.0 * Math.Log(p)) : Math.Sqrt(-2.0 * Math.Log(1.0 - p));
+            double num = a0 + a1 * t + a2 * t * t;
+            double den = 1.0 + b1 * t + b2 * t * t + b3 * t * t * t;
+            double z = t - num / den;
+            return p < 0.5 ? -z : z;
+        }
+
+        [FunctEngineExport("CohenD", "Cohen's d effect size between two groups")]
+        public static double CohenD(double[] groupA, double[] groupB)
+        {
+            double meanA = groupA.Average(), meanB = groupB.Average();
+            double varA = groupA.Sum(x => Math.Pow(x - meanA, 2)) / (groupA.Length - 1);
+            double varB = groupB.Sum(x => Math.Pow(x - meanB, 2)) / (groupB.Length - 1);
+            double pooledSd = Math.Sqrt(((groupA.Length - 1) * varA + (groupB.Length - 1) * varB) / (groupA.Length + groupB.Length - 2));
+            return pooledSd > 0 ? (meanA - meanB) / pooledSd : 0;
+        }
+
+        [FunctEngineExport("EtaSquared", "Eta-squared effect size: ssBetween / ssTotal")]
+        public static double EtaSquared(double ssBetween, double ssTotal)
+            => ssTotal > 0 ? ssBetween / ssTotal : 0;
+
+        [FunctEngineExport("TukeyHSD", "Tukey HSD post-hoc comparisons: returns array of {groupA, groupB, meanDiff, q, significant}")]
+        public static Dictionary<string, object>[] TukeyHSD(double[][] groups, string[]? groupNames = null)
+        {
+            int k = groups.Length;
+            double[] means = groups.Select(g => g.Average()).ToArray();
+            int totalN = groups.Sum(g => g.Length);
+            double msError = groups.SelectMany((g, gi) => g.Select(v => Math.Pow(v - means[gi], 2))).Sum() / (totalN - k);
+            double nHarmonic = k / groups.Sum(g => 1.0 / g.Length);
+            var results = new List<Dictionary<string, object>>();
+            for (int i = 0; i < k - 1; i++)
+                for (int j = i + 1; j < k; j++)
+                {
+                    double diff = Math.Abs(means[i] - means[j]);
+                    double se = Math.Sqrt(msError / nHarmonic);
+                    double q = se > 0 ? diff / se : 0;
+                    results.Add(new Dictionary<string, object>
+                    {
+                        ["groupA"] = groupNames?[i] ?? $"Group{i + 1}",
+                        ["groupB"] = groupNames?[j] ?? $"Group{j + 1}",
+                        ["meanA"] = means[i],
+                        ["meanB"] = means[j],
+                        ["meanDiff"] = means[i] - means[j],
+                        ["q"] = q,
+                        ["significant"] = q > 3.64
+                    });
+                }
+            return results.ToArray();
+        }
+
+        [FunctEngineExport("BonferroniCorrection", "Bonferroni-corrected p-values: divide each p-value by number of tests")]
+        public static double[] BonferroniCorrection(double[] pValues, int numTests = 0)
+        {
+            int m = numTests > 0 ? numTests : pValues.Length;
+            return pValues.Select(p => Math.Min(1.0, p * m)).ToArray();
         }
     }
 }

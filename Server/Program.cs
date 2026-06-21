@@ -26,6 +26,7 @@ internal class Program
         var setupController = new SetupController();
         var authController = new AuthController(authService);
         var reportsController = new ReportsController(reportsService, cache, authService);
+        var publicController = new PublicController();
 
         //var protectedApi = Layout.Create()
         //    .Add("api/reports", ServiceResource.From(reportsController));
@@ -53,6 +54,7 @@ internal class Program
                            .Add("/api/reports", ServiceResource.From(reportsController).Build())
                            .Add("/api/auth", ServiceResource.From(authController).Build())
                            .Add("/api/setup", ServiceResource.From(setupController).Build())
+                           .Add("/api/public", ServiceResource.From(publicController).Build())
                            .Add("/", files)
                            .AddOpenApi() //Open to all
                            .AddSwaggerUI() //Open to all
