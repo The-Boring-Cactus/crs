@@ -4,17 +4,10 @@ using GenHTTP.Modules.Websockets;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Server.Helpers;
-using System;
 using System.Collections.Concurrent;
-using System.Net.Sockets;
-using System.Net.WebSockets;
-using System.Runtime.InteropServices;
-using System.Text;
-
 
 namespace Server.Core;
 
-// Gestor de conexiones WebSocket (versión para GenHTTP)
 public class WebSocketManager
 {
     private readonly ConcurrentDictionary<string, ConnectionInfo> _connections;
@@ -30,8 +23,7 @@ public class WebSocketManager
         _dataSourceManager = dataSourceManager;
     }
 
-  
-    public async Task HandleWebSocketAsync( IWebsocketConnection socket)
+    public async Task HandleWebSocketAsync(IWebsocketConnection socket)
     {
         var connectionId = Guid.NewGuid().ToString();
         var cancellationTokenSource = new CancellationTokenSource();
@@ -54,7 +46,8 @@ public class WebSocketManager
         connectionInfo.WebSocketMessageClient.DataMessageReceived += DataMessage;
         connectionInfo.WebSocketMessageClient.HeartbeatMessageReceived += HeartbeatMessage;
         connectionInfo.WebSocketMessageClient.ErrorOccurred += ErrorOccurred;
-        connectionInfo.interpreter.StatusUpdate += TestScriptOnStatusUpdate;
+        connectionInfo.interpreter.StatusUpdate += InterpreterStatusUpdate;
+        connectionInfo.interpreter.OutputEmitted += InterpreterOutputEmitted;
         connectionInfo.interpreter.LoadExternalDll("MathFunctions.dll");
         connectionInfo.interpreter.LoadExternalDll("DateTimeFunctions.dll");
         connectionInfo.interpreter.LoadExternalDll("DoeFunctions.dll");
@@ -64,7 +57,6 @@ public class WebSocketManager
 
         if (!_connections.TryAdd(connectionId, connectionInfo))
         {
-            // No se pudo agregar la conexión, la cerramos.
             socket.Close();
             return;
         }
@@ -72,87 +64,158 @@ public class WebSocketManager
         try
         {
             await SendMessageAsync(connectionInfo, new HeartbeatMessage(), socket);
-
-          
         }
         catch (Exception ex)
         {
             Console.WriteLine($"WebSocket error for connection {connectionId}: {ex.Message}");
-            // Aseguramos la limpieza en caso de un error inesperado durante el setup.
             _connections.TryRemove(connectionId, out _);
             cancellationTokenSource.Cancel();
             cancellationTokenSource.Dispose();
         }
     }
 
-    private void TestScriptOnStatusUpdate(object sender, StatusString e)
+    private void InterpreterStatusUpdate(object sender, StatusString e)
     {
         ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.interpreter == sender).Value;
         if (connectionInfo == null) return;
-        
-        NotificationMessage notification = new NotificationMessage
+
+        var notification = new NotificationMessage
         {
             Category = "Debug",
             Content = e.status,
             Title = "Execution Debug"
         };
-        
+
         using var _ = SendMessageAsync(connectionInfo, notification, connectionInfo.WebSocket);
+    }
+
+    private void InterpreterOutputEmitted(object sender, OutputEmittedEventArgs e)
+    {
+        ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.interpreter == sender).Value;
+        if (connectionInfo == null) return;
+
+        var dataMsg = new DataMessage
+        {
+            DataType = e.OutputType,
+            Payload = e.Payload
+        };
+
+        using var _ = SendMessageAsync(connectionInfo, dataMsg, connectionInfo.WebSocket);
     }
 
     private void HeartbeatMessage(object sender, MessageReceivedEventArgs e)
     {
         IWebsocketConnection socket = e.WebSocket;
         ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
-
         using var _ = SendMessageAsync(connectionInfo, new HeartbeatMessage(), socket);
     }
 
     private void DataMessage(object sender, MessageReceivedEventArgs e)
     {
-        throw new NotImplementedException();
+        // Client-to-server data messages are logged; no action needed currently
+        Console.WriteLine($"DataMessage received from client");
     }
 
     private void ErrorMessage(object sender, MessageReceivedEventArgs e)
     {
-        throw new NotImplementedException();
+        var errMsg = e.Message as ErrorMessage;
+        Console.WriteLine($"ErrorMessage received: {errMsg?.ErrorDescription}");
     }
 
     private void NotificationMessage(object sender, MessageReceivedEventArgs e)
     {
-        throw new NotImplementedException();
+        // Client-to-server notifications are logged; no action needed currently
+        Console.WriteLine($"NotificationMessage received from client");
     }
 
     private void TextMessage(object sender, MessageReceivedEventArgs e)
     {
-        throw new NotImplementedException();
+        // Client-to-server text messages are logged; no action needed currently
+        Console.WriteLine($"TextMessage received from client");
     }
 
     private void RegisterUserDatabaseConnections(string userId)
     {
         var conns = DatabasePersistence.LoadDatabaseConnections(userId);
-        foreach(var c in conns)
+        foreach (var c in conns)
         {
             var id = c["id"]?.ToString() ?? c["Id"]?.ToString();
-            var type = c["type"]?.ToString() ?? c["Type"]?.ToString();
+            var type = (c["type"]?.ToString() ?? c["Type"]?.ToString() ?? "").ToLower();
             var connectionString = c["connectionString"]?.ToString() ?? c["ConnectionString"]?.ToString();
-            
-            if (type == "mssql" && !string.IsNullOrEmpty(id))
+
+            if (string.IsNullOrEmpty(id)) continue;
+
+            var host = c["host"]?.ToString() ?? c["Host"]?.ToString();
+            var db = c["database"]?.ToString() ?? c["DatabaseName"]?.ToString();
+            var user = c["username"]?.ToString() ?? c["Username"]?.ToString();
+            var pass = c["password"]?.ToString() ?? c["Password"]?.ToString();
+            int.TryParse((c["port"]?.ToString() ?? c["Port"]?.ToString()), out int port);
+
+            try
             {
-                var host = c["host"]?.ToString() ?? c["Host"]?.ToString();
-                var db = c["database"]?.ToString() ?? c["DatabaseName"]?.ToString();
-                var user = c["username"]?.ToString() ?? c["Username"]?.ToString();
-                var pass = c["password"]?.ToString() ?? c["Password"]?.ToString();
-                string cs = connectionString ?? $"Server={host};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;";
-                
-                try 
+                System.Data.IDbConnection conn = type switch
                 {
-                    _dataSourceManager.AddConnection(id, new Microsoft.Data.SqlClient.SqlConnection(cs));
-                }
-                catch (Exception ex)
+                    "mssql" => new Microsoft.Data.SqlClient.SqlConnection(
+                        connectionString ?? $"Server={host},{port};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;"),
+                    "postgres" => new Npgsql.NpgsqlConnection(
+                        connectionString ?? $"Host={host};Port={port};Database={db};Username={user};Password={pass};"),
+                    "mysql" => new MySqlConnector.MySqlConnection(
+                        connectionString ?? $"Server={host};Port={port};Database={db};Uid={user};Pwd={pass};"),
+                    _ => null
+                };
+
+                if (conn != null)
+                    _dataSourceManager.AddConnection(id, conn);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error registering connection {id}: {ex.Message}");
+            }
+        }
+    }
+
+    private void RegisterConnectionsToInterpreter(ConnectionInfo connectionInfo, string userId)
+    {
+        var conns = DatabasePersistence.LoadDatabaseConnections(userId);
+        foreach (var c in conns)
+        {
+            var id = c["id"]?.ToString() ?? c["Id"]?.ToString();
+            var type = (c["type"]?.ToString() ?? c["Type"]?.ToString() ?? "").ToLower();
+            var connectionString = c["connectionString"]?.ToString() ?? c["ConnectionString"]?.ToString();
+            var name = c["name"]?.ToString() ?? c["Name"]?.ToString() ?? id;
+
+            if (string.IsNullOrEmpty(id)) continue;
+
+            var host = c["host"]?.ToString() ?? c["Host"]?.ToString();
+            var db = c["database"]?.ToString() ?? c["DatabaseName"]?.ToString();
+            var user = c["username"]?.ToString() ?? c["Username"]?.ToString();
+            var pass = c["password"]?.ToString() ?? c["Password"]?.ToString();
+            int.TryParse((c["port"]?.ToString() ?? c["Port"]?.ToString()), out int port);
+
+            try
+            {
+                System.Data.IDbConnection conn = type switch
                 {
-                    Console.WriteLine($"Error registering connection {id}: {ex.Message}");
+                    "mssql" => new Microsoft.Data.SqlClient.SqlConnection(
+                        connectionString ?? $"Server={host},{port};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;"),
+                    "postgres" => new Npgsql.NpgsqlConnection(
+                        connectionString ?? $"Host={host};Port={port};Database={db};Username={user};Password={pass};"),
+                    "mysql" => new MySqlConnector.MySqlConnection(
+                        connectionString ?? $"Server={host};Port={port};Database={db};Uid={user};Pwd={pass};"),
+                    _ => null
+                };
+
+                if (conn != null)
+                {
+                    // Register by both ID and name so scripts can reference either
+                    connectionInfo.interpreter.RegisterDatabaseConnection(id, conn);
+                    if (!string.IsNullOrEmpty(name) && name != id)
+                        connectionInfo.interpreter.RegisterDatabaseConnection(name, conn);
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error registering interpreter connection {id}: {ex.Message}");
             }
         }
     }
@@ -162,22 +225,22 @@ public class WebSocketManager
         IWebsocketConnection socket = e.WebSocket;
         ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
         if (connectionInfo == null) return;
-        
-        string Uuid = !string.IsNullOrEmpty(connectionInfo.UserId) ? connectionInfo.UserId : connectionInfo.ConnectionId;
+
+        string uuid = !string.IsNullOrEmpty(connectionInfo.UserId) ? connectionInfo.UserId : connectionInfo.ConnectionId;
 
         var cmdMessage = e.Message as CommandMessage;
         if (cmdMessage == null) return;
 
         var parameters = cmdMessage.Parameters;
-        
-        ResponseMessage response = new ResponseMessage
+
+        var response = new ResponseMessage
         {
             RequestId = cmdMessage.Id,
             Status = MessageStatus.Success,
             ErrorMessage = ""
         };
 
-        try 
+        try
         {
             switch (cmdMessage.Command)
             {
@@ -185,42 +248,67 @@ public class WebSocketManager
                     if (parameters.ContainsKey("code"))
                     {
                         string code = parameters["code"].ToString();
-                        connectionInfo.interpreter.Execute(code);
+                        RegisterConnectionsToInterpreter(connectionInfo, uuid);
+                        // Run on a background thread so long scripts don't block the WebSocket pump
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                connectionInfo.interpreter.Execute(code);
+
+                                // Send completion notification
+                                var done = new NotificationMessage
+                                {
+                                    Category = "ExecutionComplete",
+                                    Content = "Script execution finished.",
+                                    Title = "Done"
+                                };
+                                using var _1 = SendMessageAsync(connectionInfo, done, connectionInfo.WebSocket);
+                            }
+                            catch (Exception ex)
+                            {
+                                var errResp = new ResponseMessage
+                                {
+                                    RequestId = cmdMessage.Id,
+                                    Status = MessageStatus.Error,
+                                    ErrorMessage = ex.Message
+                                };
+                                using var _2 = SendMessageAsync(connectionInfo, errResp, connectionInfo.WebSocket);
+                            }
+                        });
                     }
-                    response.Data = new { message = "Execution started/completed" };
+                    response.Data = new { message = "Execution started" };
                     break;
-                    
+
                 case "ExecuteSql":
                     if (parameters.ContainsKey("database") && parameters.ContainsKey("code"))
                     {
                         string dbId = parameters["database"].ToString();
                         string sql = parameters["code"].ToString();
-                        
-                        try 
+
+                        try
                         {
                             var result = _dataSourceManager.ExecuteQueryAsync(dbId, sql).GetAwaiter().GetResult();
-                            
+
                             var rows = new List<object>();
                             var columns = new List<object>();
                             bool colsExtracted = false;
-                            
-                            foreach(var row in result)
+
+                            foreach (var row in result)
                             {
                                 if (!colsExtracted)
                                 {
                                     if (row is IDictionary<string, object> dict)
                                     {
-                                        foreach(var key in dict.Keys)
-                                        {
+                                        foreach (var key in dict.Keys)
                                             columns.Add(new { field = key, header = key });
-                                        }
                                     }
                                     colsExtracted = true;
                                 }
                                 rows.Add(row);
                             }
-                            
-                            response.Data = new { rows = rows, columns = columns };
+
+                            response.Data = new { rows, columns };
                         }
                         catch (Exception dbEx)
                         {
@@ -228,33 +316,33 @@ public class WebSocketManager
                             response.ErrorMessage = dbEx.Message;
                         }
                     }
-                    else 
+                    else
                     {
                         response.Status = MessageStatus.Error;
                         response.ErrorMessage = "Missing database or code parameter";
                     }
                     break;
-                    
+
                 case "SaveScript":
                     if (parameters.ContainsKey("script"))
                     {
                         var scriptObj = JObject.FromObject(parameters["script"]);
                         var lang = scriptObj["language"]?.ToString() ?? "sql";
-                        DatabasePersistence.SaveScript(Uuid, scriptObj, lang);
+                        DatabasePersistence.SaveScript(uuid, scriptObj, lang);
                     }
                     break;
-                    
+
                 case "LoadScripts":
                     string scriptLang = parameters.ContainsKey("language") ? parameters["language"].ToString() : "";
-                    response.Data = DatabasePersistence.LoadScripts(Uuid, scriptLang);
+                    response.Data = DatabasePersistence.LoadScripts(uuid, scriptLang);
                     break;
-                    
+
                 case "DeleteScript":
                     if (parameters.ContainsKey("id"))
                     {
                         var id = parameters["id"].ToString();
                         var lang2 = parameters.ContainsKey("language") ? parameters["language"].ToString() : "sql";
-                        DatabasePersistence.DeleteScript(Uuid, id, lang2);
+                        DatabasePersistence.DeleteScript(uuid, id, lang2);
                     }
                     break;
 
@@ -262,45 +350,53 @@ public class WebSocketManager
                     if (parameters.ContainsKey("connection"))
                     {
                         var connObj = JObject.FromObject(parameters["connection"]);
-                        DatabasePersistence.SaveDatabaseConnection(Uuid, connObj);
-                        RegisterUserDatabaseConnections(Uuid);
+                        DatabasePersistence.SaveDatabaseConnection(uuid, connObj);
+                        RegisterUserDatabaseConnections(uuid);
                     }
                     break;
-                    
+
                 case "LoadDatabaseConnections":
-                    response.Data = DatabasePersistence.LoadDatabaseConnections(Uuid);
+                    response.Data = DatabasePersistence.LoadDatabaseConnections(uuid);
                     break;
-                    
+
                 case "DeleteDatabaseConnection":
                     if (parameters.ContainsKey("id"))
                     {
                         var id = parameters["id"].ToString();
-                        DatabasePersistence.DeleteDatabaseConnection(Uuid, id);
+                        DatabasePersistence.DeleteDatabaseConnection(uuid, id);
                     }
                     break;
-                    
+
                 case "TestDatabaseConnection":
-                    bool success = new Random().NextDouble() > 0.3;
-                    response.Data = new { success = success };
+                    if (parameters.ContainsKey("connection"))
+                    {
+                        var connObj = JObject.FromObject(parameters["connection"]);
+                        var testResult = TestConnection(connObj);
+                        response.Data = testResult;
+                    }
+                    else
+                    {
+                        response.Data = new { success = false, message = "No connection parameters provided" };
+                    }
                     break;
-                    
+
                 case "SaveDataset":
                     if (parameters.ContainsKey("dataset"))
                     {
                         var dsObj = JObject.FromObject(parameters["dataset"]);
-                        DatabasePersistence.SaveEntity(Uuid, "Datasets", dsObj);
+                        DatabasePersistence.SaveEntity(uuid, "Datasets", dsObj);
                     }
                     break;
 
                 case "LoadDatasets":
-                    response.Data = DatabasePersistence.LoadEntities(Uuid, "Datasets");
+                    response.Data = DatabasePersistence.LoadEntities(uuid, "Datasets");
                     break;
 
                 case "DeleteDataset":
                     if (parameters.ContainsKey("id"))
                     {
                         var id = parameters["id"].ToString();
-                        DatabasePersistence.DeleteEntity(Uuid, "Datasets", id);
+                        DatabasePersistence.DeleteEntity(uuid, "Datasets", id);
                     }
                     break;
 
@@ -308,19 +404,19 @@ public class WebSocketManager
                     if (parameters.ContainsKey("excel"))
                     {
                         var exObj = JObject.FromObject(parameters["excel"]);
-                        DatabasePersistence.SaveEntity(Uuid, "Datasets", exObj); // Excels stored in Datasets
+                        DatabasePersistence.SaveEntity(uuid, "Datasets", exObj);
                     }
                     break;
 
                 case "LoadExcels":
-                    response.Data = DatabasePersistence.LoadEntities(Uuid, "Datasets");
+                    response.Data = DatabasePersistence.LoadEntities(uuid, "Datasets");
                     break;
 
                 case "DeleteExcel":
                     if (parameters.ContainsKey("id"))
                     {
                         var id = parameters["id"].ToString();
-                        DatabasePersistence.DeleteEntity(Uuid, "Datasets", id);
+                        DatabasePersistence.DeleteEntity(uuid, "Datasets", id);
                     }
                     break;
 
@@ -328,25 +424,25 @@ public class WebSocketManager
                     if (parameters.ContainsKey("dashboard"))
                     {
                         var dashObj = JObject.FromObject(parameters["dashboard"]);
-                        DatabasePersistence.SaveEntity(Uuid, "Dashboards", dashObj);
+                        DatabasePersistence.SaveEntity(uuid, "Dashboards", dashObj);
                     }
                     break;
 
                 case "LoadDashboards":
-                    response.Data = DatabasePersistence.LoadEntities(Uuid, "Dashboards");
+                    response.Data = DatabasePersistence.LoadEntities(uuid, "Dashboards");
                     break;
 
                 case "DeleteDashboard":
                     if (parameters.ContainsKey("id"))
                     {
                         var id = parameters["id"].ToString();
-                        DatabasePersistence.DeleteEntity(Uuid, "Dashboards", id);
+                        DatabasePersistence.DeleteEntity(uuid, "Dashboards", id);
                     }
                     break;
 
                 default:
                     response.Status = MessageStatus.Error;
-                    response.ErrorMessage = "Unknown command";
+                    response.ErrorMessage = $"Unknown command: {cmdMessage.Command}";
                     break;
             }
         }
@@ -359,9 +455,46 @@ public class WebSocketManager
         using var _ = SendMessageAsync(connectionInfo, response, socket);
     }
 
+    private object TestConnection(JObject connObj)
+    {
+        var type = (connObj["type"]?.ToString() ?? connObj["Type"]?.ToString() ?? "").ToLower();
+        var host = connObj["host"]?.ToString() ?? connObj["Host"]?.ToString();
+        var database = connObj["database"]?.ToString() ?? connObj["DatabaseName"]?.ToString();
+        var user = connObj["username"]?.ToString() ?? connObj["Username"]?.ToString();
+        var pass = connObj["password"]?.ToString() ?? connObj["Password"]?.ToString();
+        var connectionString = connObj["connectionString"]?.ToString() ?? connObj["ConnectionString"]?.ToString();
+        int.TryParse(connObj["port"]?.ToString() ?? connObj["Port"]?.ToString(), out int port);
+
+        try
+        {
+            System.Data.IDbConnection conn = type switch
+            {
+                "mssql" => new Microsoft.Data.SqlClient.SqlConnection(
+                    connectionString ?? $"Server={host},{port};Database={database};User Id={user};Password={pass};TrustServerCertificate=True;Connect Timeout=5;"),
+                "postgres" => new Npgsql.NpgsqlConnection(
+                    connectionString ?? $"Host={host};Port={port};Database={database};Username={user};Password={pass};Timeout=5;"),
+                "mysql" => new MySqlConnector.MySqlConnection(
+                    connectionString ?? $"Server={host};Port={port};Database={database};Uid={user};Pwd={pass};Connect Timeout=5;"),
+                _ => throw new InvalidOperationException($"Unsupported database type: {type}")
+            };
+
+            using (conn)
+            {
+                conn.Open();
+                conn.Close();
+            }
+
+            return new { success = true, message = "Connection successful" };
+        }
+        catch (Exception ex)
+        {
+            return new { success = false, message = ex.Message };
+        }
+    }
+
     private void ErrorOccurred(object sender, Exception e)
     {
-        Console.WriteLine(e.Message);
+        Console.WriteLine($"WebSocket client error: {e.Message}");
     }
 
     private void AuthenticationMessage(object sender, MessageReceivedEventArgs e)
@@ -370,23 +503,29 @@ public class WebSocketManager
         ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
 
         var authMsg = e.Message as AuthenticationMessage;
-        if (authMsg != null && !string.IsNullOrEmpty(authMsg.Token))
+        string jwt = null;
+
+        if (authMsg != null)
         {
-            var userId = _authService.GetUserIdFromToken(authMsg.Token);
-            if (!string.IsNullOrEmpty(userId))
+            if (!string.IsNullOrEmpty(authMsg.Token))
             {
-                connectionInfo.UserId = userId;
+                var userId = _authService.GetUserIdFromToken(authMsg.Token);
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    connectionInfo.UserId = userId;
+                    jwt = authMsg.Token;
+                }
             }
             else if (!string.IsNullOrEmpty(authMsg.Username))
             {
-                connectionInfo.UserId = authMsg.Username;
+                jwt = _authService.AuthenticateAsync(new LoginRequest { Username = authMsg.Username, Password = authMsg.Password })
+                    .GetAwaiter().GetResult();
+                if (!string.IsNullOrEmpty(jwt))
+                    connectionInfo.UserId = _authService.GetUserIdFromToken(jwt);
             }
-            
-            // Register data sources upon successful login mapping
+
             if (!string.IsNullOrEmpty(connectionInfo.UserId))
-            {
                 RegisterUserDatabaseConnections(connectionInfo.UserId);
-            }
         }
 
         dynamic data = new JObject();
@@ -394,22 +533,23 @@ public class WebSocketManager
         data.Menu = new JObject();
         data.Menu.Header = "";
         data.Functions = new JArray(connectionInfo.interpreter.GetFunctions());
-        ResponseMessage responde = new ResponseMessage
+        if (jwt != null) data.Token = jwt;
+
+        var response = new ResponseMessage
         {
-            Status = MessageStatus.Success,
-            ErrorMessage = "",
+            Status = jwt != null ? MessageStatus.Success : MessageStatus.Error,
+            ErrorMessage = jwt != null ? "" : "Authentication failed",
             Data = data
         };
 
-
-        using var _ = SendMessageAsync(connectionInfo, responde, socket);
+        using var _ = SendMessageAsync(connectionInfo, response, socket);
     }
 
     public async Task ProcessIncomingMessageAsync(IWebsocketConnection socket, string messageJson)
     {
         ConnectionInfo connectionInfo = _connections.FirstOrDefault(s => s.Value.WebSocket == socket).Value;
-        CancellationToken cancellationToken = connectionInfo.CancellationTokenSource.Token;
-        // Esta lógica interna no cambia, sigue siendo perfectamente válida.
+        if (connectionInfo == null) return;
+
         try
         {
             connectionInfo.WebSocketMessageClient.ReceiveMsg(messageJson);
@@ -417,28 +557,21 @@ public class WebSocketManager
         catch (Exception ex)
         {
             Console.WriteLine($"Error processing incoming message: {ex.Message}");
-
-            ErrorMessage errorMessage = new ErrorMessage()
+            var errorMessage = new ErrorMessage
             {
-                ErrorCode = "401",
+                ErrorCode = "500",
                 ErrorDescription = ex.Message,
                 ErrorDetails = ex.StackTrace
             };
-
             await SendMessageAsync(connectionInfo, errorMessage, socket);
         }
     }
-
-    // El resto de los métodos (HandleAuthenticationAsync, HandleReportExecutionAsync, etc.) no necesitan cambios.
-    // ...
 
     private async Task SendMessageAsync(ConnectionInfo connectionInfo, BaseMessage message, IWebsocketConnection socket)
     {
         string msg = JsonConvert.SerializeObject(message);
         await socket.Send(msg);
     }
-
-    
 
     public int GetConnectionCount() => _connections.Count;
 

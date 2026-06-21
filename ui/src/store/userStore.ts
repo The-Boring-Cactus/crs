@@ -41,11 +41,14 @@ function setupGlobalListener(socket: any) {
       } else if (response.type === 'Notification') {
         if (response.category === 'Debug') {
           window.dispatchEvent(new CustomEvent('socket-debug', { detail: response.content }));
+        } else if (response.category === 'ExecutionComplete') {
+          window.dispatchEvent(new CustomEvent('socket-execution-complete', { detail: response }));
         } else {
           window.dispatchEvent(new CustomEvent('socket-notification', { detail: response }));
         }
       } else if (response.type === 'Data') {
-        window.dispatchEvent(new CustomEvent('socket-notification', { detail: response }));
+        // Structured output from script execution (Table, Chart, etc.)
+        window.dispatchEvent(new CustomEvent('socket-output', { detail: response }));
       }
     };
     isListenerSet = true;
@@ -78,12 +81,33 @@ export const userStoreMe = defineStore({
         setupGlobalListener(socket);
         return new Promise((resolve, reject) => {
           pendingRequests.set('auth', { resolve: (res: any) => {
+             if (res.Status === 'Error') { reject(new Error('Authentication failed')); return; }
+             if (res.Data?.Token) localStorage.setItem('crs_token', res.Data.Token);
              this.setCurr(true, 'User', 'admin', res.Data?.Functions || []);
              resolve(res);
           }, reject });
-          
+
           const client = new WebSocketMessageClient(socket);
           client.sendAuthentication(loginStr, passwordStr);
+        });
+      },
+      restoreSession(socket: any): Promise<any> {
+        const token = localStorage.getItem('crs_token');
+        if (!token) return Promise.reject(new Error('No stored token'));
+        setupGlobalListener(socket);
+        return new Promise((resolve, reject) => {
+          pendingRequests.set('auth', { resolve: (res: any) => {
+             if (res.Status === 'Error') {
+               localStorage.removeItem('crs_token');
+               reject(new Error('Token expired'));
+               return;
+             }
+             if (res.Data?.Token) localStorage.setItem('crs_token', res.Data.Token);
+             this.setCurr(true, 'User', 'admin', res.Data?.Functions || []);
+             resolve(res);
+          }, reject });
+          const client = new WebSocketMessageClient(socket);
+          client.sendTokenAuthentication(token);
         });
       },
       executeCommand(command: string, parameters: any, socket: any): Promise<any> {

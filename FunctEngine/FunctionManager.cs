@@ -46,6 +46,7 @@ namespace FunctEngine
             var statisticsFunctions = new StatisticsFunctions(engine);
             var basicFunctions = new BasicFunctions(engine);
             var databaseFunctions = new DatabaseFunctions(databaseManager);
+            var outputFunctions = new OutputFunctions(engine);
 
             // Registrar funciones básicas
             RegisterBasicFunctions(basicFunctions);
@@ -64,6 +65,9 @@ namespace FunctEngine
 
             // Registrar funciones de base de datos
             RegisterDatabaseFunctions(databaseFunctions);
+
+            // Registrar funciones de salida (Table, Chart)
+            RegisterOutputFunctions(outputFunctions);
 
             // Registrar funciones de contadores y memoria
             RegisterCounterAndMemoryFunctions();
@@ -150,6 +154,12 @@ namespace FunctEngine
             builtInFunctions["ZScore"] = statisticsFunctions.ZScore;
             builtInFunctions["PrintHistogram"] = statisticsFunctions.PrintHistogram;
             builtInFunctions["CreateHistogram"] = statisticsFunctions.CreateHistogram;
+        }
+
+        private void RegisterOutputFunctions(OutputFunctions outputFunctions)
+        {
+            builtInFunctions["Table"] = outputFunctions.EmitTable;
+            builtInFunctions["Chart"] = outputFunctions.EmitChart;
         }
 
         private void RegisterDatabaseFunctions(DatabaseFunctions databaseFunctions)

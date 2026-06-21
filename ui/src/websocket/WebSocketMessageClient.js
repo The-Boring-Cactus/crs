@@ -82,6 +82,10 @@ export class WebSocketMessageClient {
         });
     }
 
+    sendTokenAuthentication(token) {
+        return this.sendMessage('Authentication', { Token: token });
+    }
+
     sendHeartbeat() {
         return this.sendMessage('Heartbeat', {
             serverTimestamp: Date.now(),

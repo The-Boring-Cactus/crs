@@ -11,13 +11,13 @@ export class ServerResponse {
             return null;
         }
 
-        if (!message.Type || !message.Data || !message.Timestamp) {
-            console.error('Envelope inválido: faltan propiedades requeridas (type, data, timestamp)');
+        if (!message.Type || !message.Timestamp) {
+            console.error('Envelope inválido: faltan propiedades requeridas (type, timestamp)');
             return null;
         }
 
-        // Validar que data sea un objeto
-        if (typeof message.Data !== 'object') {
+        // Data is optional — some message types (DataMessage, NotificationMessage) use other fields
+        if (message.Data !== undefined && typeof message.Data !== 'object') {
             console.error('Envelope inválido: data debe ser un objeto');
             return null;
         }

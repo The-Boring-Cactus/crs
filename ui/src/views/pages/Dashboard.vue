@@ -32,12 +32,13 @@ import {
     ChevronRight,
     Save,
     X,
-    ArrowUpDown
+    ArrowUpDown,
+    Code
 } from 'lucide-vue-next';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import BaseChart from '@/components/BaseChart.vue';
-import { nextTick, ref, watch, getCurrentInstance } from 'vue';
+import { nextTick, ref, watch, getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import { toast as sonnerToast } from 'vue-sonner';
 import { useDashboardStore } from '@/store/dashboardStore';
 
@@ -63,6 +64,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { userStoreMe } from '@/store/userStore';
+
+const userStore = userStoreMe();
 
 const visibleCompo = ref(false);
 const editingTitle = ref(false);
@@ -461,7 +466,8 @@ const addcomponent = async (type) => {
             tableData: generateSampleCustomers(),
             columns: generateDataTableColumns(),
             globalFilter: '',
-            selectedRows: []
+            selectedRows: [],
+            scriptCode: ''
         };
     } else if (type === 'TreeTable') {
         newComponent = {
@@ -564,7 +570,8 @@ const addcomponent = async (type) => {
             title: getDefaultChartTitle(type),
             chartData: generateChartData(type),
             showLegend: true,
-            showDataLabels: true
+            showDataLabels: true,
+            scriptCode: ''
         };
     }
 
@@ -1489,6 +1496,64 @@ const itemTitle = (item) => {
     }
     return result;
 };
+
+// Widget script execution state
+const widgetScriptDialog = ref(false);
+const editingScriptWidget = ref(null);
+const widgetExecutingId = ref(null);
+
+const handleWidgetOutput = (e) => {
+    const response = e.detail;
+    const dataType = response.DataType || response.dataType;
+    const payload = response.Payload || response.payload;
+    if (!dataType || !payload || !widgetExecutingId.value) return;
+
+    const widget = layout.value.componentes.find(c => c.i === widgetExecutingId.value);
+    if (!widget) return;
+
+    if (dataType === 'Chart' && isChartType(widget.type)) {
+        widget.chartData = {
+            labels: payload.labels || [],
+            datasets: payload.datasets || []
+        };
+    } else if (dataType === 'Table' && widget.type === 'DataTable') {
+        widget.columns = (payload.columns || []).map(col => ({ field: col, header: col }));
+        widget.tableData = payload.rows || [];
+    }
+};
+
+const handleWidgetExecutionComplete = () => {
+    widgetExecutingId.value = null;
+};
+
+onMounted(() => {
+    window.addEventListener('socket-output', handleWidgetOutput);
+    window.addEventListener('socket-execution-complete', handleWidgetExecutionComplete);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('socket-output', handleWidgetOutput);
+    window.removeEventListener('socket-execution-complete', handleWidgetExecutionComplete);
+});
+
+async function runWidgetScript(item) {
+    if (!item.scriptCode || !item.scriptCode.trim()) {
+        toast.add({ severity: 'warn', summary: 'No Script', detail: 'Set a script for this widget first (click the script icon)', life: 3000 });
+        return;
+    }
+    widgetExecutingId.value = item.i;
+    try {
+        await userStore.executeCommand('ExecuteCs', { code: item.scriptCode }, proxy.$socket);
+    } catch (error) {
+        widgetExecutingId.value = null;
+        toast.add({ severity: 'error', summary: 'Execution Failed', detail: error.message, life: 3000 });
+    }
+}
+
+function openWidgetScriptEditor(item) {
+    editingScriptWidget.value = item;
+    widgetScriptDialog.value = true;
+}
 </script>
 
 <template>
@@ -1597,11 +1662,11 @@ const itemTitle = (item) => {
                         </Button>
                     </div>
                     <div class="chart-controls flex gap-1">
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="refreshChartData(item)" title="Refresh Data">
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script bound'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
                             <RefreshCw class="w-3 h-3 text-xs" />
                         </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="editChartSettings(item)" title="Settings">
-                            <Settings class="w-3 h-3 text-xs" />
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="openWidgetScriptEditor(item)" title="Bind Script">
+                            <Code class="w-3 h-3 text-xs" />
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
                             <Trash2 class="w-3 h-3 text-xs" />
@@ -1641,6 +1706,12 @@ const itemTitle = (item) => {
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="exportDataTable(item)" title="Export CSV">
                             <Download class="w-3 h-3 text-xs" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script bound'">
+                            <RefreshCw class="w-3 h-3 text-xs" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="openWidgetScriptEditor(item)" title="Bind Script">
+                            <Code class="w-3 h-3 text-xs" />
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
                             <Trash2 class="w-3 h-3 text-xs" />
@@ -2039,6 +2110,31 @@ const itemTitle = (item) => {
                     <Button variant="ghost" size="sm" @click.stop="loadFromServer(dash)">Load</Button>
                 </div>
             </div>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Widget Script Editor Dialog -->
+    <Dialog :open="widgetScriptDialog" @update:open="widgetScriptDialog = $event">
+        <DialogContent class="sm:max-w-[700px]">
+            <DialogHeader>
+                <DialogTitle>Bind Script to Widget: {{ editingScriptWidget?.title || editingScriptWidget?.type }}</DialogTitle>
+            </DialogHeader>
+            <div class="py-2 text-sm text-muted-foreground mb-2">
+                Write a script using <code class="bg-muted px-1 rounded">Table(data, "title")</code> or <code class="bg-muted px-1 rounded">Chart("bar", labels, values, "title")</code> to populate this widget.
+            </div>
+            <div v-if="editingScriptWidget">
+                <Textarea
+                    v-model="editingScriptWidget.scriptCode"
+                    placeholder="// Example:&#10;var data = ExecuteQuery(&quot;mydb&quot;, &quot;SELECT name, value FROM my_table&quot;);&#10;Chart(&quot;bar&quot;, Array(&quot;A&quot;,&quot;B&quot;,&quot;C&quot;), Array(10,20,30), &quot;My Chart&quot;);"
+                    class="font-mono text-sm h-64 resize-none"
+                />
+            </div>
+            <DialogFooter class="gap-2">
+                <Button variant="outline" @click="widgetScriptDialog = false">Cancel</Button>
+                <Button @click="() => { widgetScriptDialog = false; runWidgetScript(editingScriptWidget); }">
+                    Save &amp; Run
+                </Button>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
 </template>

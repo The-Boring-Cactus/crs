@@ -35,7 +35,9 @@ namespace FunctEngine
         public int TotalTextsAnalyzed => totalTextsAnalyzed;
 
         public event StatusUpdateHandler StatusUpdate;
-        
+        public delegate void OutputEmittedHandler(object sender, OutputEmittedEventArgs e);
+        public event OutputEmittedHandler OutputEmitted;
+
         public void PrintCore(string msg)
         {
             if(StatusUpdate != null)
@@ -43,6 +45,11 @@ namespace FunctEngine
                 var e = new StatusString(msg, connectionId);
                 StatusUpdate(this, e);
             }
+        }
+
+        public void EmitOutput(string outputType, object payload)
+        {
+            OutputEmitted?.Invoke(this, new OutputEmittedEventArgs(outputType, payload, connectionId));
         }
         public void IncrementTextStats(int words)
         {
@@ -60,6 +67,11 @@ namespace FunctEngine
         public void RegisterExternalFunction(string name, Func<object[], object> function)
         {
             functionManager.RegisterExternalFunction(name, function);
+        }
+
+        public void RegisterDatabaseConnection(string name, System.Data.IDbConnection connection)
+        {
+            databaseManager.RegisterConnection(name, connection);
         }
 
         // Parsear y ejecutar el código

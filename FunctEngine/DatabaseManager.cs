@@ -295,5 +295,14 @@ namespace FunctEngine
             }
             connections.Clear();
         }
+
+        public void RegisterConnection(string name, IDbConnection connection)
+        {
+            if (connections.ContainsKey(name))
+            {
+                try { connections[name].Close(); connections[name].Dispose(); } catch { }
+            }
+            connections[name] = connection;
+        }
     }
 }

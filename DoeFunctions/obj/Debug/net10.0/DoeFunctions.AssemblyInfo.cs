@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DoeFunctions")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+de2fc9606993a3f5c9c34a7007409783cdb0a13a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+302788172b9129f25fd1406303288e982e9378c5")]
 [assembly: System.Reflection.AssemblyProductAttribute("DoeFunctions")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DoeFunctions")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -12,7 +12,7 @@ const piniaSocketStore = useSocketStoreWithOut(app);
 
 app.use(router);
 
-app.use(VueNativeSock, 'ws://localhost:9876/srv/', {
+app.use(VueNativeSock, import.meta.env.VITE_WS_URL || 'ws://localhost:9876/srv/', {
     store: piniaSocketStore,
     format: 'json',
     connectManually: false,

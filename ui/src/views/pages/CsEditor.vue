@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, reactive } from 'vue';
 import { getCurrentInstance } from 'vue';
 import { toast } from 'vue-sonner';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
+import BaseChart from '@/components/BaseChart.vue';
 import { basicLight } from '@fsegurai/codemirror-theme-basic-light';
 
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 
@@ -20,6 +21,36 @@ import { WebSocketMessageClient } from '@/websocket/WebSocketMessageClient';
 // Services and stores
 const { proxy } = getCurrentInstance();
 const userStore = userStoreMe();
+
+// Script output: tables and charts emitted by Table() / Chart() calls
+const scriptOutputs = ref([]);
+
+const handleSocketOutput = (e) => {
+    const response = e.detail;
+    if (!response) return;
+    const dataType = response.DataType || response.dataType;
+    const payload = response.Payload || response.payload;
+    if (!dataType || !payload) return;
+    scriptOutputs.value.push({ id: Date.now(), type: dataType, payload });
+};
+
+const handleExecutionComplete = () => {
+    isExecuting.value = false;
+    hasExecuted.value = true;
+    const timestamp = new Date().toLocaleTimeString();
+    debugText.value += `[${timestamp}] Script execution finished.\n`;
+    toast.success('Execution Complete', { description: 'Script executed successfully' });
+};
+
+const clearOutputs = () => {
+    scriptOutputs.value = [];
+};
+
+// Chart output compatible format for BaseChart
+const chartTypeMap = {
+    bar: 'bar', line: 'line', pie: 'pie', doughnut: 'doughnut',
+    area: 'area', radar: 'radar', scatter: 'scatter', bubble: 'bubble'
+};
 
 // Editor state
 const code = ref(`// Welcome to C# Script Editor
@@ -183,6 +214,7 @@ const handleExecute = async () => {
     isExecuting.value = true;
     hasExecuted.value = false;
     debugText.value = '';
+    scriptOutputs.value = [];
 
     const timestamp = new Date().toLocaleTimeString();
     debugText.value = `[${timestamp}] Starting script execution...\n`;
@@ -192,21 +224,17 @@ const handleExecute = async () => {
     });
 
     try {
+        // ExecuteCs returns immediately; execution runs in background on server.
+        // Completion is signalled by socket-execution-complete event.
         await userStore.executeCommand('ExecuteCs', {
             code: code.value,
             name: currentScript.name || 'Untitled Script'
         }, proxy.$socket);
-
-        hasExecuted.value = true;
-        toast.success('Execution Complete', {
-            description: 'Script executed successfully'
-        });
     } catch (error) {
+        isExecuting.value = false;
         toast.error('Execution Failed', {
             description: error.message || 'An error occurred during script execution'
         });
-    } finally {
-        isExecuting.value = false;
     }
 };
 
@@ -381,11 +409,15 @@ const formatDate = (date) => {
 // Initialize component
 onMounted(() => {
     window.addEventListener('socket-debug', handleSocketDebug);
+    window.addEventListener('socket-output', handleSocketOutput);
+    window.addEventListener('socket-execution-complete', handleExecutionComplete);
     loadScriptsFromStorage();
 });
 
 onUnmounted(() => {
     window.removeEventListener('socket-debug', handleSocketDebug);
+    window.removeEventListener('socket-output', handleSocketOutput);
+    window.removeEventListener('socket-execution-complete', handleExecutionComplete);
 });
 </script>
 
@@ -472,6 +504,66 @@ onUnmounted(() => {
 
             <div class="debug-output" :class="{ executing: isExecuting }">
                 <Textarea v-model="debugText" :rows="debugRows" :readonly="isExecuting" placeholder="Debug output will appear here when you execute the script..." class="debug-textarea font-mono text-sm resize-y" />
+            </div>
+        </div>
+
+        <!-- Script Output: Tables and Charts -->
+        <div v-if="scriptOutputs.length > 0" class="output-container border rounded-md p-4 bg-card">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <h6 class="m-0 font-semibold">Script Output</h6>
+                    <Badge variant="secondary">{{ scriptOutputs.length }} result{{ scriptOutputs.length > 1 ? 's' : '' }}</Badge>
+                </div>
+                <Button variant="ghost" size="icon" @click="clearOutputs" title="Clear outputs">
+                    <X class="w-4 h-4" />
+                </Button>
+            </div>
+
+            <div v-for="output in scriptOutputs" :key="output.id" class="mb-6 last:mb-0">
+                <!-- Table output -->
+                <template v-if="output.type === 'Table'">
+                    <div class="flex items-center gap-2 mb-2">
+                        <TableIcon class="w-4 h-4 text-muted-foreground" />
+                        <span class="font-medium text-sm">{{ output.payload.title || 'Table' }}</span>
+                        <Badge variant="outline" class="text-xs">{{ output.payload.rows?.length || 0 }} rows</Badge>
+                    </div>
+                    <div class="border rounded overflow-auto max-h-80">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead v-for="col in output.payload.columns" :key="col">{{ col }}</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="(row, ri) in output.payload.rows" :key="ri">
+                                    <TableCell v-for="col in output.payload.columns" :key="col">{{ row[col] }}</TableCell>
+                                </TableRow>
+                                <TableRow v-if="!output.payload.rows?.length">
+                                    <TableCell :colspan="output.payload.columns?.length || 1" class="text-center text-muted-foreground h-16">No data</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                </template>
+
+                <!-- Chart output -->
+                <template v-else-if="output.type === 'Chart'">
+                    <div class="flex items-center gap-2 mb-2">
+                        <BarChart2 class="w-4 h-4 text-muted-foreground" />
+                        <span class="font-medium text-sm">{{ output.payload.title || 'Chart' }}</span>
+                        <Badge variant="outline" class="text-xs capitalize">{{ output.payload.chartType }}</Badge>
+                    </div>
+                    <div class="h-64">
+                        <BaseChart
+                            :type="chartTypeMap[output.payload.chartType] || 'bar'"
+                            :data="{ labels: output.payload.labels, datasets: output.payload.datasets }"
+                            :title="output.payload.title"
+                            :show-header="false"
+                            :show-footer="false"
+                            height="100%"
+                        />
+                    </div>
+                </template>
             </div>
         </div>
 

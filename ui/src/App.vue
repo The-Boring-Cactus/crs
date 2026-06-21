@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, getCurrentInstance, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { userStoreMe } from '@/store/userStore';
 import { toast } from 'vue-sonner';
@@ -12,6 +12,7 @@ import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogO
 const router = useRouter();
 const route = useRoute();
 const userStore = userStoreMe();
+const { proxy } = getCurrentInstance();
 
 const isSetupRoute = computed(() => route.path === '/setup');
 
@@ -22,35 +23,72 @@ const loginData = ref({
 });
 const searchQuery = ref('');
 const isSidebarHovered = ref(false);
+const showRegister = ref(false);
+const registerData = ref({ username: '', email: '', password: '' });
 
 // Check if user is authenticated
 const isLoggedIn = computed(() => userStore.auth);
 const userName = computed(() => userStore.name || 'User');
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
 
-const login = () => {
+const login = async () => {
     loading.value = true;
-    setTimeout(() => {
-        if (loginData.value.username && loginData.value.password) {
-            userStore.setCurr(true, loginData.value.username, 'admin', []);
-            router.push('/');
-        } else {
-            toast.error('Error', {
-                description: 'Por favor ingresa usuario y contraseña',
-                duration: 3000
-            });
-        }
+    try {
+        await userStore.authenticate(loginData.value.username, loginData.value.password, proxy.$socket);
+        router.push('/');
+    } catch (error) {
+        toast.error('Authentication Failed', { description: 'Please check your credentials.' });
+    } finally {
         loading.value = false;
-    }, 500);
+    }
 };
 
 const logout = () => {
+    localStorage.removeItem('crs_token');
+    try { proxy.$socket?.close(); } catch (_) {}
     userStore.setCurr(false, '', '', []);
-    toast.info('Sesión cerrada', {
-        description: 'Has cerrado sesión exitosamente',
-        duration: 2000
-    });
-    router.push('/auth/login');
+    router.push('/');
+};
+
+onMounted(async () => {
+    if (!userStore.auth) {
+        try {
+            await userStore.restoreSession(proxy.$socket);
+            router.push('/');
+        } catch (_) {
+            // No stored session — show login form
+        }
+    }
+});
+
+const handleRegister = async () => {
+    if (!registerData.value.username || !registerData.value.password) {
+        toast.error('Error', { description: 'Username and password are required' });
+        return;
+    }
+    loading.value = true;
+    try {
+        const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: registerData.value.username,
+                email: registerData.value.email,
+                password: registerData.value.password
+            })
+        });
+        if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.message || 'Registration failed');
+        }
+        toast.success('Account created', { description: 'You can now log in.' });
+        showRegister.value = false;
+        registerData.value = { username: '', email: '', password: '' };
+    } catch (error) {
+        toast.error('Registration failed', { description: error.message });
+    } finally {
+        loading.value = false;
+    }
 };
 
 const navigateTo = (path) => {
@@ -107,6 +145,37 @@ const isActive = (path) => {
 
             <div class="text-center mt-3">
                 <a href="#" style="color: #8b5cf6; text-decoration: none; font-size: 0.9rem"> ¿Olvidaste tu contraseña? </a>
+            </div>
+
+            <div class="text-center mt-3 text-sm text-muted-foreground">
+                Don't have an account?
+                <a href="/auth/register" class="text-primary hover:underline cursor-pointer" @click.prevent="showRegister = true">Register</a>
+            </div>
+        </div>
+
+        <!-- Register Dialog -->
+        <div v-if="showRegister" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showRegister = false">
+            <div class="bg-card rounded-2xl p-8 w-full max-w-sm shadow-xl">
+                <h3 class="text-xl font-bold mb-6 text-center">Create Account</h3>
+                <div class="grid gap-4">
+                    <div>
+                        <Label for="reg-username">Username</Label>
+                        <Input id="reg-username" v-model="registerData.username" type="text" class="mt-1" />
+                    </div>
+                    <div>
+                        <Label for="reg-email">Email</Label>
+                        <Input id="reg-email" v-model="registerData.email" type="email" class="mt-1" />
+                    </div>
+                    <div>
+                        <Label for="reg-password">Password</Label>
+                        <Input id="reg-password" v-model="registerData.password" type="password" class="mt-1" />
+                    </div>
+                    <Button class="w-full mt-2" @click="handleRegister" :disabled="loading">
+                        <span v-if="loading" class="animate-spin mr-2">⠋</span>
+                        Create Account
+                    </Button>
+                    <Button variant="ghost" class="w-full" @click="showRegister = false">Cancel</Button>
+                </div>
             </div>
         </div>
     </div>
