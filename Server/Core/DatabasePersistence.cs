@@ -25,11 +25,34 @@ public static class DatabasePersistence
         return config.Database.Type?.ToLower() switch
         {
             "mssql" => new Microsoft.Data.SqlClient.SqlConnection(cs),
-            "postgres" => new Npgsql.NpgsqlConnection(cs),
+            "postgresql" => new Npgsql.NpgsqlConnection(cs),
             "mysql" => new MySqlConnector.MySqlConnection(cs),
+            "oracle" => CreateOracleConnection(cs),
             _ => null
         };
     }
+
+    // Reflection-based Oracle loader — avoids direct type reference so the Oracle
+    // assembly is only loaded when an Oracle connection is actually requested.
+    private static DbConnection CreateOracleConnection(string cs)
+    {
+        try
+        {
+            var asm = System.Reflection.Assembly.Load("Oracle.ManagedDataAccess");
+            var type = asm.GetType("Oracle.ManagedDataAccess.Client.OracleConnection", throwOnError: true)!;
+            return (DbConnection)Activator.CreateInstance(type, cs)!;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                "Oracle.ManagedDataAccess assembly failed to load: " + ex.Message +
+                ". Ensure Oracle.ManagedDataAccess.Core NuGet package is deployed.", ex);
+        }
+    }
+
+    // Checks by type name so no direct Oracle assembly reference is needed.
+    internal static bool IsOracleConnection(DbConnection conn)
+        => conn?.GetType().FullName?.StartsWith("Oracle.") == true;
 
     // ── Generic JSON entity operations ──────────────────────────────────
     // Each "entity table" stores rows as JSON blobs in a dedicated table,
@@ -44,7 +67,7 @@ public static class DatabasePersistence
 
         conn.Open();
         string tableName = language == "csharp" ? "CodeScripts" : "SqlScripts";
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
         var rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId",
             new { UserId = dbUserId }).ToList();
         var list = rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).ToList();
@@ -68,8 +91,8 @@ public static class DatabasePersistence
         var code = scriptObj["code"]?.ToString() ?? scriptObj["Code"]?.ToString() ?? "";
         var dbConnId = scriptObj["database"]?.ToString() ?? scriptObj["DatabaseConnectionId"]?.ToString() ?? "";
 
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
         if (language == "csharp")
         {
@@ -95,8 +118,8 @@ public static class DatabasePersistence
         if (conn == null) return;
 
         conn.Open();
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
         
         string tableName = language == "csharp" ? "CodeScripts" : "SqlScripts";
         conn.Execute($"DELETE FROM {tableName} WHERE Id = @Id AND UserId = @UserId",
@@ -111,7 +134,7 @@ public static class DatabasePersistence
         if (conn == null) return new List<JObject>();
 
         conn.Open();
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
         var rows = conn.Query("SELECT * FROM DatabaseConnections WHERE UserId = @UserId OR IsGlobal = @True",
             new { UserId = dbUserId, True = true }).ToList();
         var list = rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).ToList();
@@ -131,8 +154,8 @@ public static class DatabasePersistence
             connObj["id"] = id;
         }
 
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
         conn.Execute("DELETE FROM DatabaseConnections WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
@@ -163,8 +186,8 @@ public static class DatabasePersistence
         if (conn == null) return;
 
         conn.Open();
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
         
         conn.Execute("DELETE FROM DatabaseConnections WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
@@ -180,7 +203,7 @@ public static class DatabasePersistence
         if (conn == null) return new List<JObject>();
 
         conn.Open();
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
         var rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId",
             new { UserId = dbUserId }).ToList();
         var list = rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).ToList();
@@ -203,8 +226,8 @@ public static class DatabasePersistence
         var name = obj["name"]?.ToString() ?? obj["Name"]?.ToString() ?? "Untitled";
         var config = JsonConvert.SerializeObject(obj);
 
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
         conn.Execute($"DELETE FROM {tableName} WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
@@ -231,8 +254,8 @@ public static class DatabasePersistence
         if (conn == null) return;
 
         conn.Open();
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
         conn.Execute($"DELETE FROM {tableName} WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
@@ -246,8 +269,8 @@ public static class DatabasePersistence
         if (conn == null) return null;
 
         conn.Open();
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
         var token = Guid.NewGuid().ToString("N")[..16];
         conn.Execute($"UPDATE {tableName} SET ShareToken = @Token, IsPublic = @True WHERE Id = @Id AND UserId = @UserId",
@@ -261,8 +284,8 @@ public static class DatabasePersistence
         if (conn == null) return;
 
         conn.Open();
-        object dbId = conn is MySqlConnector.MySqlConnection ? id : Guid.Parse(id);
-        object dbUserId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
         conn.Execute($"UPDATE {tableName} SET ShareToken = NULL, IsPublic = @False WHERE Id = @Id AND UserId = @UserId",
             new { False = false, Id = dbId, UserId = dbUserId });

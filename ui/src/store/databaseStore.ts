@@ -46,10 +46,22 @@ export const useDatabaseStore = defineStore({
         const result = await userStore.executeCommand('LoadDatabaseConnections', {}, socket);
         if (result && result.Data) {
           this.connections = result.Data.map((conn: any) => ({
-            ...conn,
-            createdAt: new Date(conn.createdAt),
-            updatedAt: new Date(conn.updatedAt),
-            lastTested: conn.lastTested ? new Date(conn.lastTested) : undefined
+            id: conn.id || conn.Id,
+            name: conn.name || conn.Name || '',
+            type: ((conn.type || conn.Type || '') as DatabaseConnection['type']),
+            host: conn.host || conn.Host || '',
+            port: conn.port || conn.Port || 0,
+            // PostgreSQL lowercases column names: DatabaseName → databasename
+            database: conn.database || conn.Database || conn.databasename || conn.DatabaseName || '',
+            username: conn.username || conn.Username || '',
+            password: conn.password || conn.Password || '',
+            connectionString: conn.connectionString || conn.ConnectionString || conn.connectionstring || '',
+            isGlobal: conn.isGlobal || conn.IsGlobal || conn.isglobal || false,
+            sharedWith: conn.sharedWith || conn.SharedWith || conn.sharedwith || '',
+            status: 'disconnected' as DatabaseConnection['status'],
+            createdAt: new Date(conn.createdAt || conn.CreatedAt || conn.createdat || Date.now()),
+            updatedAt: new Date(conn.updatedAt || conn.UpdatedAt || conn.updatedat || conn.createdAt || conn.CreatedAt || conn.createdat || Date.now()),
+            lastTested: undefined
           }));
         }
       } catch (error) {
@@ -146,7 +158,7 @@ export const useDatabaseStore = defineStore({
 
       try {
         const userStore = userStoreMe();
-        const result = await userStore.executeCommand('TestDatabaseConnection', { id }, socket);
+        const result = await userStore.executeCommand('TestDatabaseConnection', { connection }, socket);
         const success = result?.Data?.success === true;
         
         await this.updateConnection(id, {
@@ -171,7 +183,16 @@ export const useDatabaseStore = defineStore({
     },
 
     generateId(): string {
-      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+      // Must be a valid GUID — server stores connection Id as uniqueidentifier/uuid
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      // Fallback RFC4122 v4 generator
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
     },
 
     exportConnections(): string {

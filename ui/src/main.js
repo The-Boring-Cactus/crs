@@ -6,6 +6,7 @@ import { useSocketStoreWithOut } from '@/store/pinia/useSocketStore';
 import VueNativeSock from '@/websocket/VueNativeSock';
 import { userStoreMe } from '@/store/userStore';
 import '@/assets/styles.scss';
+import 'vue-sonner/style.css';
 
 const app = createApp(App);
 const piniaSocketStore = useSocketStoreWithOut(app);

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "ROR1/LhLwrk=",
+  "dgSpecHash": "5HaAaMN7wT4=",
   "success": true,
   "projectFilePath": "/home/peyotex/Documents/GitHub/crs/Server/Server.csproj",
   "expectedPackageFiles": [
@@ -57,8 +57,6 @@
     "/home/peyotex/.nuget/packages/microsoft.identitymodel.protocols/7.7.1/microsoft.identitymodel.protocols.7.7.1.nupkg.sha512",
     "/home/peyotex/.nuget/packages/microsoft.identitymodel.protocols.openidconnect/7.7.1/microsoft.identitymodel.protocols.openidconnect.7.7.1.nupkg.sha512",
     "/home/peyotex/.nuget/packages/microsoft.identitymodel.tokens/7.7.1/microsoft.identitymodel.tokens.7.7.1.nupkg.sha512",
-    "/home/peyotex/.nuget/packages/microsoft.netcore.platforms/1.1.1/microsoft.netcore.platforms.1.1.1.nupkg.sha512",
-    "/home/peyotex/.nuget/packages/microsoft.netcore.targets/1.1.0/microsoft.netcore.targets.1.1.0.nupkg.sha512",
     "/home/peyotex/.nuget/packages/microsoft.sqlserver.server/1.0.0/microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "/home/peyotex/.nuget/packages/mysqlconnector/2.4.0/mysqlconnector.2.4.0.nupkg.sha512",
     "/home/peyotex/.nuget/packages/namotion.reflection/3.4.2/namotion.reflection.3.4.2.nupkg.sha512",
@@ -71,45 +69,18 @@
     "/home/peyotex/.nuget/packages/nswag.core/14.4.0/nswag.core.14.4.0.nupkg.sha512",
     "/home/peyotex/.nuget/packages/nswag.core.yaml/14.4.0/nswag.core.yaml.14.4.0.nupkg.sha512",
     "/home/peyotex/.nuget/packages/nswag.generation/14.4.0/nswag.generation.14.4.0.nupkg.sha512",
-    "/home/peyotex/.nuget/packages/runtime.native.system/4.3.0/runtime.native.system.4.3.0.nupkg.sha512",
-    "/home/peyotex/.nuget/packages/runtime.native.system.net.http/4.3.0/runtime.native.system.net.http.4.3.0.nupkg.sha512",
-    "/home/peyotex/.nuget/packages/runtime.native.system.security.cryptography.openssl/4.3.2/runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
+    "/home/peyotex/.nuget/packages/oracle.manageddataaccess.core/23.26.200/oracle.manageddataaccess.core.23.26.200.nupkg.sha512",
     "/home/peyotex/.nuget/packages/system.clientmodel/1.5.1/system.clientmodel.1.5.1.nupkg.sha512",
     "/home/peyotex/.nuget/packages/system.configuration.configurationmanager/9.0.4/system.configuration.configurationmanager.9.0.4.nupkg.sha512",
     "/home/peyotex/.nuget/packages/system.diagnostics.eventlog/9.0.4/system.diagnostics.eventlog.9.0.4.nupkg.sha512",
+    "/home/peyotex/.nuget/packages/system.diagnostics.performancecounter/8.0.0/system.diagnostics.performancecounter.8.0.0.nupkg.sha512",
+    "/home/peyotex/.nuget/packages/system.directoryservices.protocols/8.0.2/system.directoryservices.protocols.8.0.2.nupkg.sha512",
     "/home/peyotex/.nuget/packages/system.identitymodel.tokens.jwt/7.7.1/system.identitymodel.tokens.jwt.7.7.1.nupkg.sha512",
     "/home/peyotex/.nuget/packages/system.memory.data/8.0.1/system.memory.data.8.0.1.nupkg.sha512",
-    "/home/peyotex/.nuget/packages/system.net.http/4.3.4/system.net.http.4.3.4.nupkg.sha512",
     "/home/peyotex/.nuget/packages/system.security.cryptography.pkcs/9.0.4/system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
     "/home/peyotex/.nuget/packages/system.security.cryptography.protecteddata/9.0.4/system.security.cryptography.protecteddata.9.0.4.nupkg.sha512",
-    "/home/peyotex/.nuget/packages/system.text.regularexpressions/4.3.1/system.text.regularexpressions.4.3.1.nupkg.sha512",
     "/home/peyotex/.nuget/packages/yamldotnet/16.3.0/yamldotnet.16.3.0.nupkg.sha512",
     "/home/peyotex/.nuget/packages/zstdsharp.port/0.8.5/zstdsharp.port.0.8.5.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1510",
-      "level": "Warning",
-      "message": "PackageReference System.Net.Http will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
-      "projectPath": "/home/peyotex/Documents/GitHub/crs/Server/Server.csproj",
-      "warningLevel": 1,
-      "filePath": "/home/peyotex/Documents/GitHub/crs/Server/Server.csproj",
-      "libraryId": "System.Net.Http",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1510",
-      "level": "Warning",
-      "message": "PackageReference System.Text.RegularExpressions will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
-      "projectPath": "/home/peyotex/Documents/GitHub/crs/Server/Server.csproj",
-      "warningLevel": 1,
-      "filePath": "/home/peyotex/Documents/GitHub/crs/Server/Server.csproj",
-      "libraryId": "System.Text.RegularExpressions",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }

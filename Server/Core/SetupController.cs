@@ -33,7 +33,7 @@ public class SetupController
             DbConnection connection = dbConfig.Type?.ToLower() switch
             {
                 "mssql" => new Microsoft.Data.SqlClient.SqlConnection(connectionString),
-                "postgres" => new Npgsql.NpgsqlConnection(connectionString),
+                "postgresql" => new Npgsql.NpgsqlConnection(connectionString),
                 "mysql" => new MySqlConnector.MySqlConnection(connectionString),
                 _ => throw new InvalidOperationException($"Unsupported database type: {dbConfig.Type}")
             };
@@ -62,7 +62,7 @@ public class SetupController
             DbConnection connection = request.Database.Type?.ToLower() switch
             {
                 "mssql" => new Microsoft.Data.SqlClient.SqlConnection(connectionString),
-                "postgres" => new Npgsql.NpgsqlConnection(connectionString),
+                "postgresql" => new Npgsql.NpgsqlConnection(connectionString),
                 "mysql" => new MySqlConnector.MySqlConnection(connectionString),
                 _ => throw new InvalidOperationException($"Unsupported database type: {request.Database.Type}")
             };

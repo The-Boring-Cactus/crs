@@ -21,7 +21,7 @@ const connectionTested = ref(false);
 const submitting = ref(false);
 
 const dbConfig = ref({
-  type: 'postgres',
+  type: 'postgresql',
   host: 'localhost',
   port: 5432,
   databaseName: '',
@@ -49,7 +49,7 @@ const smtpConfig = ref({
 
 const dbTypes = [
   { value: 'mssql', label: 'SQL Server', icon: '🟦', defaultPort: 1433 },
-  { value: 'postgres', label: 'PostgreSQL', icon: '🐘', defaultPort: 5432 },
+  { value: 'postgresql', label: 'PostgreSQL', icon: '🐘', defaultPort: 5432 },
   { value: 'mysql', label: 'MySQL', icon: '🐬', defaultPort: 3306 }
 ];
 

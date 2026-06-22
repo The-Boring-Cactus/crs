@@ -37,7 +37,7 @@ public class SetupConfig
 
 public class DatabaseConfig
 {
-    public string Type { get; set; } // mssql, postgres, mysql
+    public string Type { get; set; } // mssql, postgres, mysql, oracle
     public string Host { get; set; }
     public int Port { get; set; }
     public string DatabaseName { get; set; }
@@ -50,7 +50,9 @@ public class DatabaseConfig
         {
             "mssql" => $"Server={Host},{Port};Database={DatabaseName};User Id={Username};Password={Password};TrustServerCertificate=True;",
             "postgres" => $"Host={Host};Port={Port};Database={DatabaseName};Username={Username};Password={Password};",
+            "postgresql" => $"Host={Host};Port={Port};Database={DatabaseName};Username={Username};Password={Password};",
             "mysql" => $"Server={Host};Port={Port};Database={DatabaseName};Uid={Username};Pwd={Password};",
+            "oracle" => $"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={Host})(PORT={Port}))(CONNECT_DATA=(SERVICE_NAME={DatabaseName})));User Id={Username};Password={Password};",
             _ => throw new InvalidOperationException($"Unsupported database type: {Type}")
         };
     }
@@ -61,7 +63,9 @@ public class DatabaseConfig
         {
             "mssql" => GetMssqlCreateTablesSQL(),
             "postgres" => GetPostgresCreateTablesSQL(),
+            "postgresql" => GetPostgresCreateTablesSQL(),
             "mysql" => GetMysqlCreateTablesSQL(),
+            "oracle" => GetOracleCreateTablesSQL(),
             _ => throw new InvalidOperationException($"Unsupported database type: {Type}")
         };
     }
@@ -323,6 +327,123 @@ CREATE TABLE IF NOT EXISTS CodeScripts (
     UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (UserId) REFERENCES Users(Id)
 );
+";
+
+    private string GetOracleCreateTablesSQL() => @"
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE Users (
+    Id CHAR(36) PRIMARY KEY,
+    Username VARCHAR2(100) NOT NULL UNIQUE,
+    FullName VARCHAR2(200) NOT NULL,
+    Email VARCHAR2(200) NOT NULL,
+    PasswordHash VARCHAR2(500) NOT NULL,
+    Salt VARCHAR2(500) NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
+    IsActive NUMBER(1) DEFAULT 1,
+    Roles VARCHAR2(500) DEFAULT ''admin''
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE Dashboards (
+    Id CHAR(36) PRIMARY KEY,
+    UserId CHAR(36) NOT NULL REFERENCES Users(Id),
+    Name VARCHAR2(200) NOT NULL,
+    Config CLOB,
+    IsPublic NUMBER(1) DEFAULT 0,
+    ShareToken VARCHAR2(100),
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE Reports (
+    Id CHAR(36) PRIMARY KEY,
+    UserId CHAR(36) NOT NULL REFERENCES Users(Id),
+    Name VARCHAR2(200) NOT NULL,
+    Config CLOB,
+    IsPublic NUMBER(1) DEFAULT 0,
+    ShareToken VARCHAR2(100),
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE DatabaseConnections (
+    Id CHAR(36) PRIMARY KEY,
+    UserId CHAR(36) NOT NULL REFERENCES Users(Id),
+    Name VARCHAR2(200) NOT NULL,
+    Type VARCHAR2(50) NOT NULL,
+    Host VARCHAR2(200),
+    Port NUMBER(5),
+    DatabaseName VARCHAR2(200),
+    Username VARCHAR2(200),
+    Password VARCHAR2(500),
+    ConnectionString CLOB,
+    IsGlobal NUMBER(1) DEFAULT 0,
+    SharedWith CLOB,
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE Datasets (
+    Id CHAR(36) PRIMARY KEY,
+    UserId CHAR(36) NOT NULL REFERENCES Users(Id),
+    Name VARCHAR2(200) NOT NULL,
+    Config CLOB,
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE SqlScripts (
+    Id CHAR(36) PRIMARY KEY,
+    UserId CHAR(36) NOT NULL REFERENCES Users(Id),
+    Name VARCHAR2(200) NOT NULL,
+    Language VARCHAR2(50) DEFAULT ''sql'',
+    Code CLOB,
+    DatabaseConnectionId VARCHAR2(200),
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE CodeScripts (
+    Id CHAR(36) PRIMARY KEY,
+    UserId CHAR(36) NOT NULL REFERENCES Users(Id),
+    Name VARCHAR2(200) NOT NULL,
+    Language VARCHAR2(50) DEFAULT ''csharp'',
+    Code CLOB,
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
 ";
 }
 

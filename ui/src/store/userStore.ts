@@ -17,7 +17,7 @@ function setupGlobalListener(socket: any) {
 
       var response = responseHandler.analizeMessage(jResponse);
       if (!response) return;
-
+      console.log(response);
       if (response.type === 'Response') {
         // Authenticate uses a different flow (type 3 response, maybe missing RequestId), 
         // but new commands will use RequestId.
@@ -39,9 +39,10 @@ function setupGlobalListener(socket: any) {
           }
         }
       } else if (response.type === 'Notification') {
-        if (response.category === 'Debug') {
-          window.dispatchEvent(new CustomEvent('socket-debug', { detail: response.content }));
-        } else if (response.category === 'ExecutionComplete') {
+        const category = response.Category || response.category;
+        if (category === 'Debug') {
+          window.dispatchEvent(new CustomEvent('socket-debug', { detail: response.Content || response.content }));
+        } else if (category === 'ExecutionComplete') {
           window.dispatchEvent(new CustomEvent('socket-execution-complete', { detail: response }));
         } else {
           window.dispatchEvent(new CustomEvent('socket-notification', { detail: response }));

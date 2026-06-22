@@ -97,7 +97,7 @@ const chartData = computed(() => {
 const currentScript = reactive({
     id: null,
     name: '',
-    content: '',
+    code: '',
     database: null
 });
 
@@ -131,9 +131,10 @@ const editorStyle = computed(() => {
     };
 });
 
-// Available databases from store
+// Available databases from store — show all connections so users can run queries
+// without needing to test first. Error-status connections are shown dimmed.
 const availableDatabases = computed(() => {
-    return databaseStore.allConnections.filter((conn) => conn.status === 'connected');
+    return databaseStore.allConnections;
 });
 
 // Editor extensions with search support
@@ -161,8 +162,7 @@ const handleRedo = () => {
 };
 
 const handleStateUpdate = () => {
-    // Auto-save current script content
-    currentScript.content = code.value;
+    currentScript.code = code.value;
 };
 
 // Text operations
@@ -316,7 +316,7 @@ const generateMockData = (query) => {
 const newScript = () => {
     currentScript.id = null;
     currentScript.name = '';
-    currentScript.content = '';
+    currentScript.code = '';
     currentScript.database = null;
     code.value = '';
     queryResults.value = [];
@@ -328,9 +328,8 @@ const saveScript = async () => {
     const script = {
         id: currentScript.id || generateId(),
         name: currentScript.name || 'Untitled Script',
-        content: code.value,
-        database: getSelectedDatabaseName(),
-        databaseId: selectedDatabase.value,
+        code: code.value,
+        database: selectedDatabase.value || '',
         createdAt: currentScript.id ? undefined : new Date(),
         updatedAt: new Date()
     };
@@ -342,7 +341,7 @@ const saveScript = async () => {
         if (existingIndex >= 0) {
             savedScripts.value[existingIndex] = { ...savedScripts.value[existingIndex], ...script };
         } else {
-            savedScripts.value.push(script);
+            savedScripts.value.push({ ...script, databaseName: getSelectedDatabaseName() });
             currentScript.id = script.id;
         }
 
@@ -365,11 +364,11 @@ const confirmLoadScript = () => {
     const script = selectedScriptToLoad.value;
     currentScript.id = script.id;
     currentScript.name = script.name;
-    currentScript.content = script.content;
+    currentScript.code = script.code;
     currentScript.database = script.database;
 
-    code.value = script.content;
-    selectedDatabase.value = script.databaseId;
+    code.value = script.code || '';
+    selectedDatabase.value = script.database || null;
 
     queryResults.value = [];
     queryColumns.value = [];
@@ -404,10 +403,16 @@ const loadScriptsFromStorage = async () => {
     try {
         const result = await userStore.executeCommand('LoadScripts', { language: 'sql' }, proxy.$socket);
         if (result && result.Data) {
-            savedScripts.value = result.Data.map((script) => ({
-                ...script,
-                createdAt: script.createdAt ? new Date(script.createdAt) : new Date(),
-                updatedAt: script.updatedAt ? new Date(script.updatedAt) : new Date()
+            savedScripts.value = result.Data.map((s) => ({
+                id: s.id || s.Id,
+                name: s.name || s.Name || '',
+                // PostgreSQL lowercases column names: Code → code, DatabaseConnectionId → databaseconnectionid
+                code: s.code || s.Code || '',
+                database: s.database || s.Database || s.databaseconnectionid || s.DatabaseConnectionId || '',
+                databaseName: s.databaseName || s.DatabaseName || '',
+                language: s.language || s.Language || 'sql',
+                createdAt: new Date(s.createdAt || s.CreatedAt || s.createdat || Date.now()),
+                updatedAt: new Date(s.updatedAt || s.UpdatedAt || s.updatedat || s.createdAt || s.CreatedAt || s.createdat || Date.now()),
             }));
         }
     } catch (error) {
@@ -418,7 +423,15 @@ const loadScriptsFromStorage = async () => {
 
 // Utility functions
 const generateId = () => {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    // Must be a valid GUID — server stores script Id as uniqueidentifier/uuid
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
 };
 
 const formatDate = (date) => {
@@ -492,7 +505,11 @@ onMounted(() => {
                             <div class="flex items-center gap-2">
                                 <component :is="getDatabaseIcon(db.type)" class="w-4 h-4" />
                                 <div>
-                                    <div class="font-medium">{{ db.name }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium">{{ db.name }}</span>
+                                        <span v-if="db.status === 'connected'" class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                                        <span v-else-if="db.status === 'error'" class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                                    </div>
                                     <div class="text-xs text-muted-foreground">{{ db.host }}:{{ db.port }}</div>
                                 </div>
                             </div>
@@ -690,7 +707,7 @@ onMounted(() => {
                                     </div>
                                 </TableCell>
                                 <TableCell class="font-medium">{{ script.name }}</TableCell>
-                                <TableCell>{{ script.database }}</TableCell>
+                                <TableCell>{{ databaseStore.connectionById(script.database)?.name || script.databaseName || '—' }}</TableCell>
                                 <TableCell class="text-muted-foreground text-sm">{{ formatDate(script.updatedAt) }}</TableCell>
                                 <TableCell class="text-right">
                                     <Button variant="ghost" size="icon" class="text-destructive hover:bg-destructive/10 h-8 w-8" @click.stop="deleteScript(script.id)">

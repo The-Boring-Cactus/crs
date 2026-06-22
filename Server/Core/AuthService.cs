@@ -30,7 +30,7 @@ public class AuthService : IAuthService
         var salt = GenerateSalt();
         var passwordHash = HashPassword(request.Password, salt);
         var id = Guid.NewGuid();
-        object dbId = conn is MySqlConnector.MySqlConnection ? id.ToString() : id;
+        object dbId = (conn is MySqlConnector.MySqlConnection || DatabasePersistence.IsOracleConnection(conn)) ? id.ToString() : id;
 
         await conn.ExecuteAsync(@"INSERT INTO Users (Id, Username, FullName, Email, PasswordHash, Salt, Roles)
                                   VALUES (@Id, @Username, @FullName, @Email, @PasswordHash, @Salt, @Roles)",
@@ -52,16 +52,16 @@ public class AuthService : IAuthService
 
         var passwordHash = HashPassword(request.Password, user.Salt);
         if (passwordHash == user.PasswordHash)
-            return GenerateJwtToken(user.UserId);
+            return GenerateJwtToken(user.UserId.ToString());
 
         // Legacy SHA256 fallback — migrate on first successful login with old hash
         var legacyHash = HashLegacySHA256(request.Password, user.Salt);
         if (legacyHash == user.PasswordHash)
         {
             var newHash = HashPassword(request.Password, user.Salt);
-            object dbId = conn is MySqlConnector.MySqlConnection ? user.UserId : Guid.Parse(user.UserId);
+            object dbId = (conn is MySqlConnector.MySqlConnection || DatabasePersistence.IsOracleConnection(conn)) ? (object)user.UserId.ToString() : user.UserId;
             await conn.ExecuteAsync("UPDATE Users SET PasswordHash = @Hash WHERE Id = @Id", new { Hash = newHash, Id = dbId });
-            return GenerateJwtToken(user.UserId);
+            return GenerateJwtToken(user.UserId.ToString());
         }
 
         return null;
@@ -73,7 +73,7 @@ public class AuthService : IAuthService
         if (conn == null) return null;
         await conn.OpenAsync();
 
-        object dbId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+        object dbId = (conn is MySqlConnector.MySqlConnection || DatabasePersistence.IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
         return await conn.QueryFirstOrDefaultAsync<User>("SELECT Id as UserId, Username, Email, CreatedAt, IsActive, Roles FROM Users WHERE Id = @Id", new { Id = dbId });
     }
 
@@ -90,7 +90,7 @@ public class AuthService : IAuthService
             if (conn == null) return false;
             await conn.OpenAsync();
 
-            object dbId = conn is MySqlConnector.MySqlConnection ? userId : Guid.Parse(userId);
+            object dbId = (conn is MySqlConnector.MySqlConnection || DatabasePersistence.IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
             // Query IsActive rather than comparing with a literal to be DB-agnostic
             var isActive = await conn.QueryFirstOrDefaultAsync<bool?>(
                 "SELECT IsActive FROM Users WHERE Id = @Id", new { Id = dbId });
@@ -212,7 +212,7 @@ public class AuthService : IAuthService
 
     private class UserRecord
     {
-        public string UserId { get; set; }
+        public Guid UserId { get; set; }
         public string Username { get; set; }
         public string PasswordHash { get; set; }
         public string Salt { get; set; }

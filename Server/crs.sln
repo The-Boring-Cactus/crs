@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "reporter", "reporter.csproj", "{3EE67C95-98AB-4ADE-8765-765695F1F174}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server.csproj", "{3EE67C95-98AB-4ADE-8765-765695F1F174}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -146,7 +146,7 @@ public class WebSocketManager
             if (string.IsNullOrEmpty(id)) continue;
 
             var host = c["host"]?.ToString() ?? c["Host"]?.ToString();
-            var db = c["database"]?.ToString() ?? c["DatabaseName"]?.ToString();
+            var db = c["databasename"]?.ToString() ?? c["DatabaseName"]?.ToString();
             var user = c["username"]?.ToString() ?? c["Username"]?.ToString();
             var pass = c["password"]?.ToString() ?? c["Password"]?.ToString();
             int.TryParse((c["port"]?.ToString() ?? c["Port"]?.ToString()), out int port);
@@ -157,7 +157,7 @@ public class WebSocketManager
                 {
                     "mssql" => new Microsoft.Data.SqlClient.SqlConnection(
                         connectionString ?? $"Server={host},{port};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;"),
-                    "postgres" => new Npgsql.NpgsqlConnection(
+                    "postgresql" => new Npgsql.NpgsqlConnection(
                         connectionString ?? $"Host={host};Port={port};Database={db};Username={user};Password={pass};"),
                     "mysql" => new MySqlConnector.MySqlConnection(
                         connectionString ?? $"Server={host};Port={port};Database={db};Uid={user};Pwd={pass};"),
@@ -198,7 +198,7 @@ public class WebSocketManager
                 {
                     "mssql" => new Microsoft.Data.SqlClient.SqlConnection(
                         connectionString ?? $"Server={host},{port};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;"),
-                    "postgres" => new Npgsql.NpgsqlConnection(
+                    "postgresql" => new Npgsql.NpgsqlConnection(
                         connectionString ?? $"Host={host};Port={port};Database={db};Username={user};Password={pass};"),
                     "mysql" => new MySqlConnector.MySqlConnection(
                         connectionString ?? $"Server={host};Port={port};Database={db};Uid={user};Pwd={pass};"),
@@ -229,6 +229,7 @@ public class WebSocketManager
         string uuid = !string.IsNullOrEmpty(connectionInfo.UserId) ? connectionInfo.UserId : connectionInfo.ConnectionId;
 
         var cmdMessage = e.Message as CommandMessage;
+        
         if (cmdMessage == null) return;
 
         var parameters = cmdMessage.Parameters;
@@ -263,7 +264,7 @@ public class WebSocketManager
                                     Content = "Script execution finished.",
                                     Title = "Done"
                                 };
-                                using var _1 = SendMessageAsync(connectionInfo, done, connectionInfo.WebSocket);
+                                using var _1 = SendMessageAsync(connectionInfo, done, socket);
                             }
                             catch (Exception ex)
                             {
@@ -273,7 +274,7 @@ public class WebSocketManager
                                     Status = MessageStatus.Error,
                                     ErrorMessage = ex.Message
                                 };
-                                using var _2 = SendMessageAsync(connectionInfo, errResp, connectionInfo.WebSocket);
+                                using var _2 = SendMessageAsync(connectionInfo, errResp, socket);
                             }
                         });
                     }
@@ -290,22 +291,24 @@ public class WebSocketManager
                         {
                             var result = _dataSourceManager.ExecuteQueryAsync(dbId, sql).GetAwaiter().GetResult();
 
-                            var rows = new List<object>();
+                            var rows = new List<Dictionary<string, object>>();
                             var columns = new List<object>();
                             bool colsExtracted = false;
 
                             foreach (var row in result)
                             {
+                                // ReportsCache round-trips through System.Text.Json, turning
+                                // Dapper DapperRow (IDictionary) into JsonElement on cache hit.
+                                // Normalise both cases to a plain dictionary with CLR values.
+                                var rowDict = RowToDictionary(row);
+
                                 if (!colsExtracted)
                                 {
-                                    if (row is IDictionary<string, object> dict)
-                                    {
-                                        foreach (var key in dict.Keys)
-                                            columns.Add(new { field = key, header = key });
-                                    }
+                                    foreach (var key in rowDict.Keys)
+                                        columns.Add(new { field = key, header = key });
                                     colsExtracted = true;
                                 }
-                                rows.Add(row);
+                                rows.Add(rowDict);
                             }
 
                             response.Data = new { rows, columns };
@@ -485,19 +488,34 @@ public class WebSocketManager
         var pass = connObj["password"]?.ToString() ?? connObj["Password"]?.ToString();
         var connectionString = connObj["connectionString"]?.ToString() ?? connObj["ConnectionString"]?.ToString();
         int.TryParse(connObj["port"]?.ToString() ?? connObj["Port"]?.ToString(), out int port);
-
+        connectionString = connectionString == "" ? null : connectionString;
         try
         {
-            System.Data.IDbConnection conn = type switch
+            System.Data.IDbConnection conn;
+            var cs = connectionString ?? type switch
             {
-                "mssql" => new Microsoft.Data.SqlClient.SqlConnection(
-                    connectionString ?? $"Server={host},{port};Database={database};User Id={user};Password={pass};TrustServerCertificate=True;Connect Timeout=5;"),
-                "postgres" => new Npgsql.NpgsqlConnection(
-                    connectionString ?? $"Host={host};Port={port};Database={database};Username={user};Password={pass};Timeout=5;"),
-                "mysql" => new MySqlConnector.MySqlConnection(
-                    connectionString ?? $"Server={host};Port={port};Database={database};Uid={user};Pwd={pass};Connect Timeout=5;"),
-                _ => throw new InvalidOperationException($"Unsupported database type: {type}")
+                "mssql"       => $"Server={host},{port};Database={database};User Id={user};Password={pass};TrustServerCertificate=True;Connect Timeout=5;",
+                "postgresql"  => $"Host={host};Port={port};Database={database};Username={user};Password={pass};Timeout=5;",
+                "mysql"       => $"Server={host};Port={port};Database={database};Uid={user};Pwd={pass};Connect Timeout=5;",
+                "oracle"      => $"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SERVICE_NAME={database})));User Id={user};Password={pass};",
+                _             => throw new InvalidOperationException($"Unsupported database type: {type}")
             };
+
+            try
+            {
+                conn = type switch
+                {
+                    "mssql"      => new Microsoft.Data.SqlClient.SqlConnection(cs),
+                    "postgresql" => new Npgsql.NpgsqlConnection(cs),
+                    "mysql"      => new MySqlConnector.MySqlConnection(cs),
+                    "oracle"     => CreateOracleTestConnection(cs),
+                    _            => throw new InvalidOperationException($"Unsupported database type: {type}")
+                };
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Oracle"))
+            {
+                return new { success = false, message = ex.Message };
+            }
 
             using (conn)
             {
@@ -510,6 +528,51 @@ public class WebSocketManager
         catch (Exception ex)
         {
             return new { success = false, message = ex.Message };
+        }
+    }
+
+    private static Dictionary<string, object> RowToDictionary(dynamic row)
+    {
+        if (row is IDictionary<string, object> dapperRow)
+            return new Dictionary<string, object>(dapperRow);
+
+        if (row is System.Text.Json.JsonElement { ValueKind: System.Text.Json.JsonValueKind.Object } jsonObj)
+        {
+            var d = new Dictionary<string, object>();
+            foreach (var prop in jsonObj.EnumerateObject())
+                d[prop.Name] = JsonElementToClr(prop.Value);
+            return d;
+        }
+
+        // Last-resort: round-trip through Newtonsoft to get a plain dict
+        var json = Newtonsoft.Json.JsonConvert.SerializeObject(row);
+        return Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json)
+               ?? new Dictionary<string, object>();
+    }
+
+    private static object JsonElementToClr(System.Text.Json.JsonElement el) => el.ValueKind switch
+    {
+        System.Text.Json.JsonValueKind.String  => el.GetString(),
+        System.Text.Json.JsonValueKind.True    => (object)true,
+        System.Text.Json.JsonValueKind.False   => false,
+        System.Text.Json.JsonValueKind.Null    => null,
+        System.Text.Json.JsonValueKind.Number  => el.TryGetInt64(out var l) ? (object)l : el.GetDouble(),
+        _                                      => el.ToString()
+    };
+
+    private static System.Data.IDbConnection CreateOracleTestConnection(string cs)
+    {
+        try
+        {
+            var asm = System.Reflection.Assembly.Load("Oracle.ManagedDataAccess");
+            var type = asm.GetType("Oracle.ManagedDataAccess.Client.OracleConnection", throwOnError: true)!;
+            return (System.Data.IDbConnection)Activator.CreateInstance(type, cs)!;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                "Oracle client not available: " + ex.Message +
+                ". Ensure Oracle.ManagedDataAccess.Core NuGet package is deployed.", ex);
         }
     }
 
