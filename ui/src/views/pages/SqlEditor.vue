@@ -7,6 +7,7 @@ import { sql } from '@codemirror/lang-sql';
 import { toast } from 'vue-sonner';
 import { useDatabaseStore } from '@/store/databaseStore';
 import { userStoreMe } from '@/store/userStore';
+import { useProjectStore } from '@/store/projectStore';
 import { getCurrentInstance } from 'vue';
 
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import { Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, Re
 // Stores and services
 const databaseStore = useDatabaseStore();
 const userStore = userStoreMe();
+const projectStore = useProjectStore();
 var { proxy } = getCurrentInstance();
 
 // Editor state
@@ -330,6 +332,7 @@ const saveScript = async () => {
         name: currentScript.name || 'Untitled Script',
         code: code.value,
         database: selectedDatabase.value || '',
+        projectId: projectStore.currentProjectId || undefined,
         createdAt: currentScript.id ? undefined : new Date(),
         updatedAt: new Date()
     };
@@ -401,7 +404,9 @@ const deleteScript = async (scriptId) => {
 
 const loadScriptsFromStorage = async () => {
     try {
-        const result = await userStore.executeCommand('LoadScripts', { language: 'sql' }, proxy.$socket);
+        const params = { language: 'sql' };
+        if (projectStore.currentProjectId) params.projectId = projectStore.currentProjectId;
+        const result = await userStore.executeCommand('LoadScripts', params, proxy.$socket);
         if (result && result.Data) {
             savedScripts.value = result.Data.map((s) => ({
                 id: s.id || s.Id,

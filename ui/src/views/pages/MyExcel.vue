@@ -3,6 +3,7 @@ import { markRaw, ref, computed, nextTick, onMounted, onUnmounted, getCurrentIns
 import { Upload, Grid, Search, Filter, Pencil, RefreshCcw, Scissors, Plus, BarChart, PlusCircle, Eraser, Check, Copy, SortDesc, Download, File, Table, Trash2, FileSpreadsheet, CheckSquare, Save, SortAsc, Code } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import { useExcelStore } from '@/store/excelStore';
+import { useProjectStore } from '@/store/projectStore';
 import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ const showLoadDialog = ref(false);
 const excelId = ref(null);
 
 const excelStore = useExcelStore();
+const projectStore = useProjectStore();
 const { proxy } = getCurrentInstance();
 
 // Initialize with default data
@@ -464,7 +466,8 @@ const saveToServer = async () => {
             name: sheetTitle.value,
             columns: columnHeaders.value,
             data: sheetData.value,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            projectId: projectStore.currentProjectId || undefined
         };
         await excelStore.saveExcel(payload, proxy.$socket);
         toast.success('Saved to Server', {

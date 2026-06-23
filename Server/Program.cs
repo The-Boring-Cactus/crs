@@ -15,6 +15,7 @@ internal class Program
     private static async Task Main(string[] args)
     {
         var cache = new ReportsCache("report-system");
+        DatabasePersistence.RunMigrations();
         var dataSource = new DataSourceManager(cache);
         var authService = new AuthService(cache);
         var reportsService = new UserReportsService(cache, dataSource);

@@ -60,7 +60,7 @@ public static class DatabasePersistence
 
     // ── Scripts (SqlScripts + CodeScripts combined) ─────────────────────
 
-    public static List<JObject> LoadScripts(string userId, string language)
+    public static List<JObject> LoadScripts(string userId, string language, string projectId = null)
     {
         using var conn = CreateConnection();
         if (conn == null) return new List<JObject>();
@@ -68,10 +68,19 @@ public static class DatabasePersistence
         conn.Open();
         string tableName = language == "csharp" ? "CodeScripts" : "SqlScripts";
         object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
-        var rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId",
-            new { UserId = dbUserId }).ToList();
-        var list = rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).ToList();
-        return  list.Cast<JObject>().ToList();;
+
+        IEnumerable<dynamic> rows;
+        if (!string.IsNullOrEmpty(projectId))
+        {
+            object dbProjId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? projectId : Guid.Parse(projectId);
+            rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId AND ProjectId = @ProjectId",
+                new { UserId = dbUserId, ProjectId = dbProjId });
+        }
+        else
+        {
+            rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId", new { UserId = dbUserId });
+        }
+        return rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).Cast<JObject>().ToList();
     }
 
     public static void SaveScript(string userId, JObject scriptObj, string language)
@@ -90,25 +99,28 @@ public static class DatabasePersistence
         var name = scriptObj["name"]?.ToString() ?? scriptObj["Name"]?.ToString() ?? "Untitled";
         var code = scriptObj["code"]?.ToString() ?? scriptObj["Code"]?.ToString() ?? "";
         var dbConnId = scriptObj["database"]?.ToString() ?? scriptObj["DatabaseConnectionId"]?.ToString() ?? "";
+        var projIdStr = scriptObj["projectId"]?.ToString() ?? scriptObj["ProjectId"]?.ToString();
 
         object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
         object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        object dbProjId = string.IsNullOrEmpty(projIdStr) ? null :
+            ((conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? (object)projIdStr : Guid.Parse(projIdStr));
 
         if (language == "csharp")
         {
             conn.Execute(@"DELETE FROM CodeScripts WHERE Id = @Id AND UserId = @UserId",
                 new { Id = dbId, UserId = dbUserId });
-            conn.Execute(@"INSERT INTO CodeScripts (Id, UserId, Name, Language, Code) 
-                          VALUES (@Id, @UserId, @Name, @Language, @Code)",
-                new { Id = dbId, UserId = dbUserId, Name = name, Language = language, Code = code });
+            conn.Execute(@"INSERT INTO CodeScripts (Id, UserId, Name, Language, Code, ProjectId)
+                          VALUES (@Id, @UserId, @Name, @Language, @Code, @ProjectId)",
+                new { Id = dbId, UserId = dbUserId, Name = name, Language = language, Code = code, ProjectId = dbProjId });
         }
         else
         {
             conn.Execute(@"DELETE FROM SqlScripts WHERE Id = @Id AND UserId = @UserId",
                 new { Id = dbId, UserId = dbUserId });
-            conn.Execute(@"INSERT INTO SqlScripts (Id, UserId, Name, Language, Code, DatabaseConnectionId) 
-                          VALUES (@Id, @UserId, @Name, @Language, @Code, @DatabaseConnectionId)",
-                new { Id = dbId, UserId = dbUserId, Name = name, Language = language, Code = code, DatabaseConnectionId = dbConnId });
+            conn.Execute(@"INSERT INTO SqlScripts (Id, UserId, Name, Language, Code, DatabaseConnectionId, ProjectId)
+                          VALUES (@Id, @UserId, @Name, @Language, @Code, @DatabaseConnectionId, @ProjectId)",
+                new { Id = dbId, UserId = dbUserId, Name = name, Language = language, Code = code, DatabaseConnectionId = dbConnId, ProjectId = dbProjId });
         }
     }
 
@@ -128,17 +140,27 @@ public static class DatabasePersistence
 
     // ── DatabaseConnections ─────────────────────────────────────────────
 
-    public static List<JObject> LoadDatabaseConnections(string userId)
+    public static List<JObject> LoadDatabaseConnections(string userId, string projectId = null)
     {
         using var conn = CreateConnection();
         if (conn == null) return new List<JObject>();
 
         conn.Open();
         object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
-        var rows = conn.Query("SELECT * FROM DatabaseConnections WHERE UserId = @UserId OR IsGlobal = @True",
-            new { UserId = dbUserId, True = true }).ToList();
-        var list = rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).ToList();
-        return  list.Cast<JObject>().ToList();;
+
+        IEnumerable<dynamic> rows;
+        if (!string.IsNullOrEmpty(projectId))
+        {
+            object dbProjId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? projectId : Guid.Parse(projectId);
+            rows = conn.Query("SELECT * FROM DatabaseConnections WHERE (UserId = @UserId AND ProjectId = @ProjectId) OR IsGlobal = @True",
+                new { UserId = dbUserId, ProjectId = dbProjId, True = true });
+        }
+        else
+        {
+            rows = conn.Query("SELECT * FROM DatabaseConnections WHERE UserId = @UserId OR IsGlobal = @True",
+                new { UserId = dbUserId, True = true });
+        }
+        return rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).Cast<JObject>().ToList();
     }
 
     public static void SaveDatabaseConnection(string userId, JObject connObj)
@@ -157,12 +179,16 @@ public static class DatabasePersistence
         object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
         object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
+        var projIdStr = connObj["projectId"]?.ToString() ?? connObj["ProjectId"]?.ToString();
+        object dbProjId = string.IsNullOrEmpty(projIdStr) ? null :
+            ((conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? (object)projIdStr : Guid.Parse(projIdStr));
+
         conn.Execute("DELETE FROM DatabaseConnections WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
 
-        conn.Execute(@"INSERT INTO DatabaseConnections 
-            (Id, UserId, Name, Type, Host, Port, DatabaseName, Username, Password, ConnectionString, IsGlobal, SharedWith) 
-            VALUES (@Id, @UserId, @Name, @Type, @Host, @Port, @DatabaseName, @Username, @Password, @ConnectionString, @IsGlobal, @SharedWith)",
+        conn.Execute(@"INSERT INTO DatabaseConnections
+            (Id, UserId, Name, Type, Host, Port, DatabaseName, Username, Password, ConnectionString, IsGlobal, SharedWith, ProjectId)
+            VALUES (@Id, @UserId, @Name, @Type, @Host, @Port, @DatabaseName, @Username, @Password, @ConnectionString, @IsGlobal, @SharedWith, @ProjectId)",
             new
             {
                 Id = dbId,
@@ -176,7 +202,8 @@ public static class DatabasePersistence
                 Password = connObj["password"]?.ToString() ?? connObj["Password"]?.ToString() ?? "",
                 ConnectionString = connObj["connectionString"]?.ToString() ?? connObj["ConnectionString"]?.ToString() ?? "",
                 IsGlobal = (bool)(connObj["isGlobal"] ?? connObj["IsGlobal"] ?? false),
-                SharedWith = connObj["sharedWith"]?.ToString() ?? connObj["SharedWith"]?.ToString() ?? ""
+                SharedWith = connObj["sharedWith"]?.ToString() ?? connObj["SharedWith"]?.ToString() ?? "",
+                ProjectId = dbProjId
             });
     }
 
@@ -197,17 +224,26 @@ public static class DatabasePersistence
 
     private static readonly HashSet<string> ShareableTables = new() { "Dashboards", "Reports" };
 
-    public static List<JObject> LoadEntities(string userId, string tableName)
+    public static List<JObject> LoadEntities(string userId, string tableName, string projectId = null)
     {
         using var conn = CreateConnection();
         if (conn == null) return new List<JObject>();
 
         conn.Open();
         object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
-        var rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId",
-            new { UserId = dbUserId }).ToList();
-        var list = rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).ToList();
-        return list.Cast<JObject>().ToList();
+
+        IEnumerable<dynamic> rows;
+        if (!string.IsNullOrEmpty(projectId))
+        {
+            object dbProjId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? projectId : Guid.Parse(projectId);
+            rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId AND ProjectId = @ProjectId",
+                new { UserId = dbUserId, ProjectId = dbProjId });
+        }
+        else
+        {
+            rows = conn.Query($"SELECT * FROM {tableName} WHERE UserId = @UserId", new { UserId = dbUserId });
+        }
+        return rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).Cast<JObject>().ToList();
     }
 
     public static void SaveEntity(string userId, string tableName, JObject obj)
@@ -229,6 +265,10 @@ public static class DatabasePersistence
         object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
         object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
 
+        var projIdStr = obj["projectId"]?.ToString() ?? obj["ProjectId"]?.ToString();
+        object dbProjId = string.IsNullOrEmpty(projIdStr) ? null :
+            ((conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? (object)projIdStr : Guid.Parse(projIdStr));
+
         conn.Execute($"DELETE FROM {tableName} WHERE Id = @Id AND UserId = @UserId",
             new { Id = dbId, UserId = dbUserId });
 
@@ -236,15 +276,15 @@ public static class DatabasePersistence
         {
             var isPublic = (obj["isPublic"] ?? obj["IsPublic"])?.Value<bool>() ?? false;
             var shareToken = (obj["shareToken"] ?? obj["ShareToken"])?.ToString();
-            conn.Execute($@"INSERT INTO {tableName} (Id, UserId, Name, Config, IsPublic, ShareToken)
-                            VALUES (@Id, @UserId, @Name, @Config, @IsPublic, @ShareToken)",
-                new { Id = dbId, UserId = dbUserId, Name = name, Config = config, IsPublic = isPublic, ShareToken = shareToken });
+            conn.Execute($@"INSERT INTO {tableName} (Id, UserId, Name, Config, IsPublic, ShareToken, ProjectId)
+                            VALUES (@Id, @UserId, @Name, @Config, @IsPublic, @ShareToken, @ProjectId)",
+                new { Id = dbId, UserId = dbUserId, Name = name, Config = config, IsPublic = isPublic, ShareToken = shareToken, ProjectId = dbProjId });
         }
         else
         {
-            conn.Execute($@"INSERT INTO {tableName} (Id, UserId, Name, Config)
-                            VALUES (@Id, @UserId, @Name, @Config)",
-                new { Id = dbId, UserId = dbUserId, Name = name, Config = config });
+            conn.Execute($@"INSERT INTO {tableName} (Id, UserId, Name, Config, ProjectId)
+                            VALUES (@Id, @UserId, @Name, @Config, @ProjectId)",
+                new { Id = dbId, UserId = dbUserId, Name = name, Config = config, ProjectId = dbProjId });
         }
     }
 
@@ -313,4 +353,83 @@ public static class DatabasePersistence
 
     public static void DeleteReport(string userId, string id)
         => DeleteEntity(userId, "Reports", id);
+
+    // ── Projects ────────────────────────────────────────────────────────
+
+    public static void RunMigrations()
+    {
+        var config = SetupConfig.Load();
+        if (!config.IsConfigured || config.Database == null) return;
+
+        var migrationSQL = config.Database.GetMigrationSQL();
+        if (string.IsNullOrWhiteSpace(migrationSQL)) return;
+
+        bool isOracle = config.Database.Type?.ToLower() == "oracle";
+        string[] statements;
+        if (isOracle)
+            statements = migrationSQL.Split(new[] { "\n/" }, StringSplitOptions.RemoveEmptyEntries);
+        else
+            statements = migrationSQL.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+        using var conn = CreateConnection();
+        if (conn == null) return;
+        conn.Open();
+
+        foreach (var stmt in statements)
+        {
+            var trimmed = stmt.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed)) continue;
+            try { conn.Execute(trimmed); }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Migration] Statement skipped (may already be applied): {ex.Message}");
+            }
+        }
+    }
+
+    public static List<JObject> LoadProjects(string userId)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return new List<JObject>();
+
+        conn.Open();
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        var rows = conn.Query("SELECT * FROM Projects WHERE UserId = @UserId ORDER BY CreatedAt",
+            new { UserId = dbUserId });
+        return rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).Cast<JObject>().ToList();
+    }
+
+    public static void SaveProject(string userId, JObject projectObj)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return;
+
+        conn.Open();
+        var id = projectObj["id"]?.ToString() ?? projectObj["Id"]?.ToString();
+        if (string.IsNullOrEmpty(id)) { id = Guid.NewGuid().ToString(); projectObj["id"] = id; }
+
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+
+        conn.Execute("DELETE FROM Projects WHERE Id = @Id AND UserId = @UserId", new { Id = dbId, UserId = dbUserId });
+        conn.Execute("INSERT INTO Projects (Id, UserId, Name, Description) VALUES (@Id, @UserId, @Name, @Description)",
+            new
+            {
+                Id = dbId,
+                UserId = dbUserId,
+                Name = projectObj["name"]?.ToString() ?? projectObj["Name"]?.ToString() ?? "Untitled",
+                Description = projectObj["description"]?.ToString() ?? projectObj["Description"]?.ToString() ?? ""
+            });
+    }
+
+    public static void DeleteProject(string userId, string id)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return;
+
+        conn.Open();
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        conn.Execute("DELETE FROM Projects WHERE Id = @Id AND UserId = @UserId", new { Id = dbId, UserId = dbUserId });
+    }
 }

@@ -74,6 +74,11 @@ namespace FunctEngine
             databaseManager.RegisterConnection(name, connection);
         }
 
+        public List<object> ExecuteDatabaseQuery(string connectionName, string query)
+        {
+            return databaseManager.ExecuteQuery(connectionName, query);
+        }
+
         // Parsear y ejecutar el código
         public void Execute(string code)
         {

@@ -2,16 +2,18 @@
 import { ref, computed, getCurrentInstance, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { userStoreMe } from '@/store/userStore';
+import { useProjectStore } from '@/store/projectStore';
 import { toast } from 'vue-sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight, FileText } from 'lucide-vue-next';
+import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight, FileText, ChevronRight, ChevronDown, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 
 const router = useRouter();
 const route = useRoute();
 const userStore = userStoreMe();
+const projectStore = useProjectStore();
 const { proxy } = getCurrentInstance();
 
 const isSetupRoute = computed(() => route.path === '/setup');
@@ -25,6 +27,9 @@ const searchQuery = ref('');
 const isSidebarHovered = ref(false);
 const showRegister = ref(false);
 const registerData = ref({ username: '', email: '', password: '' });
+const showProjectDialog = ref(false);
+const isEditingProject = ref(false);
+const editingProject = ref({ id: undefined, name: '', description: '' });
 
 // Check if user is authenticated
 const isLoggedIn = computed(() => userStore.auth);
@@ -35,6 +40,7 @@ const login = async () => {
     loading.value = true;
     try {
         await userStore.authenticate(loginData.value.username, loginData.value.password, proxy.$socket);
+        await projectStore.loadProjects(proxy.$socket);
         router.push('/');
     } catch (error) {
         toast.error('Authentication Failed', { description: 'Please check your credentials.' });
@@ -47,6 +53,7 @@ const logout = () => {
     localStorage.removeItem('crs_token');
     try { proxy.$socket?.close(); } catch (_) {}
     userStore.setCurr(false, '', '', []);
+    projectStore.setCurrentProject(null);
     router.push('/');
 };
 
@@ -54,10 +61,13 @@ onMounted(async () => {
     if (!userStore.auth) {
         try {
             await userStore.restoreSession(proxy.$socket);
+            await projectStore.loadProjects(proxy.$socket);
             router.push('/');
         } catch (_) {
             // No stored session — show login form
         }
+    } else {
+        await projectStore.loadProjects(proxy.$socket);
     }
 });
 
@@ -95,20 +105,58 @@ const navigateTo = (path) => {
     router.push(path);
 };
 
-// Define navigation items based on your routes
-const navItems = [
-    { icon: Home, path: '/', name: 'home', label: 'Home', category: 'General' },
-    { icon: BarChart, path: '/pages/dashboard', name: 'dashboard', label: 'Dashboard', category: 'Pages' },
-    { icon: FileText, path: '/pages/reports', name: 'reports', label: 'Reports', category: 'Pages' },
-    { icon: Database, path: '/pages/databases', name: 'databases', label: 'Databases', category: 'Data' },
-    { icon: Table, path: '/pages/dataset', name: 'dataset', label: 'Dataset', category: 'Data' },
-    { icon: FileSpreadsheet, path: '/pages/myexcel', name: 'myexcel', label: 'Excel', category: 'Tools' },
-    { icon: Code, path: '/pages/sqleditor', name: 'sqleditor', label: 'SQL Editor', category: 'Editor' },
-    { icon: FileCode2, path: '/pages/cseditor', name: 'cseditor', label: 'C# Editor', category: 'Editor' }
-];
-
 const isActive = (path) => {
     return route.path === path;
+};
+
+const projectSubItems = [
+    { icon: Database, key: 'databases', label: 'Databases', path: '/pages/databases' },
+    { icon: Table, key: 'datasets', label: 'Datasets', path: '/pages/dataset' },
+    { icon: Code, key: 'sqleditor', label: 'SQL Queries', path: '/pages/sqleditor' },
+    { icon: FileCode2, key: 'cseditor', label: 'Scripts', path: '/pages/cseditor' },
+    { icon: BarChart, key: 'dashboard', label: 'Dashboards', path: '/pages/dashboard' },
+    { icon: FileSpreadsheet, key: 'myexcel', label: 'Excel', path: '/pages/myexcel' },
+];
+
+const selectProjectItem = (project, subItem) => {
+    projectStore.setCurrentProject(project.id);
+    router.push(subItem.path);
+};
+
+const openNewProject = () => {
+    isEditingProject.value = false;
+    editingProject.value = { id: undefined, name: '', description: '' };
+    showProjectDialog.value = true;
+};
+
+const openEditProject = (project) => {
+    isEditingProject.value = true;
+    editingProject.value = { id: project.id, name: project.name, description: project.description };
+    showProjectDialog.value = true;
+};
+
+const saveProject = async () => {
+    if (!editingProject.value.name.trim()) {
+        toast.error('Name required', { description: 'Please enter a project name.' });
+        return;
+    }
+    try {
+        await projectStore.saveProject(editingProject.value, proxy.$socket);
+        toast.success(isEditingProject.value ? 'Project updated' : 'Project created');
+        showProjectDialog.value = false;
+    } catch (error) {
+        toast.error('Failed to save project', { description: error.message });
+    }
+};
+
+const deleteProject = async (id) => {
+    try {
+        await projectStore.deleteProject(id, proxy.$socket);
+        toast.success('Project deleted');
+        showProjectDialog.value = false;
+    } catch (error) {
+        toast.error('Failed to delete project', { description: error.message });
+    }
 };
 </script>
 
@@ -198,26 +246,91 @@ const isActive = (path) => {
                 </div>
 
                 <!-- Nav Items -->
-                <div class="flex-col p-2 gap-2 flex overflow-y-auto mt-1 custom-scrollbar">
+                <div class="flex-col p-2 gap-1 flex overflow-y-auto mt-1 custom-scrollbar">
+                    <!-- Home -->
                     <div
-                        v-for="item in navItems"
-                        :key="item.path"
                         class="group flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200"
-                        :class="[isActive(item.path) ? 'bg-zinc-900 border-zinc-700 shadow-sm' : 'border-transparent hover:bg-zinc-900/50 hover:border-zinc-800/50', isSidebarHovered ? 'justify-start' : 'justify-center']"
-                        @click="navigateTo(item.path)"
-                        :title="!isSidebarHovered ? item.label : ''"
+                        :class="[isActive('/') ? 'bg-zinc-900 border-zinc-700 shadow-sm' : 'border-transparent hover:bg-zinc-900/50 hover:border-zinc-800/50', isSidebarHovered ? 'justify-start' : 'justify-center']"
+                        @click="navigateTo('/')"
+                        title="Home"
                     >
-                        <component :is="item.icon" class="w-5 h-5 shrink-0 transition-colors" :class="isActive(item.path) ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'" />
+                        <Home class="w-5 h-5 shrink-0 transition-colors" :class="isActive('/') ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'" />
+                        <span class="overflow-hidden whitespace-nowrap transition-all duration-300 text-[13px] font-medium" :class="[isSidebarHovered ? 'opacity-100 ml-3 w-auto' : 'opacity-0 w-0 ml-0', isActive('/') ? 'text-zinc-50' : 'text-zinc-300 group-hover:text-zinc-100']">
+                            Home
+                        </span>
+                    </div>
 
-                        <div class="flex flex-col justify-center overflow-hidden whitespace-nowrap transition-all duration-300" :class="isSidebarHovered ? 'w-[160px] opacity-100 ml-3' : 'w-0 opacity-0 ml-0'">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 transition-colors" :class="isActive(item.path) ? 'text-zinc-400' : 'group-hover:text-zinc-400'">
-                                {{ item.category }}
-                            </span>
-                            <span class="text-[13px] font-medium transition-colors" :class="isActive(item.path) ? 'text-zinc-50' : 'text-zinc-300 group-hover:text-zinc-100'">
-                                {{ item.label }}
-                            </span>
+                    <!-- Projects section header -->
+                    <div class="overflow-hidden whitespace-nowrap transition-all duration-300" :class="isSidebarHovered ? 'opacity-100' : 'opacity-0 h-0'">
+                        <div class="flex items-center justify-between px-3 py-1 mt-2">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Projects</span>
+                            <button
+                                class="w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                                @click.stop="openNewProject()"
+                                title="New project"
+                            >
+                                <Plus class="w-3 h-3" />
+                            </button>
                         </div>
                     </div>
+
+                    <!-- Collapsed state: show project icons -->
+                    <div v-if="!isSidebarHovered" class="flex flex-col gap-1">
+                        <div
+                            v-for="project in projectStore.projects"
+                            :key="project.id"
+                            class="w-9 h-9 mx-auto flex items-center justify-center rounded-lg cursor-pointer transition-colors text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                            :class="projectStore.currentProjectId === project.id ? 'bg-zinc-800 text-zinc-100' : ''"
+                            :title="project.name"
+                            @click="projectStore.toggleExpanded(project.id)"
+                        >
+                            <span class="text-[11px] font-bold">{{ project.name.charAt(0).toUpperCase() }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Expanded state: full project tree -->
+                    <div v-if="isSidebarHovered" class="flex flex-col gap-0.5">
+                        <div v-for="project in projectStore.projects" :key="project.id">
+                            <!-- Project row -->
+                            <div
+                                class="group flex items-center gap-2 px-2 py-2 rounded-xl cursor-pointer transition-colors hover:bg-zinc-900/50"
+                                :class="projectStore.currentProjectId === project.id ? 'text-zinc-100' : 'text-zinc-400'"
+                                @click="projectStore.toggleExpanded(project.id)"
+                            >
+                                <ChevronDown v-if="projectStore.isExpanded(project.id)" class="w-3.5 h-3.5 shrink-0 text-zinc-500" />
+                                <ChevronRight v-else class="w-3.5 h-3.5 shrink-0 text-zinc-500" />
+                                <span class="text-[13px] font-medium flex-1 truncate">{{ project.name }}</span>
+                                <button
+                                    class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-300 transition-all"
+                                    @click.stop="openEditProject(project)"
+                                    title="Edit project"
+                                >
+                                    <Pencil class="w-3 h-3" />
+                                </button>
+                            </div>
+
+                            <!-- Sub-items -->
+                            <div v-if="projectStore.isExpanded(project.id)" class="ml-4 flex flex-col gap-0.5 mb-1">
+                                <div
+                                    v-for="subItem in projectSubItems"
+                                    :key="subItem.key"
+                                    class="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer transition-colors"
+                                    :class="isActive(subItem.path) && projectStore.currentProjectId === project.id
+                                        ? 'bg-zinc-800 text-zinc-100'
+                                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'"
+                                    @click="selectProjectItem(project, subItem)"
+                                >
+                                    <component :is="subItem.icon" class="w-4 h-4 shrink-0" />
+                                    <span class="text-[12px] font-medium">{{ subItem.label }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="projectStore.projects.length === 0" class="px-3 py-2 text-[11px] text-zinc-600 italic">
+                            No projects yet
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Bottom items -->
@@ -230,6 +343,31 @@ const isActive = (path) => {
                         <LogOut class="w-5 h-5 shrink-0 text-zinc-500 group-hover:text-zinc-300" />
                         <span class="text-[13px] font-medium text-zinc-300 group-hover:text-zinc-50 transition-all duration-300" :class="isSidebarHovered ? 'opacity-100 w-auto ml-2' : 'opacity-0 w-0 ml-0'"> Cerrar Sesión </span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Dialog -->
+        <div v-if="showProjectDialog" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showProjectDialog = false">
+            <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-sm shadow-xl">
+                <h3 class="text-lg font-semibold text-zinc-100 mb-4">{{ isEditingProject ? 'Edit Project' : 'New Project' }}</h3>
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <Label class="text-zinc-400 text-xs mb-1 block">Name</Label>
+                        <Input v-model="editingProject.name" placeholder="Project name" class="bg-zinc-800 border-zinc-700 text-zinc-100" @keyup.enter="saveProject" />
+                    </div>
+                    <div>
+                        <Label class="text-zinc-400 text-xs mb-1 block">Description</Label>
+                        <Input v-model="editingProject.description" placeholder="Optional description" class="bg-zinc-800 border-zinc-700 text-zinc-100" />
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <Button class="flex-1" @click="saveProject">Save</Button>
+                        <Button variant="outline" class="flex-1" @click="showProjectDialog = false">Cancel</Button>
+                    </div>
+                    <Button v-if="isEditingProject" variant="destructive" class="w-full" @click="deleteProject(editingProject.id)">
+                        <Trash2 class="w-4 h-4 mr-2" />
+                        Delete Project
+                    </Button>
                 </div>
             </div>
         </div>

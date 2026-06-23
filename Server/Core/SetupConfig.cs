@@ -329,6 +329,120 @@ CREATE TABLE IF NOT EXISTS CodeScripts (
 );
 ";
 
+    public string GetMigrationSQL()
+    {
+        return Type?.ToLower() switch
+        {
+            "mssql" => GetMssqlMigrationSQL(),
+            "postgres" => GetPostgresMigrationSQL(),
+            "postgresql" => GetPostgresMigrationSQL(),
+            "mysql" => GetMysqlMigrationSQL(),
+            "oracle" => GetOracleMigrationSQL(),
+            _ => ""
+        };
+    }
+
+    private string GetMssqlMigrationSQL() => @"
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Projects' AND xtype='U')
+CREATE TABLE Projects (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    UserId UNIQUEIDENTIFIER NOT NULL REFERENCES Users(Id),
+    Name NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(MAX),
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Dashboards') AND name = 'ProjectId')
+    ALTER TABLE Dashboards ADD ProjectId UNIQUEIDENTIFIER NULL;
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SqlScripts') AND name = 'ProjectId')
+    ALTER TABLE SqlScripts ADD ProjectId UNIQUEIDENTIFIER NULL;
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('CodeScripts') AND name = 'ProjectId')
+    ALTER TABLE CodeScripts ADD ProjectId UNIQUEIDENTIFIER NULL;
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Datasets') AND name = 'ProjectId')
+    ALTER TABLE Datasets ADD ProjectId UNIQUEIDENTIFIER NULL;
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('DatabaseConnections') AND name = 'ProjectId')
+    ALTER TABLE DatabaseConnections ADD ProjectId UNIQUEIDENTIFIER NULL;
+";
+
+    private string GetPostgresMigrationSQL() => @"
+CREATE TABLE IF NOT EXISTS Projects (
+    Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    UserId UUID NOT NULL REFERENCES Users(Id),
+    Name VARCHAR(200) NOT NULL,
+    Description TEXT,
+    CreatedAt TIMESTAMPTZ DEFAULT NOW(),
+    UpdatedAt TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE Dashboards ADD COLUMN IF NOT EXISTS ProjectId UUID;
+ALTER TABLE SqlScripts ADD COLUMN IF NOT EXISTS ProjectId UUID;
+ALTER TABLE CodeScripts ADD COLUMN IF NOT EXISTS ProjectId UUID;
+ALTER TABLE Datasets ADD COLUMN IF NOT EXISTS ProjectId UUID;
+ALTER TABLE DatabaseConnections ADD COLUMN IF NOT EXISTS ProjectId UUID;
+";
+
+    private string GetMysqlMigrationSQL() => @"
+CREATE TABLE IF NOT EXISTS Projects (
+    Id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    UserId CHAR(36) NOT NULL,
+    Name VARCHAR(200) NOT NULL,
+    Description LONGTEXT,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+ALTER TABLE Dashboards ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
+ALTER TABLE SqlScripts ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
+ALTER TABLE CodeScripts ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
+ALTER TABLE Datasets ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
+ALTER TABLE DatabaseConnections ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
+";
+
+    private string GetOracleMigrationSQL() => @"
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE Projects (
+    Id CHAR(36) PRIMARY KEY,
+    UserId CHAR(36) NOT NULL REFERENCES Users(Id),
+    Name VARCHAR2(200) NOT NULL,
+    Description CLOB,
+    CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+BEGIN
+  EXECUTE IMMEDIATE 'ALTER TABLE Dashboards ADD ProjectId CHAR(36)';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -1430 THEN RAISE; END IF;
+END;
+/
+BEGIN
+  EXECUTE IMMEDIATE 'ALTER TABLE SqlScripts ADD ProjectId CHAR(36)';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -1430 THEN RAISE; END IF;
+END;
+/
+BEGIN
+  EXECUTE IMMEDIATE 'ALTER TABLE CodeScripts ADD ProjectId CHAR(36)';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -1430 THEN RAISE; END IF;
+END;
+/
+BEGIN
+  EXECUTE IMMEDIATE 'ALTER TABLE Datasets ADD ProjectId CHAR(36)';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -1430 THEN RAISE; END IF;
+END;
+/
+BEGIN
+  EXECUTE IMMEDIATE 'ALTER TABLE DatabaseConnections ADD ProjectId CHAR(36)';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -1430 THEN RAISE; END IF;
+END;
+/
+";
+
     private string GetOracleCreateTablesSQL() => @"
 BEGIN
   EXECUTE IMMEDIATE 'CREATE TABLE Users (

@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { userStoreMe } from "@/store/userStore";
+import { useProjectStore } from "@/store/projectStore";
 
 export const useExcelStore = defineStore({
   id: "excel",
@@ -11,7 +12,9 @@ export const useExcelStore = defineStore({
     async loadExcels(socket: any) {
       try {
         const userStore = userStoreMe();
-        const result = await userStore.executeCommand('LoadExcels', {}, socket);
+        const projectStore = useProjectStore();
+        const params = projectStore.currentProjectId ? { projectId: projectStore.currentProjectId } : {};
+        const result = await userStore.executeCommand('LoadExcels', params, socket);
         if (result && result.Data) {
           this.excels = result.Data;
         }

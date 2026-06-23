@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { userStoreMe } from "@/store/userStore";
+import { useProjectStore } from "@/store/projectStore";
 
 export interface DatabaseConnection {
   id: string;
@@ -43,7 +44,9 @@ export const useDatabaseStore = defineStore({
     async loadConnections(socket: any) {
       try {
         const userStore = userStoreMe();
-        const result = await userStore.executeCommand('LoadDatabaseConnections', {}, socket);
+        const projectStore = useProjectStore();
+        const params = projectStore.currentProjectId ? { projectId: projectStore.currentProjectId } : {};
+        const result = await userStore.executeCommand('LoadDatabaseConnections', params, socket);
         if (result && result.Data) {
           this.connections = result.Data.map((conn: any) => ({
             id: conn.id || conn.Id,

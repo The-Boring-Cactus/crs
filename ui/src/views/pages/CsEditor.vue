@@ -12,15 +12,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2 } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
+import { useProjectStore } from '@/store/projectStore';
 
 import { WebSocketMessageClient } from '@/websocket/WebSocketMessageClient';
 
 // Services and stores
 const { proxy } = getCurrentInstance();
 const userStore = userStoreMe();
+const projectStore = useProjectStore();
 
 // Script output: tables and charts emitted by Table() / Chart() calls
 const scriptOutputs = ref([]);
@@ -285,6 +287,7 @@ const saveScript = async () => {
         name: currentScript.name || 'Untitled C# Script',
         content: code.value,
         language: 'csharp',
+        projectId: projectStore.currentProjectId || undefined,
         createdAt: currentScript.id ? undefined : new Date(),
         updatedAt: new Date()
     };
@@ -366,7 +369,9 @@ const saveScriptsToStorage = () => {
 
 const loadScriptsFromStorage = async () => {
     try {
-        const result = await userStore.executeCommand('LoadScripts', { language: 'csharp' }, proxy.$socket);
+        const params = { language: 'csharp' };
+        if (projectStore.currentProjectId) params.projectId = projectStore.currentProjectId;
+        const result = await userStore.executeCommand('LoadScripts', params, proxy.$socket);
         if (result && result.Data) {
             savedScripts.value = result.Data.map((script) => ({
                 ...script,
@@ -431,8 +436,162 @@ const formatDate = (date) => {
     return new Date(date).toLocaleString();
 };
 
-// Legacy handlers for backward compatibility
-// Removed handleSave unused
+const showHelpPanel = ref(false);
+
+const SAMPLE_SCRIPT = `var numbers = Array(10, 25, 30, 45, 50);
+var target = 30;
+var index = 0;
+var found = false;
+
+while(index < ArrayLength(numbers) && !found) {
+    var current = ArrayGet(numbers, index);
+    if(current == target) {
+        found = true;
+        Print('¡Encontrado!');
+    } else {
+        index = index + 1;
+    }
+}`;
+
+const loadSampleScript = () => {
+    currentScript.id = null;
+    currentScript.name = 'Linear Search Sample';
+    code.value = SAMPLE_SCRIPT;
+    if (editorRef.value?.setCode) editorRef.value.setCode(SAMPLE_SCRIPT);
+    debugText.value = '';
+    scriptOutputs.value = [];
+    hasExecuted.value = false;
+};
+
+const functionCategories = [
+    {
+        name: 'Basic', badge: 'bg-blue-100 text-blue-800',
+        fns: [
+            { sig: 'Print(value)', desc: 'Prints value to debug output' },
+            { sig: 'Concat(v1, v2, ...)', desc: 'Concatenates multiple values into a string' },
+            { sig: 'ToString(value)', desc: 'Converts value to string' },
+            { sig: 'Add(a, b)', desc: 'Returns a + b' },
+            { sig: 'Multiply(a, b)', desc: 'Returns a × b' },
+            { sig: 'CountWords(text)', desc: 'Counts words in a text' },
+            { sig: 'GetTextStats()', desc: 'Prints accumulated text statistics' },
+        ]
+    },
+    {
+        name: 'Arrays', badge: 'bg-green-100 text-green-800',
+        fns: [
+            { sig: 'Array(v1, v2, ...)', desc: 'Creates a new array' },
+            { sig: 'ArrayLength(arr)', desc: 'Returns number of elements' },
+            { sig: 'ArrayGet(arr, index)', desc: 'Gets element at index (0-based)' },
+            { sig: 'ArraySet(arr, index, value)', desc: 'Sets element at index' },
+            { sig: 'ArrayPush(arr, value)', desc: 'Adds value to end; returns new length' },
+            { sig: 'ArrayPop(arr)', desc: 'Removes and returns last element' },
+            { sig: 'ArraySlice(arr, start, count)', desc: 'Returns sub-array' },
+            { sig: 'ArrayJoin(arr, separator)', desc: 'Joins elements into a string' },
+            { sig: 'ArraySort(arr)', desc: 'Returns numerically sorted copy' },
+            { sig: 'ArrayReverse(arr)', desc: 'Returns reversed copy' },
+        ]
+    },
+    {
+        name: 'Math', badge: 'bg-purple-100 text-purple-800',
+        fns: [
+            { sig: 'Add(a, b)', desc: 'a + b' },
+            { sig: 'Subtract(a, b)', desc: 'a − b' },
+            { sig: 'Multiply(a, b)', desc: 'a × b' },
+            { sig: 'Divide(a, b)', desc: 'a ÷ b' },
+            { sig: 'Power(base, exp)', desc: 'base raised to exp' },
+            { sig: 'Sqrt(x)', desc: 'Square root' },
+            { sig: 'Abs(x)', desc: 'Absolute value' },
+            { sig: 'Floor(x)', desc: 'Round down to integer' },
+            { sig: 'Ceil(x)', desc: 'Round up to integer' },
+            { sig: 'Round(x)', desc: 'Round to nearest integer' },
+            { sig: 'Sin(x)', desc: 'Sine (radians)' },
+            { sig: 'Cos(x)', desc: 'Cosine (radians)' },
+            { sig: 'Tan(x)', desc: 'Tangent (radians)' },
+            { sig: 'Log(x)', desc: 'Natural logarithm' },
+            { sig: 'Log10(x)', desc: 'Base-10 logarithm' },
+            { sig: 'Exp(x)', desc: 'e raised to x' },
+            { sig: 'Min(a, b)', desc: 'Smaller of two values' },
+            { sig: 'Max(a, b)', desc: 'Larger of two values' },
+            { sig: 'Random()', desc: 'Random number 0–1' },
+            { sig: 'PI()', desc: 'Returns π ≈ 3.14159' },
+            { sig: 'E()', desc: 'Returns e ≈ 2.71828' },
+        ]
+    },
+    {
+        name: 'Strings', badge: 'bg-orange-100 text-orange-800',
+        fns: [
+            { sig: 'StringLength(str)', desc: 'Length of string' },
+            { sig: 'Substring(str, start[, length])', desc: 'Extract part of a string' },
+            { sig: 'IndexOf(str, search)', desc: 'First index of search (−1 if not found)' },
+            { sig: 'ToUpper(str)', desc: 'Convert to uppercase' },
+            { sig: 'ToLower(str)', desc: 'Convert to lowercase' },
+            { sig: 'Trim(str)', desc: 'Remove leading/trailing whitespace' },
+            { sig: 'Replace(str, old, new)', desc: 'Replace all occurrences' },
+            { sig: 'Split(str[, separator])', desc: 'Split string into array' },
+            { sig: 'StartsWith(str, prefix)', desc: 'true if str starts with prefix' },
+            { sig: 'EndsWith(str, suffix)', desc: 'true if str ends with suffix' },
+            { sig: 'Contains(str, search)', desc: 'true if str contains search' },
+            { sig: 'PadLeft(str, width[, char])', desc: 'Pad string on the left' },
+            { sig: 'PadRight(str, width[, char])', desc: 'Pad string on the right' },
+        ]
+    },
+    {
+        name: 'Statistics', badge: 'bg-teal-100 text-teal-800',
+        fns: [
+            { sig: 'Sum(arr)', desc: 'Sum of all elements' },
+            { sig: 'Count(arr)', desc: 'Number of elements' },
+            { sig: 'Mean(arr)', desc: 'Arithmetic mean' },
+            { sig: 'Median(arr)', desc: 'Middle value of sorted data' },
+            { sig: 'Mode(arr)', desc: 'Most frequent value' },
+            { sig: 'Range(arr)', desc: 'max − min' },
+            { sig: 'Variance(arr)', desc: 'Statistical variance' },
+            { sig: 'StandardDeviation(arr)', desc: 'Standard deviation' },
+            { sig: 'Percentile(arr, p)', desc: 'p-th percentile (0–100)' },
+            { sig: 'Quartile(arr, q)', desc: 'Quartile 1, 2, or 3' },
+            { sig: 'Correlation(arr1, arr2)', desc: 'Pearson correlation coefficient' },
+            { sig: 'ZScore(arr, value)', desc: 'Z-score of value in dataset' },
+            { sig: 'PrintHistogram(arr, bins)', desc: 'Print text histogram to debug output' },
+            { sig: 'CreateHistogram(arr, bins)', desc: 'Return histogram bin data' },
+        ]
+    },
+    {
+        name: 'Output', badge: 'bg-pink-100 text-pink-800',
+        fns: [
+            { sig: 'Table(data[, title])', desc: 'Render query results as a table widget' },
+            { sig: 'Chart(type, labels, values[, title])', desc: 'Render a chart — type: "bar" | "line" | "pie" | "doughnut" | "area" | "radar" | "scatter"' },
+            { sig: 'StatReport(title, data)', desc: 'Render a formatted statistical report' },
+        ]
+    },
+    {
+        name: 'Database', badge: 'bg-slate-100 text-slate-800',
+        fns: [
+            { sig: 'ConnectPostgres(host, db, user, pass[, port])', desc: 'Connect to PostgreSQL' },
+            { sig: 'ConnectSqlServer(server, db, user, pass)', desc: 'Connect to SQL Server' },
+            { sig: 'DisconnectDB()', desc: 'Close the active connection' },
+            { sig: 'ExecuteQuery(connectionId, sql)', desc: 'Run SELECT — returns list of row dictionaries' },
+            { sig: 'ExecuteNonQuery(connectionId, sql)', desc: 'Run INSERT / UPDATE / DELETE — returns rows affected' },
+            { sig: 'ExecuteScalar(connectionId, sql)', desc: 'Run query and return a single value' },
+            { sig: 'ExecuteScript(scriptName)', desc: 'Run a saved SQL Query from the project by name — returns same as ExecuteQuery' },
+            { sig: 'ReadDataset(name)', desc: 'Load a saved Dataset from the project by name — returns list of row dictionaries' },
+            { sig: 'ReadSpreadsheet(name)', desc: 'Load a saved Spreadsheet from the project by name — returns list of row dictionaries' },
+            { sig: 'GetRowValue(row, key)', desc: 'Get a column value from a row dictionary' },
+            { sig: 'GetRowKeys(row)', desc: 'Get all column names from a row' },
+            { sig: 'BeginTransaction()', desc: 'Begin a database transaction' },
+            { sig: 'CommitTransaction()', desc: 'Commit the current transaction' },
+            { sig: 'RollbackTransaction()', desc: 'Rollback the current transaction' },
+        ]
+    },
+    {
+        name: 'Memory', badge: 'bg-yellow-100 text-yellow-800',
+        fns: [
+            { sig: 'Counter(name)', desc: 'Increment named counter; returns new value' },
+            { sig: 'SaveToVar(name, value)', desc: 'Save value to a named variable' },
+            { sig: 'LoadFromVar(name)', desc: 'Load value from a named variable' },
+            { sig: 'MaxVar(name, value)', desc: 'Keep the maximum value in a named variable' },
+            { sig: 'IncrementVar(name)', desc: 'Increment a named variable by 1' },
+        ]
+    },
+];
 
 // Initialize component
 onMounted(() => {
@@ -482,6 +641,7 @@ onUnmounted(() => {
             <div class="flex items-center gap-1">
                 <Button variant="ghost" size="icon" @click="loadScript" title="Open Script"><FolderOpen class="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" @click="newScript" title="New Script"><Plus class="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" @click="loadSampleScript" title="Load Sample Script"><Wand2 class="w-4 h-4" /></Button>
                 <div class="w-px h-5 bg-border mx-1"></div>
                 <Button variant="ghost" size="icon" @click="handleUndo" title="Undo"><Undo class="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" @click="handleRedo" title="Redo"><RefreshCw class="w-4 h-4" /></Button>
@@ -494,11 +654,11 @@ onUnmounted(() => {
             </div>
 
             <div class="flex items-center gap-2">
-                <Info class="w-4 h-4 text-muted-foreground" />
-                <span class="text-sm text-muted-foreground">C# Script Editor</span>
-            </div>
-
-            <div class="flex items-center gap-2">
+                <Button variant="outline" size="sm" @click="showHelpPanel = true" class="gap-1.5">
+                    <BookOpen class="w-4 h-4" />
+                    Functions
+                </Button>
+                <div class="w-px h-5 bg-border mx-1"></div>
                 <Button variant="destructive" size="sm" @click="stopExecution" :disabled="!isExecuting" class="gap-2">
                     <Square class="w-4 h-4" />
                     Stop
@@ -627,6 +787,37 @@ onUnmounted(() => {
                 </template>
             </div>
         </div>
+
+        <!-- Function Reference Dialog -->
+        <Dialog :open="showHelpPanel" @update:open="showHelpPanel = $event">
+            <DialogContent class="max-w-4xl max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle class="flex items-center gap-2">
+                        <BookOpen class="w-5 h-5" />
+                        FunctEngine — Function Reference
+                    </DialogTitle>
+                </DialogHeader>
+                <div class="overflow-y-auto flex-1 pr-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+                        <div v-for="cat in functionCategories" :key="cat.name" class="border rounded-lg overflow-hidden">
+                            <div class="px-3 py-2 bg-muted/50 border-b flex items-center gap-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">{{ cat.name }}</span>
+                                <span :class="['text-[10px] font-medium px-1.5 py-0.5 rounded-full', cat.badge]">{{ cat.fns.length }} functions</span>
+                            </div>
+                            <div class="divide-y">
+                                <div v-for="fn in cat.fns" :key="fn.sig" class="px-3 py-2 hover:bg-muted/30 transition-colors">
+                                    <code class="text-xs font-mono text-primary font-medium">{{ fn.sig }}</code>
+                                    <p class="text-[11px] text-muted-foreground mt-0.5 leading-snug">{{ fn.desc }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter class="pt-2">
+                    <Button variant="outline" @click="showHelpPanel = false">Close</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
         <!-- Load Script Dialog -->
         <Dialog :open="showLoadDialog" @update:open="showLoadDialog = $event">

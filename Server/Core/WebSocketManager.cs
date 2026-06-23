@@ -220,6 +220,97 @@ public class WebSocketManager
         }
     }
 
+    private void RegisterProjectFunctions(ConnectionInfo connectionInfo, string userId, string projectId)
+    {
+        // ExecuteScript(scriptName) — runs a saved SQL script by name on its stored connection
+        connectionInfo.interpreter.RegisterExternalFunction("ExecuteScript", args =>
+        {
+            if (args.Length == 0) return new List<object>();
+            string scriptName = args[0]?.ToString() ?? "";
+
+            var scripts = DatabasePersistence.LoadScripts(userId, "sql", projectId);
+            var script = scripts.FirstOrDefault(s =>
+                string.Equals(s["name"]?.ToString() ?? s["Name"]?.ToString() ?? "",
+                              scriptName, StringComparison.OrdinalIgnoreCase));
+
+            if (script == null)
+            {
+                connectionInfo.interpreter.PrintCore($"ExecuteScript: script '{scriptName}' not found");
+                return new List<object>();
+            }
+
+            string sqlCode = script["code"]?.ToString() ?? script["Code"]?.ToString() ?? "";
+            string dbId = script["databaseconnectionid"]?.ToString()
+                       ?? script["DatabaseConnectionId"]?.ToString()
+                       ?? script["database"]?.ToString()
+                       ?? script["Database"]?.ToString() ?? "";
+
+            if (string.IsNullOrEmpty(sqlCode))
+            {
+                connectionInfo.interpreter.PrintCore($"ExecuteScript: script '{scriptName}' has no code");
+                return new List<object>();
+            }
+            if (string.IsNullOrEmpty(dbId))
+            {
+                connectionInfo.interpreter.PrintCore($"ExecuteScript: script '{scriptName}' has no database connection");
+                return new List<object>();
+            }
+
+            return connectionInfo.interpreter.ExecuteDatabaseQuery(dbId, sqlCode);
+        });
+
+        // ReadDataset(name) — returns rows from a saved Dataset as List<Dictionary>
+        connectionInfo.interpreter.RegisterExternalFunction("ReadDataset", args =>
+        {
+            if (args.Length == 0) return new List<object>();
+            string name = args[0]?.ToString() ?? "";
+            return LoadProjectDataRows(connectionInfo, userId, projectId, name, "ReadDataset");
+        });
+
+        // ReadSpreadsheet(name) — returns rows from a saved Excel spreadsheet as List<Dictionary>
+        connectionInfo.interpreter.RegisterExternalFunction("ReadSpreadsheet", args =>
+        {
+            if (args.Length == 0) return new List<object>();
+            string name = args[0]?.ToString() ?? "";
+            return LoadProjectDataRows(connectionInfo, userId, projectId, name, "ReadSpreadsheet");
+        });
+    }
+
+    private static List<object> LoadProjectDataRows(ConnectionInfo connectionInfo, string userId, string projectId, string name, string caller)
+    {
+        var entities = DatabasePersistence.LoadEntities(userId, "Datasets", projectId);
+        var entity = entities.FirstOrDefault(e =>
+            string.Equals(e["name"]?.ToString() ?? e["Name"]?.ToString() ?? "",
+                          name, StringComparison.OrdinalIgnoreCase));
+
+        if (entity == null)
+        {
+            connectionInfo.interpreter.PrintCore($"{caller}: '{name}' not found");
+            return new List<object>();
+        }
+
+        string configStr = entity["config"]?.ToString() ?? entity["Config"]?.ToString() ?? "";
+        if (string.IsNullOrEmpty(configStr)) return new List<object>();
+
+        try
+        {
+            var config = Newtonsoft.Json.Linq.JObject.Parse(configStr);
+            var dataArray = config["data"] as Newtonsoft.Json.Linq.JArray;
+            if (dataArray == null) return new List<object>();
+
+            return dataArray.Select(row =>
+                (object)(row is Newtonsoft.Json.Linq.JObject rowObj
+                    ? rowObj.ToObject<Dictionary<string, object>>()
+                    : new Dictionary<string, object>())
+            ).ToList();
+        }
+        catch (Exception ex)
+        {
+            connectionInfo.interpreter.PrintCore($"{caller}: error parsing data for '{name}': {ex.Message}");
+            return new List<object>();
+        }
+    }
+
     private void CommandMessage(object sender, MessageReceivedEventArgs e)
     {
         IWebsocketConnection socket = e.WebSocket;
@@ -249,7 +340,9 @@ public class WebSocketManager
                     if (parameters.ContainsKey("code"))
                     {
                         string code = parameters["code"].ToString();
+                        string execProjectId = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
                         RegisterConnectionsToInterpreter(connectionInfo, uuid);
+                        RegisterProjectFunctions(connectionInfo, uuid, execProjectId);
                         // Run on a background thread so long scripts don't block the WebSocket pump
                         Task.Run(() =>
                         {
@@ -336,9 +429,12 @@ public class WebSocketManager
                     break;
 
                 case "LoadScripts":
+                {
                     string scriptLang = parameters.ContainsKey("language") ? parameters["language"].ToString() : "";
-                    response.Data = DatabasePersistence.LoadScripts(uuid, scriptLang);
+                    var pid = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
+                    response.Data = DatabasePersistence.LoadScripts(uuid, scriptLang, pid);
                     break;
+                }
 
                 case "DeleteScript":
                     if (parameters.ContainsKey("id"))
@@ -359,8 +455,11 @@ public class WebSocketManager
                     break;
 
                 case "LoadDatabaseConnections":
-                    response.Data = DatabasePersistence.LoadDatabaseConnections(uuid);
+                {
+                    var pid = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
+                    response.Data = DatabasePersistence.LoadDatabaseConnections(uuid, pid);
                     break;
+                }
 
                 case "DeleteDatabaseConnection":
                     if (parameters.ContainsKey("id"))
@@ -392,8 +491,11 @@ public class WebSocketManager
                     break;
 
                 case "LoadDatasets":
-                    response.Data = DatabasePersistence.LoadEntities(uuid, "Datasets");
+                {
+                    var pid = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
+                    response.Data = DatabasePersistence.LoadEntities(uuid, "Datasets", pid);
                     break;
+                }
 
                 case "DeleteDataset":
                     if (parameters.ContainsKey("id"))
@@ -412,8 +514,11 @@ public class WebSocketManager
                     break;
 
                 case "LoadExcels":
-                    response.Data = DatabasePersistence.LoadEntities(uuid, "Datasets");
+                {
+                    var pid = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
+                    response.Data = DatabasePersistence.LoadEntities(uuid, "Datasets", pid);
                     break;
+                }
 
                 case "DeleteExcel":
                     if (parameters.ContainsKey("id"))
@@ -433,8 +538,11 @@ public class WebSocketManager
                     break;
 
                 case "LoadDashboards":
-                    response.Data = DatabasePersistence.LoadEntities(uuid, "Dashboards");
+                {
+                    var pid = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
+                    response.Data = DatabasePersistence.LoadEntities(uuid, "Dashboards", pid);
                     break;
+                }
 
                 case "DeleteDashboard":
                     if (parameters.ContainsKey("id"))
@@ -463,6 +571,24 @@ public class WebSocketManager
                     }
                     break;
                 }
+
+                case "LoadProjects":
+                    response.Data = DatabasePersistence.LoadProjects(uuid);
+                    break;
+
+                case "SaveProject":
+                    if (parameters.ContainsKey("project"))
+                    {
+                        var projObj = JObject.FromObject(parameters["project"]);
+                        DatabasePersistence.SaveProject(uuid, projObj);
+                        response.Data = new { id = projObj["id"]?.ToString() };
+                    }
+                    break;
+
+                case "DeleteProject":
+                    if (parameters.ContainsKey("id"))
+                        DatabasePersistence.DeleteProject(uuid, parameters["id"].ToString());
+                    break;
 
                 default:
                     response.Status = MessageStatus.Error;

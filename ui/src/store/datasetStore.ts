@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { userStoreMe } from "@/store/userStore";
+import { useProjectStore } from "@/store/projectStore";
 
 export const useDatasetStore = defineStore({
   id: "dataset",
@@ -11,7 +12,9 @@ export const useDatasetStore = defineStore({
     async loadDatasets(socket: any) {
       try {
         const userStore = userStoreMe();
-        const result = await userStore.executeCommand('LoadDatasets', {}, socket);
+        const projectStore = useProjectStore();
+        const params = projectStore.currentProjectId ? { projectId: projectStore.currentProjectId } : {};
+        const result = await userStore.executeCommand('LoadDatasets', params, socket);
         if (result && result.Data) {
           this.datasets = result.Data;
         }
