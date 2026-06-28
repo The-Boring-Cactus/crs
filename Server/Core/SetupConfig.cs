@@ -158,6 +158,22 @@ CREATE TABLE CodeScripts (
     CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
     UpdatedAt DATETIME2 DEFAULT GETUTCDATE()
 );
+
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Variables' AND xtype='U')
+CREATE TABLE Variables (
+    Id NVARCHAR(36) NOT NULL PRIMARY KEY,
+    UserId NVARCHAR(36) NOT NULL,
+    ProjectId NVARCHAR(36) NULL,
+    Name NVARCHAR(100) NOT NULL,
+    Label NVARCHAR(200) NULL,
+    Type NVARCHAR(50) NOT NULL DEFAULT 'input',
+    DefaultValue NVARCHAR(MAX) NULL,
+    DropdownSource NVARCHAR(50) NULL,
+    DropdownValues NVARCHAR(MAX) NULL,
+    DropdownQuery NVARCHAR(MAX) NULL,
+    DropdownConnectionId NVARCHAR(36) NULL,
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
 ";
 
     private string GetPostgresCreateTablesSQL() => @"
@@ -240,6 +256,21 @@ CREATE TABLE IF NOT EXISTS CodeScripts (
     Code TEXT,
     CreatedAt TIMESTAMPTZ DEFAULT NOW(),
     UpdatedAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS Variables (
+    Id VARCHAR(36) NOT NULL PRIMARY KEY,
+    UserId VARCHAR(36) NOT NULL,
+    ProjectId VARCHAR(36) NULL,
+    Name VARCHAR(100) NOT NULL,
+    Label VARCHAR(200) NULL,
+    Type VARCHAR(50) NOT NULL DEFAULT 'input',
+    DefaultValue TEXT NULL,
+    DropdownSource VARCHAR(50) NULL,
+    DropdownValues TEXT NULL,
+    DropdownQuery TEXT NULL,
+    DropdownConnectionId VARCHAR(36) NULL,
+    CreatedAt TIMESTAMPTZ DEFAULT NOW()
 );
 ";
 
@@ -330,6 +361,21 @@ CREATE TABLE IF NOT EXISTS CodeScripts (
     UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (UserId) REFERENCES Users(Id)
 );
+
+CREATE TABLE IF NOT EXISTS Variables (
+    Id VARCHAR(36) NOT NULL PRIMARY KEY,
+    UserId VARCHAR(36) NOT NULL,
+    ProjectId VARCHAR(36) NULL,
+    Name VARCHAR(100) NOT NULL,
+    Label VARCHAR(200) NULL,
+    Type VARCHAR(50) NOT NULL DEFAULT 'input',
+    DefaultValue TEXT NULL,
+    DropdownSource VARCHAR(50) NULL,
+    DropdownValues TEXT NULL,
+    DropdownQuery TEXT NULL,
+    DropdownConnectionId VARCHAR(36) NULL,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 ";
 
     public string GetMigrationSQL()
@@ -375,6 +421,21 @@ IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Datasets')
     ALTER TABLE Datasets ADD ProjectId UNIQUEIDENTIFIER NULL;
 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('DatabaseConnections') AND name = 'ProjectId')
     ALTER TABLE DatabaseConnections ADD ProjectId UNIQUEIDENTIFIER NULL;
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Variables')
+    CREATE TABLE Variables (
+        Id NVARCHAR(36) NOT NULL PRIMARY KEY,
+        UserId NVARCHAR(36) NOT NULL,
+        ProjectId NVARCHAR(36) NULL,
+        Name NVARCHAR(100) NOT NULL,
+        Label NVARCHAR(200) NULL,
+        Type NVARCHAR(50) NOT NULL DEFAULT 'input',
+        DefaultValue NVARCHAR(MAX) NULL,
+        DropdownSource NVARCHAR(50) NULL,
+        DropdownValues NVARCHAR(MAX) NULL,
+        DropdownQuery NVARCHAR(MAX) NULL,
+        DropdownConnectionId NVARCHAR(36) NULL,
+        CreatedAt DATETIME2 DEFAULT GETUTCDATE()
+    );
 ";
 
     private string GetPostgresMigrationSQL() => @"
@@ -396,6 +457,20 @@ ALTER TABLE SqlScripts ADD COLUMN IF NOT EXISTS Visualization TEXT;
 ALTER TABLE CodeScripts ADD COLUMN IF NOT EXISTS ProjectId UUID;
 ALTER TABLE Datasets ADD COLUMN IF NOT EXISTS ProjectId UUID;
 ALTER TABLE DatabaseConnections ADD COLUMN IF NOT EXISTS ProjectId UUID;
+CREATE TABLE IF NOT EXISTS Variables (
+    Id VARCHAR(36) NOT NULL PRIMARY KEY,
+    UserId VARCHAR(36) NOT NULL,
+    ProjectId VARCHAR(36) NULL,
+    Name VARCHAR(100) NOT NULL,
+    Label VARCHAR(200) NULL,
+    Type VARCHAR(50) NOT NULL DEFAULT 'input',
+    DefaultValue TEXT NULL,
+    DropdownSource VARCHAR(50) NULL,
+    DropdownValues TEXT NULL,
+    DropdownQuery TEXT NULL,
+    DropdownConnectionId VARCHAR(36) NULL,
+    CreatedAt TIMESTAMPTZ DEFAULT NOW()
+);
 ";
 
     private string GetMysqlMigrationSQL() => @"
@@ -418,6 +493,20 @@ ALTER TABLE SqlScripts ADD COLUMN IF NOT EXISTS Visualization LONGTEXT;
 ALTER TABLE CodeScripts ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
 ALTER TABLE Datasets ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
 ALTER TABLE DatabaseConnections ADD COLUMN IF NOT EXISTS ProjectId CHAR(36) NULL;
+CREATE TABLE IF NOT EXISTS Variables (
+    Id VARCHAR(36) NOT NULL PRIMARY KEY,
+    UserId VARCHAR(36) NOT NULL,
+    ProjectId VARCHAR(36) NULL,
+    Name VARCHAR(100) NOT NULL,
+    Label VARCHAR(200) NULL,
+    Type VARCHAR(50) NOT NULL DEFAULT 'input',
+    DefaultValue TEXT NULL,
+    DropdownSource VARCHAR(50) NULL,
+    DropdownValues TEXT NULL,
+    DropdownQuery TEXT NULL,
+    DropdownConnectionId VARCHAR(36) NULL,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 ";
 
     private string GetOracleMigrationSQL() => @"
@@ -492,6 +581,25 @@ BEGIN
   EXECUTE IMMEDIATE 'ALTER TABLE DatabaseConnections ADD ProjectId CHAR(36)';
 EXCEPTION WHEN OTHERS THEN
   IF SQLCODE != -1430 THEN RAISE; END IF;
+END;
+/
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE Variables (
+    Id VARCHAR2(36) NOT NULL PRIMARY KEY,
+    UserId VARCHAR2(36) NOT NULL,
+    ProjectId VARCHAR2(36),
+    Name VARCHAR2(100) NOT NULL,
+    Label VARCHAR2(200),
+    Type VARCHAR2(50) DEFAULT ''input'',
+    DefaultValue CLOB,
+    DropdownSource VARCHAR2(50),
+    DropdownValues CLOB,
+    DropdownQuery CLOB,
+    DropdownConnectionId VARCHAR2(36),
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
 END;
 /
 ";
@@ -606,6 +714,26 @@ BEGIN
     Code CLOB,
     CreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
     UpdatedAt TIMESTAMP DEFAULT SYSTIMESTAMP
+  )';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE Variables (
+    Id VARCHAR2(36) NOT NULL PRIMARY KEY,
+    UserId VARCHAR2(36) NOT NULL,
+    ProjectId VARCHAR2(36),
+    Name VARCHAR2(100) NOT NULL,
+    Label VARCHAR2(200),
+    Type VARCHAR2(50) DEFAULT ''input'',
+    DefaultValue CLOB,
+    DropdownSource VARCHAR2(50),
+    DropdownValues CLOB,
+    DropdownQuery CLOB,
+    DropdownConnectionId VARCHAR2(36),
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )';
 EXCEPTION WHEN OTHERS THEN
   IF SQLCODE != -955 THEN RAISE; END IF;

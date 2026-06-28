@@ -21,14 +21,25 @@ import {
     Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, RefreshCw,
     Copy, Search, Download, ChevronLeft, ChevronRight, Info, Trash2,
     Table2, LayoutList, TrendingUp, BarChart2, BarChart3, AreaChart, PieChart,
-    ScatterChart, BarChart4, Settings2
+    ScatterChart, BarChart4, Settings2, Braces
 } from 'lucide-vue-next';
+import { useVariableStore } from '@/store/variableStore';
 
 // Stores and services
 const databaseStore = useDatabaseStore();
 const userStore = userStoreMe();
 const projectStore = useProjectStore();
 var { proxy } = getCurrentInstance();
+const variableStore = useVariableStore();
+
+// Variable manager state
+const showVariableManager = ref(false);
+const editingVariable = ref(null);
+const newVar = reactive({ id: '', name: '', label: '', type: 'input', defaultValue: '', dropdownSource: 'static', dropdownValues: '', dropdownQuery: '', dropdownConnectionId: '' });
+
+// Computed: variables detected in current SQL
+const detectedVars = computed(() => variableStore.detectInSql(code.value));
+const hasVariables = computed(() => detectedVars.value.length > 0);
 
 // Editor state
 const code = ref('SELECT 1;');
@@ -360,9 +371,11 @@ const executeQuery = async () => {
     queryColumns.value = [];
 
     try {
+        const db = databaseStore.connections?.find(c => c.id === selectedDatabase.value);
+        const substitutedCode = variableStore.substituteInSql(code.value, db?.type || '');
         const result = await userStore.executeCommand('ExecuteSql', {
             database: selectedDatabase.value,
-            code: code.value
+            code: substitutedCode
         }, proxy.$socket);
 
         if (result && result.Data) {
@@ -535,14 +548,32 @@ const exportResults = () => {
     toast('Export Complete', { description: 'Query results exported to CSV file' });
 };
 
+const saveVariableDef = async () => {
+    if (!newVar.name.trim()) return;
+    await variableStore.saveDefinition({ ...newVar }, proxy.$socket);
+    editingVariable.value = null;
+    Object.assign(newVar, { id: '', name: '', label: '', type: 'input', defaultValue: '', dropdownSource: 'static', dropdownValues: '', dropdownQuery: '', dropdownConnectionId: '' });
+};
+
+const editVar = (v) => {
+    editingVariable.value = v;
+    Object.assign(newVar, { ...v });
+};
+
+const deleteVar = async (id) => {
+    await variableStore.deleteDefinition(id, proxy.$socket);
+};
+
 onMounted(() => {
     databaseStore.loadConnections(proxy.$socket);
     loadScriptsFromStorage();
+    variableStore.loadDefinitions(proxy.$socket);
 });
 
 watch(() => projectStore.currentProjectId, () => {
     databaseStore.loadConnections(proxy.$socket);
     loadScriptsFromStorage();
+    variableStore.loadDefinitions(proxy.$socket);
 });
 </script>
 
@@ -589,6 +620,11 @@ watch(() => projectStore.currentProjectId, () => {
                     <Save class="w-4 h-4" />
                     Save Script
                 </Button>
+                <Button variant="outline" @click="showVariableManager = true" class="gap-2" title="Manage Variables">
+                    <Braces class="w-4 h-4" />
+                    Variables
+                    <Badge v-if="variableStore.definitions.length" variant="secondary" class="ml-1 h-4 px-1 text-xs">{{ variableStore.definitions.length }}</Badge>
+                </Button>
             </div>
         </div>
 
@@ -632,6 +668,39 @@ watch(() => projectStore.currentProjectId, () => {
                 @update="handleStateUpdate"
                 @ready="handleReady"
             />
+        </div>
+
+        <!-- Variable Values Panel (shown when SQL has {{varName}}) -->
+        <div v-if="hasVariables" class="mb-3 bg-card border rounded-md p-3">
+            <div class="flex items-center gap-2 mb-2">
+                <Braces class="w-4 h-4 text-muted-foreground" />
+                <span class="text-sm font-semibold">Variable Values</span>
+                <span class="text-xs text-muted-foreground">(substituted before execution)</span>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <div v-for="varName in detectedVars" :key="varName" class="flex items-center gap-2">
+                    <label class="text-sm font-medium whitespace-nowrap">{{ varName }}:</label>
+                    <template v-if="variableStore.definitions.find(d => d.name === varName)?.type === 'dropdown'">
+                        <Select :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)">
+                            <SelectTrigger class="h-8 w-[180px] text-xs">
+                                <SelectValue :placeholder="varName" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="opt in (variableStore.definitions.find(d => d.name === varName)?.dropdownValues || '').split(',').map(s => s.trim()).filter(Boolean)" :key="opt" :value="opt">{{ opt }}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </template>
+                    <template v-else-if="variableStore.definitions.find(d => d.name === varName)?.type === 'date'">
+                        <Input type="date" class="h-8 w-[160px] text-xs" :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)" />
+                    </template>
+                    <template v-else-if="variableStore.definitions.find(d => d.name === varName)?.type === 'datetime'">
+                        <Input type="datetime-local" class="h-8 w-[200px] text-xs" :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)" />
+                    </template>
+                    <template v-else>
+                        <Input class="h-8 w-[160px] text-xs" :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)" :placeholder="varName" />
+                    </template>
+                </div>
+            </div>
         </div>
 
         <!-- Results Panel -->
@@ -925,6 +994,117 @@ watch(() => projectStore.currentProjectId, () => {
                 <DialogFooter>
                     <Button variant="outline" @click="showLoadDialog = false">Cancel</Button>
                     <Button @click="confirmLoadScript" :disabled="!selectedScriptToLoad">Load Script</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Variable Manager Dialog -->
+        <Dialog v-model:open="showVariableManager">
+            <DialogContent class="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Variable Manager</DialogTitle>
+                </DialogHeader>
+
+                <!-- Existing variables -->
+                <div v-if="variableStore.definitions.length > 0" class="mb-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Label</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Default</TableHead>
+                                <TableHead class="w-20"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="v in variableStore.definitions" :key="v.id">
+                                <TableCell class="font-mono text-sm">{{ '{' + '{' + v.name + '}' + '}' }}</TableCell>
+                                <TableCell>{{ v.label || v.name }}</TableCell>
+                                <TableCell>{{ v.type }}</TableCell>
+                                <TableCell>{{ v.defaultValue }}</TableCell>
+                                <TableCell class="flex gap-1">
+                                    <Button variant="ghost" size="icon" @click="editVar(v)"><Pencil class="w-4 h-4" /></Button>
+                                    <Button variant="ghost" size="icon" @click="deleteVar(v.id)"><Trash2 class="w-4 h-4 text-destructive" /></Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+                <p v-else class="text-sm text-muted-foreground mb-4">No variables defined yet.</p>
+
+                <!-- Add / Edit form -->
+                <div class="border rounded-md p-4 space-y-3">
+                    <h4 class="text-sm font-semibold">{{ editingVariable ? 'Edit Variable' : 'New Variable' }}</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-muted-foreground mb-1 block">Variable Name (used in SQL as {{ '{' + '{' + 'name' + '}' + '}' }})</label>
+                            <Input v-model="newVar.name" placeholder="variableName" class="h-8" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted-foreground mb-1 block">Label (display name)</label>
+                            <Input v-model="newVar.label" placeholder="Variable Label" class="h-8" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted-foreground mb-1 block">Type</label>
+                            <Select v-model="newVar.type">
+                                <SelectTrigger class="h-8">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="input">InputBox</SelectItem>
+                                    <SelectItem value="date">Date</SelectItem>
+                                    <SelectItem value="datetime">Date & Time</SelectItem>
+                                    <SelectItem value="dropdown">Dropdown</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted-foreground mb-1 block">Default Value</label>
+                            <Input v-model="newVar.defaultValue" placeholder="default" class="h-8" />
+                        </div>
+                    </div>
+
+                    <template v-if="newVar.type === 'dropdown'">
+                        <div>
+                            <label class="text-xs text-muted-foreground mb-1 block">Dropdown Source</label>
+                            <Select v-model="newVar.dropdownSource">
+                                <SelectTrigger class="h-8 w-40">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="static">Static (comma-separated)</SelectItem>
+                                    <SelectItem value="sql">SQL Query</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div v-if="newVar.dropdownSource === 'static'">
+                            <label class="text-xs text-muted-foreground mb-1 block">Values (comma-separated)</label>
+                            <Input v-model="newVar.dropdownValues" placeholder="Option A, Option B, Option C" class="h-8" />
+                        </div>
+                        <template v-if="newVar.dropdownSource === 'sql'">
+                            <div>
+                                <label class="text-xs text-muted-foreground mb-1 block">Connection</label>
+                                <Select v-model="newVar.dropdownConnectionId">
+                                    <SelectTrigger class="h-8">
+                                        <SelectValue placeholder="Select connection" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="db in availableDatabases" :key="db.id" :value="db.id">{{ db.name }}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-muted-foreground mb-1 block">SQL Query (single column)</label>
+                                <Input v-model="newVar.dropdownQuery" placeholder="SELECT name FROM table ORDER BY name" class="h-8" />
+                            </div>
+                        </template>
+                    </template>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="editingVariable = null; Object.assign(newVar, { id: '', name: '', label: '', type: 'input', defaultValue: '', dropdownSource: 'static', dropdownValues: '', dropdownQuery: '', dropdownConnectionId: '' })">Clear</Button>
+                    <Button @click="saveVariableDef" :disabled="!newVar.name.trim()">{{ editingVariable ? 'Update' : 'Save Variable' }}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -433,4 +433,64 @@ public static class DatabasePersistence
         object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
         conn.Execute("DELETE FROM Projects WHERE Id = @Id AND UserId = @UserId", new { Id = dbId, UserId = dbUserId });
     }
+
+    // ── Variables ────────────────────────────────────────────────────────────────
+
+    public static List<JObject> LoadVariables(string userId, string projectId = null)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return new List<JObject>();
+        conn.Open();
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        IEnumerable<dynamic> rows;
+        if (!string.IsNullOrEmpty(projectId))
+        {
+            object dbProjId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? projectId : Guid.Parse(projectId);
+            rows = conn.Query("SELECT * FROM Variables WHERE UserId = @UserId AND (ProjectId = @ProjectId OR ProjectId IS NULL)",
+                new { UserId = dbUserId, ProjectId = dbProjId });
+        }
+        else
+        {
+            rows = conn.Query("SELECT * FROM Variables WHERE UserId = @UserId", new { UserId = dbUserId });
+        }
+        return rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).Cast<JObject>().ToList();
+    }
+
+    public static void SaveVariable(string userId, JObject varObj)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return;
+        conn.Open();
+        var id = varObj["id"]?.ToString() ?? varObj["Id"]?.ToString();
+        if (string.IsNullOrEmpty(id)) { id = Guid.NewGuid().ToString(); varObj["id"] = id; }
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        var projIdStr = varObj["projectId"]?.ToString() ?? varObj["ProjectId"]?.ToString();
+        object dbProjId = string.IsNullOrEmpty(projIdStr) ? null :
+            ((conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? (object)projIdStr : Guid.Parse(projIdStr));
+        conn.Execute("DELETE FROM Variables WHERE Id = @Id AND UserId = @UserId", new { Id = dbId, UserId = dbUserId });
+        conn.Execute(@"INSERT INTO Variables (Id, UserId, ProjectId, Name, Label, Type, DefaultValue, DropdownSource, DropdownValues, DropdownQuery, DropdownConnectionId)
+                       VALUES (@Id, @UserId, @ProjectId, @Name, @Label, @Type, @DefaultValue, @DropdownSource, @DropdownValues, @DropdownQuery, @DropdownConnectionId)",
+            new {
+                Id = dbId, UserId = dbUserId, ProjectId = dbProjId,
+                Name = varObj["name"]?.ToString() ?? "var",
+                Label = varObj["label"]?.ToString(),
+                Type = varObj["type"]?.ToString() ?? "input",
+                DefaultValue = varObj["defaultValue"]?.ToString(),
+                DropdownSource = varObj["dropdownSource"]?.ToString(),
+                DropdownValues = varObj["dropdownValues"]?.ToString(),
+                DropdownQuery = varObj["dropdownQuery"]?.ToString(),
+                DropdownConnectionId = varObj["dropdownConnectionId"]?.ToString()
+            });
+    }
+
+    public static void DeleteVariable(string userId, string id)
+    {
+        using var conn = CreateConnection();
+        if (conn == null) return;
+        conn.Open();
+        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
+        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        conn.Execute("DELETE FROM Variables WHERE Id = @Id AND UserId = @UserId", new { Id = dbId, UserId = dbUserId });
+    }
 }

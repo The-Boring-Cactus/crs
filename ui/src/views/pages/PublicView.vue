@@ -5,12 +5,14 @@ import BaseChart from '@/components/BaseChart.vue';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import { BarChart2, LayoutDashboard, AlertCircle } from 'lucide-vue-next';
+import { useVariableStore } from '@/store/variableStore';
 
 const route = useRoute();
 const loading = ref(true);
 const error = ref('');
 const dashboard = ref(null);
 const components = ref([]);
+const variableStore = useVariableStore();
 
 // Only pass items that are valid grid objects to the layout engine.
 // Using :layout (not v-model:layout) since the view is read-only — v-model on a
@@ -133,6 +135,7 @@ onMounted(async () => {
         dashboard.value = data;
         const config = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
         components.value = config?.components || [];
+        variableStore.loadFromStorage();
     } catch (e) {
         error.value = 'Failed to load dashboard.';
     } finally {
@@ -346,6 +349,38 @@ onMounted(async () => {
                             <!-- No output stored -->
                             <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs">No output data</div>
                         </div>
+                    </div>
+
+                    <!-- InputText (editable when bound to variable) -->
+                    <div v-else-if="item.type === 'InputText'" class="flex flex-col h-full border rounded-md p-2 bg-card">
+                        <div class="font-medium text-sm mb-2">{{ item.title || 'Input' }}</div>
+                        <div v-if="item.boundVariable" class="flex flex-col gap-1 flex-1 justify-center">
+                            <label class="text-xs text-muted-foreground">{{ item.boundVariable }}</label>
+                            <input
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                :value="variableStore.getValue(item.boundVariable)"
+                                :placeholder="item.placeholder"
+                                @input="e => variableStore.setValue(item.boundVariable, e.target.value)"
+                            />
+                        </div>
+                        <div v-else class="flex-1 flex items-center justify-center text-sm text-muted-foreground">{{ item.value }}</div>
+                    </div>
+
+                    <!-- Select (editable when bound to variable) -->
+                    <div v-else-if="item.type === 'Select'" class="flex flex-col h-full border rounded-md p-2 bg-card">
+                        <div class="font-medium text-sm mb-2">{{ item.title || 'Select' }}</div>
+                        <div v-if="item.boundVariable" class="flex flex-col gap-1 flex-1 justify-center">
+                            <label class="text-xs text-muted-foreground">{{ item.boundVariable }}</label>
+                            <select
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                :value="variableStore.getValue(item.boundVariable)"
+                                @change="e => variableStore.setValue(item.boundVariable, e.target.value)"
+                            >
+                                <option value="" disabled v-if="item.placeholder">{{ item.placeholder }}</option>
+                                <option v-for="opt in item.options" :key="opt[item.optionValue || 'value'] || opt" :value="opt[item.optionValue || 'value'] || opt">{{ opt[item.optionLabel || 'label'] || opt }}</option>
+                            </select>
+                        </div>
+                        <div v-else class="flex-1 flex items-center justify-center text-sm text-muted-foreground">{{ item.selectedValue || item.placeholder }}</div>
                     </div>
 
                     <!-- Fallback -->

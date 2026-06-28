@@ -43,7 +43,9 @@ import {
     Database,
     Hash,
     Terminal,
-    BarChart2 as BarChart2Icon
+    BarChart2 as BarChart2Icon,
+    Braces,
+    Link
 } from 'lucide-vue-next';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
@@ -77,9 +79,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
+import { useVariableStore } from '@/store/variableStore';
 
 const userStore = userStoreMe();
 const projectStore = useProjectStore();
+const variableStore = useVariableStore();
 
 const visibleCompo = ref(false);
 const editingTitle = ref(false);
@@ -1357,6 +1361,18 @@ function getSelectedOptionLabel(item) {
     return option ? option[item.optionLabel] : item.selectedValue;
 }
 
+// Variable binding
+const bindingDialogItem = ref(null);
+const bindingDialogOpen = ref(false);
+function openBindDialog(item) {
+    bindingDialogItem.value = item;
+    bindingDialogOpen.value = true;
+}
+function setVariableBinding(varName) {
+    if (bindingDialogItem.value) bindingDialogItem.value.boundVariable = varName || undefined;
+    bindingDialogOpen.value = false;
+}
+
 // InputText helper functions
 function clearInputText(item) {
     item.value = '';
@@ -1741,6 +1757,7 @@ const handleWidgetExecutionComplete = () => {
 onMounted(() => {
     window.addEventListener('socket-output', handleWidgetOutput);
     window.addEventListener('socket-execution-complete', handleWidgetExecutionComplete);
+    variableStore.loadDefinitions(proxy.$socket);
 });
 
 onUnmounted(() => {
@@ -1756,7 +1773,7 @@ async function runWidgetScript(item) {
     }
     widgetExecutingId.value = item.i;
     try {
-        await userStore.executeCommand('ExecuteCs', { code: item.scriptCode }, proxy.$socket);
+        await userStore.executeCommand('ExecuteCs', { code: item.scriptCode, variables: variableStore.getValuesDict() }, proxy.$socket);
     } catch (error) {
         widgetExecutingId.value = null;
         toast.add({ severity: 'error', summary: 'Execution Failed', detail: error.message, life: 3000 });
@@ -1819,7 +1836,7 @@ async function refreshSqlWidget(item) {
     try {
         const result = await userStore.executeCommand('ExecuteSql', {
             database: item.databaseId,
-            code: item.sqlCode
+            code: variableStore.substituteInSql(item.sqlCode, '')
         }, proxy.$socket);
         if (result?.Data) {
             item.queryResults = result.Data.rows || [];
@@ -2354,6 +2371,9 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="refreshSelectOptions(item)" title="Refresh Options">
                             <RefreshCw class="w-3 h-3 text-xs" />
                         </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" :class="item.boundVariable ? 'text-primary' : ''" @click="openBindDialog(item)" title="Bind to Variable">
+                            <Braces class="w-3 h-3 text-xs" />
+                        </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
                             <Trash2 class="w-3 h-3 text-xs" />
                         </Button>
@@ -2361,18 +2381,22 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                 </div>
 
                 <div class="select-content flex-1 flex flex-col gap-2 p-2">
+                    <div v-if="item.boundVariable" class="flex items-center gap-1 mb-1">
+                        <span class="text-xs text-muted-foreground">Bound to:</span>
+                        <Badge variant="outline" class="text-xs py-0 h-5">{{ item.boundVariable }}</Badge>
+                    </div>
                     <!-- Native Select for simplicity over building out the full Combobox here -->
                     <select
                         class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        v-model="item.selectedValue"
-                        @change="(e) => onSelectChange(item, e)"
+                        :value="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.selectedValue"
+                        @change="(e) => { if (item.boundVariable) variableStore.setValue(item.boundVariable, e.target.value); else { item.selectedValue = e.target.value; onSelectChange(item, e); } }"
                     >
-                        <option value="" disabled selected v-if="item.placeholder">{{ item.placeholder }}</option>
+                        <option value="" disabled v-if="item.placeholder">{{ item.placeholder }}</option>
                         <option v-for="opt in item.options" :key="opt[item.optionValue || 'value'] || opt" :value="opt[item.optionValue || 'value'] || opt">
                             {{ opt[item.optionLabel || 'label'] || opt }}
                         </option>
                     </select>
-                    <div class="select-value text-sm text-muted-foreground mt-2" v-if="item.selectedValue">Selected: {{ getSelectedOptionLabel(item) }}</div>
+                    <div class="select-value text-sm text-muted-foreground mt-2" v-if="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.selectedValue">Selected: {{ item.boundVariable ? variableStore.getValue(item.boundVariable) : getSelectedOptionLabel(item) }}</div>
                 </div>
             </div>
 
@@ -2392,6 +2416,9 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="clearInputText(item)" title="Clear Text">
                             <Eraser class="w-3 h-3 text-xs" />
                         </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" :class="item.boundVariable ? 'text-primary' : ''" @click="openBindDialog(item)" title="Bind to Variable">
+                            <Braces class="w-3 h-3 text-xs" />
+                        </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
                             <Trash2 class="w-3 h-3 text-xs" />
                         </Button>
@@ -2399,8 +2426,17 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                 </div>
 
                 <div class="input-content flex-1 flex flex-col gap-2 justify-center p-2">
-                    <Input v-model="item.value" :placeholder="item.placeholder" class="w-full" @input="(e) => onInputTextChange(item, e)" />
-                    <div class="input-info text-xs text-muted-foreground mt-1" v-if="item.value">Length: {{ item.value.length }} characters</div>
+                    <div v-if="item.boundVariable" class="flex items-center gap-1 mb-1">
+                        <span class="text-xs text-muted-foreground">Bound to:</span>
+                        <Badge variant="outline" class="text-xs py-0 h-5">{{ item.boundVariable }}</Badge>
+                    </div>
+                    <Input
+                        :model-value="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.value"
+                        :placeholder="item.placeholder"
+                        class="w-full"
+                        @update:model-value="v => { if (item.boundVariable) variableStore.setValue(item.boundVariable, v); else item.value = v; }"
+                    />
+                    <div class="input-info text-xs text-muted-foreground mt-1" v-if="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.value">Length: {{ (item.boundVariable ? variableStore.getValue(item.boundVariable) : item.value).length }} characters</div>
                 </div>
             </div>
 
@@ -2950,6 +2986,43 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
             <DialogFooter>
                 <Button variant="outline" @click="showStatReportDialog = false">Close</Button>
             </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Bind Variable Dialog -->
+    <Dialog v-model:open="bindingDialogOpen">
+        <DialogContent class="max-w-sm">
+            <DialogHeader>
+                <DialogTitle>Bind to Variable</DialogTitle>
+                <DialogDescription>Select a project variable to bind this widget to. The widget will display and update the variable's current value.</DialogDescription>
+            </DialogHeader>
+            <div class="space-y-2 py-2">
+                <button
+                    class="w-full text-left px-3 py-2 rounded-md border text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                    :class="!bindingDialogItem?.boundVariable ? 'border-primary bg-primary/5' : ''"
+                    @click="setVariableBinding(null)"
+                >
+                    <X class="w-4 h-4 text-muted-foreground" />
+                    <span class="text-muted-foreground">No binding (standalone widget)</span>
+                </button>
+                <button
+                    v-for="v in variableStore.definitions"
+                    :key="v.id"
+                    class="w-full text-left px-3 py-2 rounded-md border text-sm hover:bg-muted transition-colors flex items-center justify-between"
+                    :class="bindingDialogItem?.boundVariable === v.name ? 'border-primary bg-primary/5' : ''"
+                    @click="setVariableBinding(v.name)"
+                >
+                    <div class="flex items-center gap-2">
+                        <Braces class="w-4 h-4 text-primary" />
+                        <span class="font-medium">{{ v.name }}</span>
+                        <span class="text-muted-foreground text-xs" v-if="v.label && v.label !== v.name">{{ v.label }}</span>
+                    </div>
+                    <Badge variant="outline" class="text-xs">{{ v.type }}</Badge>
+                </button>
+                <p v-if="variableStore.definitions.length === 0" class="text-sm text-muted-foreground text-center py-4">
+                    No variables defined for this project. Create variables in the SQL Editor (Variables button).
+                </p>
+            </div>
         </DialogContent>
     </Dialog>
 </template>

@@ -341,8 +341,26 @@ public class WebSocketManager
                     {
                         string code = parameters["code"].ToString();
                         string execProjectId = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
+
+                        // Extract variable values passed by the client { varName: value }
+                        var varDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        if (parameters.ContainsKey("variables") && parameters["variables"] is Newtonsoft.Json.Linq.JObject varsObj)
+                        {
+                            foreach (var kv in varsObj)
+                                varDict[kv.Key] = kv.Value?.ToString() ?? "";
+                        }
+
                         RegisterConnectionsToInterpreter(connectionInfo, uuid);
                         RegisterProjectFunctions(connectionInfo, uuid, execProjectId);
+
+                        // GetVar('name') lets scripts read the current variable values
+                        connectionInfo.interpreter.RegisterExternalFunction("GetVar", args =>
+                        {
+                            if (args.Length == 0) return "";
+                            var name = args[0]?.ToString() ?? "";
+                            return varDict.TryGetValue(name, out var v) ? v : "";
+                        });
+
                         // Run on a background thread so long scripts don't block the WebSocket pump
                         Task.Run(() =>
                         {
@@ -588,6 +606,51 @@ public class WebSocketManager
                 case "DeleteProject":
                     if (parameters.ContainsKey("id"))
                         DatabasePersistence.DeleteProject(uuid, parameters["id"].ToString());
+                    break;
+
+                case "LoadVariables":
+                {
+                    var pid = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
+                    response.Data = DatabasePersistence.LoadVariables(uuid, pid);
+                    break;
+                }
+
+                case "SaveVariable":
+                    if (parameters.ContainsKey("variable"))
+                    {
+                        var varObj = JObject.FromObject(parameters["variable"]);
+                        DatabasePersistence.SaveVariable(uuid, varObj);
+                        response.Data = new { id = varObj["id"]?.ToString() };
+                    }
+                    break;
+
+                case "DeleteVariable":
+                    if (parameters.ContainsKey("id"))
+                        DatabasePersistence.DeleteVariable(uuid, parameters["id"].ToString());
+                    break;
+
+                case "ResolveDropdownQuery":
+                    if (parameters.ContainsKey("database") && parameters.ContainsKey("query"))
+                    {
+                        string dbId2 = parameters["database"].ToString();
+                        string qry = parameters["query"].ToString();
+                        try
+                        {
+                            var qResult = _dataSourceManager.ExecuteQueryAsync(dbId2, qry).GetAwaiter().GetResult();
+                            var opts = new List<string>();
+                            foreach (var row in qResult)
+                            {
+                                var rd = RowToDictionary(row);
+                                if (rd.Count > 0) opts.Add(rd.Values.First()?.ToString() ?? "");
+                            }
+                            response.Data = opts;
+                        }
+                        catch (Exception qEx)
+                        {
+                            response.Status = MessageStatus.Error;
+                            response.ErrorMessage = qEx.Message;
+                        }
+                    }
                     break;
 
                 default:

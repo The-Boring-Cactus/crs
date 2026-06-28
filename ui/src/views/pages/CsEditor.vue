@@ -16,6 +16,7 @@ import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshC
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
+import { useVariableStore } from '@/store/variableStore';
 
 import { WebSocketMessageClient } from '@/websocket/WebSocketMessageClient';
 
@@ -23,6 +24,7 @@ import { WebSocketMessageClient } from '@/websocket/WebSocketMessageClient';
 const { proxy } = getCurrentInstance();
 const userStore = userStoreMe();
 const projectStore = useProjectStore();
+const variableStore = useVariableStore();
 
 // Script output: tables and charts emitted by Table() / Chart() calls
 const scriptOutputs = ref([]);
@@ -218,7 +220,8 @@ const handleExecute = async () => {
         // Completion is signalled by socket-execution-complete event.
         await userStore.executeCommand('ExecuteCs', {
             code: code.value,
-            name: currentScript.name || 'Untitled Script'
+            name: currentScript.name || 'Untitled Script',
+            variables: variableStore.getValuesDict()
         }, proxy.$socket);
     } catch (error) {
         isExecuting.value = false;
@@ -585,6 +588,7 @@ onMounted(() => {
     window.addEventListener('socket-output', handleSocketOutput);
     window.addEventListener('socket-execution-complete', handleExecutionComplete);
     loadScriptsFromStorage();
+    variableStore.loadDefinitions(proxy.$socket);
 });
 
 onUnmounted(() => {
