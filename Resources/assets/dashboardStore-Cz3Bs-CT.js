@@ -1,6 +1,0 @@
-import{c as d,Y as c,v as t,M as h}from"./index-BYfZAI0Q.js";/**
- * @license lucide-vue-next v0.577.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */const u=d("file-text",[["path",{d:"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",key:"1oefj6"}],["path",{d:"M14 2v5a1 1 0 0 0 1 1h5",key:"wfsgrz"}],["path",{d:"M10 9H8",key:"b1mrlr"}],["path",{d:"M16 13H8",key:"t4e002"}],["path",{d:"M16 17H8",key:"z1uh3a"}]]),i=c({id:"dashboard",state:()=>({dashboards:[],loading:!1}),actions:{async loadDashboards(a){try{const e=t(),r=h(),s=r.currentProjectId?{projectId:r.currentProjectId}:{},o=await e.executeCommand("LoadDashboards",s,a);o&&o.Data&&(this.dashboards=o.Data)}catch(e){console.error("Error loading dashboards:",e),this.dashboards=[]}},async saveDashboard(a,e){try{return await t().executeCommand("SaveDashboard",{dashboard:a},e)}catch(r){throw console.error("Error saving dashboard:",r),r}},async deleteDashboard(a,e){try{return await t().executeCommand("DeleteDashboard",{id:a},e),!0}catch(r){throw console.error("Error deleting dashboard:",r),r}}}});export{u as F,i as u};

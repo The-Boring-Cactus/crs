@@ -116,11 +116,12 @@ public static class DatabasePersistence
         }
         else
         {
+            var visualizationStr = scriptObj["visualization"]?.ToString() ?? scriptObj["Visualization"]?.ToString();
             conn.Execute(@"DELETE FROM SqlScripts WHERE Id = @Id AND UserId = @UserId",
                 new { Id = dbId, UserId = dbUserId });
-            conn.Execute(@"INSERT INTO SqlScripts (Id, UserId, Name, Language, Code, DatabaseConnectionId, ProjectId)
-                          VALUES (@Id, @UserId, @Name, @Language, @Code, @DatabaseConnectionId, @ProjectId)",
-                new { Id = dbId, UserId = dbUserId, Name = name, Language = language, Code = code, DatabaseConnectionId = dbConnId, ProjectId = dbProjId });
+            conn.Execute(@"INSERT INTO SqlScripts (Id, UserId, Name, Language, Code, DatabaseConnectionId, ProjectId, Visualization)
+                          VALUES (@Id, @UserId, @Name, @Language, @Code, @DatabaseConnectionId, @ProjectId, @Visualization)",
+                new { Id = dbId, UserId = dbUserId, Name = name, Language = language, Code = code, DatabaseConnectionId = dbConnId, ProjectId = dbProjId, Visualization = visualizationStr });
         }
     }
 
@@ -152,7 +153,7 @@ public static class DatabasePersistence
         if (!string.IsNullOrEmpty(projectId))
         {
             object dbProjId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? projectId : Guid.Parse(projectId);
-            rows = conn.Query("SELECT * FROM DatabaseConnections WHERE (UserId = @UserId AND ProjectId = @ProjectId) OR IsGlobal = @True",
+            rows = conn.Query("SELECT * FROM DatabaseConnections WHERE (UserId = @UserId AND ProjectId = @ProjectId) OR (UserId = @UserId AND ProjectId IS NULL) OR IsGlobal = @True",
                 new { UserId = dbUserId, ProjectId = dbProjId, True = true });
         }
         else

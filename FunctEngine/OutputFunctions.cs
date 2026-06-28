@@ -101,6 +101,18 @@ namespace FunctEngine
             return null;
         }
 
+        // Value(value, label?, unit?)
+        // Emits a single scalar value for Variable dashboard widgets
+        public object EmitValue(object[] args)
+        {
+            if (args.Length == 0) return null;
+            var value = args[0]?.ToString() ?? "";
+            var label = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
+            var unit  = args.Length > 2 ? args[2]?.ToString() ?? "" : "";
+            engine.EmitOutput("Value", new { value, label, unit });
+            return null;
+        }
+
         private List<object> FormatStatDict(Dictionary<string, object> dict)
         {
             var sections = new List<object>();

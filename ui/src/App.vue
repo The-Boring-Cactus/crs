@@ -17,6 +17,7 @@ const projectStore = useProjectStore();
 const { proxy } = getCurrentInstance();
 
 const isSetupRoute = computed(() => route.path === '/setup');
+const isPublicRoute = computed(() => route.path.startsWith('/share/') || route.path.startsWith('/public/'));
 
 const loading = ref(false);
 const loginData = ref({
@@ -165,6 +166,11 @@ const deleteProject = async (id) => {
 
     <!-- Setup Wizard (full screen, no chrome) -->
     <div v-if="isSetupRoute" class="setup-fullscreen">
+        <RouterView />
+    </div>
+
+    <!-- Public shared views — no auth required -->
+    <div v-else-if="isPublicRoute">
         <RouterView />
     </div>
 

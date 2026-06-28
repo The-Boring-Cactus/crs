@@ -19,7 +19,7 @@ const props = defineProps({
     type: {
         type: String,
         required: true,
-        validator: (value) => ['line', 'bar', 'pie', 'doughnut', 'polarArea', 'radar', 'scatter', 'bubble', 'area', 'mixed'].includes(value)
+        validator: (value) => ['line', 'bar', 'bar-h', 'pie', 'doughnut', 'polarArea', 'radar', 'scatter', 'bubble', 'area', 'mixed', 'waterfall'].includes(value)
     },
     data: {
         type: Object,
@@ -92,7 +92,7 @@ const chartOptions = computed(() => {
     const datasets = props.data?.datasets || [];
     const labels = (props.data?.labels || []).map(String);
 
-    const isCategorical = ['line', 'bar', 'area', 'mixed'].includes(type) && labels.length > 0;
+    const isCategorical = ['line', 'bar', 'bar-h', 'area', 'mixed', 'waterfall'].includes(type) && labels.length > 0;
 
     let options = {
         title: props.title ? { text: props.title, left: 'center' } : undefined,
@@ -108,7 +108,12 @@ const chartOptions = computed(() => {
         ...props.options // merge specific echart overrides if any
     };
 
-    if (isCategorical) {
+    if (type === 'bar-h') {
+        // Horizontal bar: swap axes
+        options.xAxis = { type: 'value' };
+        options.yAxis = { type: 'category', data: labels };
+        options.grid = { left: '3%', right: '4%', bottom: props.showLegend ? '15%' : '3%', containLabel: true };
+    } else if (isCategorical) {
         options.xAxis = {
             type: 'category',
             data: labels
@@ -143,6 +148,38 @@ const chartOptions = computed(() => {
         };
     }
 
+    // Waterfall: compute ghost (transparent base) + value series from first dataset
+    if (type === 'waterfall' && datasets.length > 0) {
+        const vals = datasets[0].data.map(v => Number(v) || 0);
+        const ghost = [];
+        let cumulative = 0;
+        vals.forEach(v => {
+            ghost.push(v >= 0 ? cumulative : cumulative + v);
+            cumulative += v;
+        });
+        options.series = [
+            {
+                name: 'ghost',
+                type: 'bar',
+                stack: 'waterfall',
+                itemStyle: { color: 'transparent', borderColor: 'transparent' },
+                emphasis: { itemStyle: { color: 'transparent' } },
+                data: ghost
+            },
+            {
+                name: datasets[0].label || 'Value',
+                type: 'bar',
+                stack: 'waterfall',
+                data: vals.map((v, i) => ({
+                    value: Math.abs(v),
+                    itemStyle: { color: v >= 0 ? '#91cc75' : '#ee6666' }
+                })),
+                label: { show: true, position: 'top', formatter: (p) => vals[p.dataIndex] >= 0 ? `+${vals[p.dataIndex]}` : `${vals[p.dataIndex]}` }
+            }
+        ];
+        return options;
+    }
+
     datasets.forEach((ds, idx) => {
         let dsType = ds.type || type;
         const color = ds.backgroundColor || defaultPalette[idx % defaultPalette.length];
@@ -151,7 +188,7 @@ const chartOptions = computed(() => {
 
         let s = {
             name: pLabel,
-            type: dsType === 'area' ? 'line' : dsType,
+            type: dsType === 'area' ? 'line' : (dsType === 'bar-h' ? 'bar' : dsType),
             data: ds.data,
             itemStyle: {}
         };
@@ -248,6 +285,7 @@ function getChartTypeName(type) {
     const names = {
         line: 'Line Chart',
         bar: 'Bar Chart',
+        'bar-h': 'Horizontal Bar Chart',
         pie: 'Pie Chart',
         doughnut: 'Doughnut Chart',
         polarArea: 'Polar Area Chart',
@@ -255,7 +293,8 @@ function getChartTypeName(type) {
         scatter: 'Scatter Plot',
         bubble: 'Bubble Chart',
         area: 'Area Chart',
-        mixed: 'Mixed Chart'
+        mixed: 'Mixed Chart',
+        waterfall: 'Waterfall Chart'
     };
     return names[type] || type;
 }

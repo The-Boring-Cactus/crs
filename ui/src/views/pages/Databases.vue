@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted, ref, reactive, computed, getCurrentInstance } from 'vue';
+import { onMounted, ref, reactive, computed, getCurrentInstance, watch } from 'vue';
 import { useDatabaseStore } from '@/store/databaseStore';
+import { useProjectStore } from '@/store/projectStore';
 import { toast } from 'vue-sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Database, Plus, Trash2, Download, Upload, RefreshCw, Search, ArrowUpDown, Check, Pencil, Copy, X, Save, AlertTriangle, Loader2 } from 'lucide-vue-next';
 
 const databaseStore = useDatabaseStore();
+const projectStore = useProjectStore();
 const { proxy } = getCurrentInstance();
 
 const fileInput = ref();
@@ -122,6 +124,10 @@ const databaseTypes = ref([
 ]);
 
 onMounted(() => {
+    databaseStore.loadConnections(proxy.$socket);
+});
+
+watch(() => projectStore.currentProjectId, () => {
     databaseStore.loadConnections(proxy.$socket);
 });
 

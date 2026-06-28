@@ -90,10 +90,14 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
-            path: '/public/:shareToken',
+            path: '/share/:shareToken',
             name: 'public-view',
             component: () => import('@/views/pages/PublicView.vue'),
             meta: { requiresAuth: false }
+        },
+        {
+            path: '/public/:shareToken',
+            redirect: to => ({ name: 'public-view', params: { shareToken: to.params.shareToken } })
         },
         {
             path: '/auth/login',

@@ -39,7 +39,11 @@ import {
     Lock,
     Copy,
     FileText,
-    Clock
+    Clock,
+    Database,
+    Hash,
+    Terminal,
+    BarChart2 as BarChart2Icon
 } from 'lucide-vue-next';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
@@ -72,8 +76,10 @@ import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/compon
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { userStoreMe } from '@/store/userStore';
+import { useProjectStore } from '@/store/projectStore';
 
 const userStore = userStoreMe();
+const projectStore = useProjectStore();
 
 const visibleCompo = ref(false);
 const editingTitle = ref(false);
@@ -92,6 +98,17 @@ const showLoadDialog = ref(false);
 
 const dashboardStore = useDashboardStore();
 const { proxy } = getCurrentInstance();
+
+// SQL widget picker
+const showSqlPickerDialog = ref(false);
+const savedSqlScripts = ref([]);
+const selectedSqlScript = ref(null);
+
+// CS script picker
+const showCsPickerDialog = ref(false);
+const savedCsScripts = ref([]);
+const selectedCsScript = ref(null);
+const csPickerMode = ref('output'); // 'output' | 'variable'
 
 let layout = ref({
     componentes: [{ x: 6, y: 0, w: 3, h: 1, i: '0', static: false, type: 'Text', value: 'Sample Text' }],
@@ -233,6 +250,31 @@ const componentMenuItems = ref([
                         badge: 'Pro'
                     }
                 ]
+            }
+        ]
+    },
+    {
+        label: 'Data Widgets',
+        icon: markRaw(Database),
+        expanded: true,
+        items: [
+            {
+                label: 'SQL Visualization',
+                icon: markRaw(BarChart2Icon),
+                command: () => openSqlPickerDialog(),
+                badge: 'SQL'
+            },
+            {
+                label: 'CS Variable',
+                icon: markRaw(Hash),
+                command: () => openCsPickerDialog('variable'),
+                badge: 'KPI'
+            },
+            {
+                label: 'CS Script Output',
+                icon: markRaw(Terminal),
+                command: () => openCsPickerDialog('output'),
+                badge: 'Live'
             }
         ]
     },
@@ -551,6 +593,36 @@ const addcomponent = async (type) => {
             placeholder: 'Enter text here...',
             size: 'medium'
         };
+    } else if (type === 'Variable') {
+        newComponent = {
+            x: 1, y: 0, w: 3, h: 3,
+            i: layout.value.componentes.length.toString(),
+            static: false,
+            type: 'Variable',
+            label: 'KPI',
+            value: '0',
+            unit: '',
+            description: '',
+            scriptCode: '',
+            refreshInterval: 0
+        };
+    } else if (type === 'FunctOutput') {
+        newComponent = {
+            x: 1, y: 0, w: 6, h: 7,
+            i: layout.value.componentes.length.toString(),
+            static: false,
+            type: 'FunctOutput',
+            title: 'Script Output',
+            outputType: null,
+            chartType: 'bar',
+            chartData: null,
+            tableColumns: [],
+            tableData: [],
+            statReportData: null,
+            printOutput: '',
+            scriptCode: '',
+            refreshInterval: 0
+        };
     } else if (isChartType(type)) {
         // Chart components get larger default sizes
         const chartSizes = {
@@ -627,7 +699,10 @@ function getDefaultChartTitle(type) {
         Image: 'Image',
         ToggleButton: 'Toggle Button',
         Select: 'Select Dropdown',
-        InputText: 'Input Text'
+        InputText: 'Input Text',
+        Variable: 'Variable / KPI',
+        FunctOutput: 'Script Output',
+        SqlWidget: 'SQL Visualization'
     };
     return titles[type] || type;
 }
@@ -1338,7 +1413,11 @@ async function saveToServer() {
     try {
         const layoutData = {
             id: dashboardId.value,
+            name: MyTitle.value,
             title: MyTitle.value,
+            projectId: projectStore.currentProjectId || undefined,
+            shareToken: layout.value.formvalues?.shareToken || undefined,
+            isPublic: layout.value.formvalues?.isPublic || false,
             components: layout.value.componentes,
             timestamp: new Date().toISOString()
         };
@@ -1368,10 +1447,33 @@ async function openLoadDialog() {
 }
 
 async function loadFromServer(dash) {
-    if (dash && dash.components) {
-        dashboardId.value = dash.id;
-        MyTitle.value = dash.title || 'Imported Dashboard';
-        layout.value.componentes = dash.components;
+    // Components may be directly on the object or inside the config JSON string
+    let components = dash.components;
+    let title = dash.title || dash.name || 'Imported Dashboard';
+    let shareToken = dash.shareToken || dash.sharetoken || null;
+    let isPublic = dash.isPublic ?? dash.ispublic ?? false;
+
+    if (!components && dash.config) {
+        try {
+            const cfg = typeof dash.config === 'string' ? JSON.parse(dash.config) : dash.config;
+            components = cfg.components;
+            if (cfg.title || cfg.name) title = cfg.title || cfg.name;
+            if (!shareToken) shareToken = cfg.shareToken || cfg.sharetoken || null;
+            if (!isPublic) isPublic = cfg.isPublic ?? cfg.ispublic ?? false;
+        } catch { /* malformed config — leave components undefined */ }
+    }
+
+    if (dash && components) {
+        dashboardId.value = dash.id || dash.Id;
+        MyTitle.value = title;
+        layout.value.componentes = components;
+        layout.value.formvalues = {
+            ...layout.value.formvalues,
+            name: title,
+            shareToken: shareToken,
+            isPublic: isPublic
+        };
+        currentShareToken.value = shareToken || '';
         
         showLoadDialog.value = false;
         
@@ -1509,7 +1611,7 @@ const itemTitle = (item) => {
 const showShareDialog = ref(false);
 const currentShareToken = ref('');
 const shareUrl = computed(() =>
-    currentShareToken.value ? `${window.location.origin}/public/${currentShareToken.value}` : ''
+    currentShareToken.value ? `${window.location.origin}/share/${currentShareToken.value}` : ''
 );
 
 async function openShareDialog() {
@@ -1596,18 +1698,39 @@ const handleWidgetOutput = (e) => {
     const widget = layout.value.componentes.find(c => c.i === widgetExecutingId.value);
     if (!widget) return;
 
+    // Legacy handling for existing chart / table widgets
     if (dataType === 'Chart' && isChartType(widget.type)) {
-        widget.chartData = {
-            labels: payload.labels || [],
-            datasets: payload.datasets || []
-        };
+        widget.chartData = { labels: payload.labels || [], datasets: payload.datasets || [] };
     } else if (dataType === 'Table' && widget.type === 'DataTable') {
         widget.columns = (payload.columns || []).map(col => ({ field: col, header: col }));
         widget.tableData = payload.rows || [];
-    } else if (dataType === 'StatReport') {
+    } else if (dataType === 'StatReport' && widget.type !== 'FunctOutput') {
         widget.statReportData = payload;
         showStatReportDialog.value = true;
         viewingStatReport.value = payload;
+    }
+
+    // FunctOutput: accept any structured output type
+    if (widget.type === 'FunctOutput') {
+        if (dataType === 'Chart') {
+            widget.outputType = 'chart';
+            widget.chartType = payload.chartType || 'bar';
+            widget.chartData = { labels: payload.labels || [], datasets: payload.datasets || [] };
+        } else if (dataType === 'Table') {
+            widget.outputType = 'table';
+            widget.tableColumns = (payload.columns || []).map(col => ({ field: col, header: col }));
+            widget.tableData = payload.rows || [];
+        } else if (dataType === 'StatReport') {
+            widget.outputType = 'statreport';
+            widget.statReportData = payload;
+        }
+    }
+
+    // Variable: Value output updates the displayed scalar
+    if (widget.type === 'Variable' && dataType === 'Value') {
+        widget.value = payload.value ?? payload;
+        if (payload.label && !widget.label) widget.label = payload.label;
+        if (payload.unit) widget.unit = payload.unit;
     }
 };
 
@@ -1644,6 +1767,234 @@ function openWidgetScriptEditor(item) {
     editingScriptWidget.value = item;
     widgetScriptDialog.value = true;
 }
+
+// ── SQL Widget helpers ──────────────────────────────────────────────────────
+async function openSqlPickerDialog() {
+    try {
+        const params = { language: 'sql' };
+        if (projectStore.currentProjectId) params.projectId = projectStore.currentProjectId;
+        const result = await userStore.executeCommand('LoadScripts', params, proxy.$socket);
+        savedSqlScripts.value = (result?.Data || []).map(s => ({
+            id: s.id || s.Id,
+            name: s.name || s.Name || 'Untitled',
+            database: s.databaseconnectionid || s.DatabaseConnectionId || s.database || '',
+            code: s.code || s.Code || '',
+            visualization: s.visualization || s.Visualization || null
+        }));
+    } catch { savedSqlScripts.value = []; }
+    showSqlPickerDialog.value = true;
+}
+
+async function addSqlWidget() {
+    if (!selectedSqlScript.value) return;
+    const script = selectedSqlScript.value;
+    const newComponent = {
+        x: 1, y: 0, w: 6, h: 7,
+        i: layout.value.componentes.length.toString(),
+        static: false,
+        type: 'SqlWidget',
+        title: script.name,
+        sqlScriptId: script.id,
+        sqlScriptName: script.name,
+        databaseId: script.database,
+        sqlCode: script.code,
+        visualization: script.visualization || '{"type":"table"}',
+        queryResults: [],
+        queryColumns: [],
+        loading: false
+    };
+    layout.value.componentes.push(newComponent);
+    showSqlPickerDialog.value = false;
+    selectedSqlScript.value = null;
+    visibleCompo.value = false;
+    await refreshSqlWidget(newComponent);
+}
+
+async function refreshSqlWidget(item) {
+    if (!item.databaseId || !item.sqlCode) {
+        toast.add({ severity: 'warn', summary: 'No Query', detail: 'This widget has no database or SQL code configured.' });
+        return;
+    }
+    item.loading = true;
+    try {
+        const result = await userStore.executeCommand('ExecuteSql', {
+            database: item.databaseId,
+            code: item.sqlCode
+        }, proxy.$socket);
+        if (result?.Data) {
+            item.queryResults = result.Data.rows || [];
+            item.queryColumns = result.Data.columns || [];
+        }
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Query Failed', detail: error.message });
+    } finally {
+        item.loading = false;
+    }
+}
+
+function getSqlWidgetViz(item) {
+    try { return JSON.parse(item.visualization || '{"type":"table"}'); }
+    catch { return { type: 'table' }; }
+}
+
+function getSqlWidgetChartData(item) {
+    const viz = getSqlWidgetViz(item);
+    const rows = item.queryResults || [];
+    const columns = item.queryColumns || [];
+    if (!rows.length || !columns.length) return null;
+
+    const labelCol = viz.labelColumn || columns[0]?.field || '';
+    const valueCols = (viz.valueColumns || []).length > 0
+        ? viz.valueColumns
+        : columns.filter(c => c.field !== labelCol).slice(0, 4).map(c => c.field);
+    if (!valueCols.length) return null;
+
+    const palette = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272'];
+    const vizType = viz.type;
+
+    if (vizType === 'pie') {
+        const col = valueCols[0] || labelCol;
+        return {
+            labels: rows.map(r => String(r[labelCol] ?? '')),
+            datasets: [{ label: col, data: rows.map(r => Number(r[col]) || 0), backgroundColor: palette, borderColor: palette, borderWidth: 1 }]
+        };
+    }
+
+    const labels = rows.map(r => String(r[labelCol] ?? ''));
+    const datasets = valueCols.map((col, i) => ({
+        label: columns.find(c => c.field === col)?.header || col,
+        data: rows.map(r => Number(r[col]) || 0),
+        backgroundColor: palette[i % palette.length] + 'bb',
+        borderColor: palette[i % palette.length],
+        borderWidth: 1,
+        fill: vizType === 'area'
+    }));
+    return { labels, datasets };
+}
+
+function getSqlWidgetPivotData(item) {
+    const viz = getSqlWidgetViz(item);
+    const rows = item.queryResults || [];
+    const { pivotRowField, pivotColField, pivotValueField, pivotAggregation = 'sum' } = viz;
+    if (!rows.length || !pivotRowField || !pivotColField || !pivotValueField) return null;
+
+    const colValues = [...new Set(rows.map(r => String(r[pivotColField] ?? '')))].sort();
+    const rowValues = [...new Set(rows.map(r => String(r[pivotRowField] ?? '')))].sort();
+
+    const agg = (matchingRows) => {
+        if (!matchingRows.length) return null;
+        const nums = matchingRows.map(r => Number(r[pivotValueField]) || 0);
+        switch (pivotAggregation) {
+            case 'sum': return nums.reduce((a, b) => a + b, 0);
+            case 'avg': return +(nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2);
+            case 'count': return matchingRows.length;
+            case 'min': return Math.min(...nums);
+            case 'max': return Math.max(...nums);
+            default: return nums[0];
+        }
+    };
+
+    return {
+        columns: colValues,
+        rows: rowValues.map(rowVal => {
+            const values = {};
+            for (const colVal of colValues) {
+                const matching = rows.filter(r =>
+                    String(r[pivotRowField] ?? '') === rowVal &&
+                    String(r[pivotColField] ?? '') === colVal
+                );
+                values[colVal] = agg(matching);
+            }
+            return { label: rowVal, values };
+        })
+    };
+}
+
+// ── CS Script Widget helpers ───────────────────────────────────────────────
+async function openCsPickerDialog(mode = 'output') {
+    csPickerMode.value = mode;
+    try {
+        const params = { language: 'csharp' };
+        if (projectStore.currentProjectId) params.projectId = projectStore.currentProjectId;
+        const result = await userStore.executeCommand('LoadScripts', params, proxy.$socket);
+        savedCsScripts.value = (result?.Data || []).map(s => ({
+            id: s.id || s.Id,
+            name: s.name || s.Name || 'Untitled',
+            code: s.content || s.Content || s.code || s.Code || ''
+        }));
+    } catch { savedCsScripts.value = []; }
+    showCsPickerDialog.value = true;
+}
+
+function addCsWidget() {
+    if (!selectedCsScript.value) return;
+    const script = selectedCsScript.value;
+    const isVariable = csPickerMode.value === 'variable';
+
+    const newComponent = isVariable
+        ? {
+            x: 0, y: 0, w: 3, h: 3,
+            i: layout.value.componentes.length.toString(),
+            static: false,
+            type: 'Variable',
+            label: script.name,
+            value: '',
+            unit: '',
+            description: 'From: ' + script.name,
+            scriptCode: script.code,
+            refreshInterval: 0
+          }
+        : {
+            x: 0, y: 0, w: 6, h: 7,
+            i: layout.value.componentes.length.toString(),
+            static: false,
+            type: 'FunctOutput',
+            title: script.name,
+            scriptCode: script.code,
+            outputType: null,
+            chartType: 'bar',
+            chartData: null,
+            tableColumns: [],
+            tableData: [],
+            statReportData: null,
+            printOutput: '',
+            refreshInterval: 0
+          };
+
+    layout.value.componentes.push(newComponent);
+    showCsPickerDialog.value = false;
+    selectedCsScript.value = null;
+    visibleCompo.value = false;
+    runWidgetScript(newComponent);
+}
+
+// ── DataTable helpers (used in template) ──────────────────────────────────
+function getStatusVariant(status) {
+    if (status === 'active') return 'default';
+    if (status === 'inactive') return 'destructive';
+    return 'secondary';
+}
+
+function toggleAllRows(item, val) {
+    item.selectedRows = val ? [...item.tableData] : [];
+}
+
+function isSelected(item, row) {
+    return item.selectedRows?.some(r => r.id === row.id) ?? false;
+}
+
+function toggleRowSelection(item, row, val) {
+    if (!item.selectedRows) item.selectedRows = [];
+    if (val) item.selectedRows.push(row);
+    else item.selectedRows = item.selectedRows.filter(r => r.id !== row.id);
+}
+
+function toggleTreeNode(item, node) {
+    if (item.expandedKeys[node.key]) delete item.expandedKeys[node.key];
+    else item.expandedKeys[node.key] = true;
+}
+
+function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 </script>
 
 <template>
@@ -2164,6 +2515,211 @@ function openWidgetScriptEditor(item) {
                     </div>
                 </div>
             </div>
+
+            <!-- SqlWidget: execute a saved SQL query and display with configured visualization -->
+            <div v-else-if="item.type === 'SqlWidget'" class="sql-widget-container flex flex-col h-full border rounded-md p-2 bg-card">
+                <div class="flex justify-between items-center mb-2 min-h-[2rem]">
+                    <div v-if="!item.editing" class="cursor-pointer hover:underline font-medium text-sm truncate max-w-[60%]" @click="item.editing = true">
+                        {{ item.title || item.sqlScriptName || 'SQL Query' }}
+                    </div>
+                    <div v-else class="flex items-center gap-1 flex-1 mr-2">
+                        <Input v-model="item.title" class="h-7 text-sm" @keyup.enter="item.editing = false" />
+                        <Button variant="ghost" size="icon" class="h-6 w-6 text-destructive shrink-0" @click="item.editing = false"><X class="w-3 h-3" /></Button>
+                    </div>
+                    <div class="sql-widget-controls flex gap-1 shrink-0">
+                        <span v-if="item.loading" class="text-xs text-muted-foreground mr-1 self-center">Running…</span>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="refreshSqlWidget(item)" title="Run Query">
+                            <RefreshCw class="w-3 h-3" :class="item.loading ? 'animate-spin' : ''" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
+                            <Trash2 class="w-3 h-3" />
+                        </Button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-auto min-h-0">
+                    <!-- Table view -->
+                    <div v-if="getSqlWidgetViz(item).type === 'table'" class="h-full overflow-auto border rounded-md bg-background">
+                        <table v-if="item.queryResults?.length" class="text-xs w-full border-collapse">
+                            <thead class="sticky top-0 bg-secondary z-10">
+                                <tr>
+                                    <th v-for="col in item.queryColumns" :key="col.field" class="border border-border px-2 py-1 text-left font-semibold whitespace-nowrap">{{ col.header }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(row, ri) in item.queryResults" :key="ri" class="hover:bg-muted/40 transition-colors">
+                                    <td v-for="col in item.queryColumns" :key="col.field" class="border border-border px-2 py-1">{{ row[col.field] ?? 'NULL' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
+                            Click the refresh button to run the query
+                        </div>
+                    </div>
+
+                    <!-- Pivot view -->
+                    <div v-else-if="getSqlWidgetViz(item).type === 'pivot'" class="h-full overflow-auto border rounded-md bg-background">
+                        <table v-if="getSqlWidgetPivotData(item)" class="text-xs w-full border-collapse">
+                            <thead class="sticky top-0 bg-secondary z-10">
+                                <tr>
+                                    <th class="border border-border px-2 py-1 text-left font-semibold">Row</th>
+                                    <th v-for="col in getSqlWidgetPivotData(item).columns" :key="col" class="border border-border px-2 py-1 text-center font-semibold">{{ col }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="row in getSqlWidgetPivotData(item).rows" :key="row.label" class="hover:bg-muted/40 transition-colors">
+                                    <td class="border border-border px-2 py-1 font-medium">{{ row.label }}</td>
+                                    <td v-for="col in getSqlWidgetPivotData(item).columns" :key="col" class="border border-border px-2 py-1 text-right">{{ row.values[col] !== null ? row.values[col] : '—' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
+                            Configure pivot fields in the SQL Editor script first
+                        </div>
+                    </div>
+
+                    <!-- Chart view (line, bar, bar-h, area, pie, scatter, waterfall) -->
+                    <div v-else class="h-full flex items-center justify-center">
+                        <BaseChart
+                            v-if="getSqlWidgetChartData(item)"
+                            :type="getSqlWidgetViz(item).type || 'bar'"
+                            :data="getSqlWidgetChartData(item)"
+                            :height="getChartHeight(item.h - 1)"
+                            :show-header="false"
+                            :show-footer="false"
+                            :show-controls="false"
+                            :show-legend="true"
+                            class="w-full"
+                        />
+                        <div v-else class="text-muted-foreground text-xs text-center p-4">
+                            <BarChart2Icon class="w-6 h-6 mx-auto mb-1 opacity-40" />
+                            Click refresh to load data
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variable / KPI Widget -->
+            <div v-else-if="item.type === 'Variable'" class="variable-widget flex flex-col h-full border rounded-md p-3 bg-card">
+                <div class="flex justify-between items-start">
+                    <div
+                        v-if="!item.editingLabel"
+                        class="text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                        @click="item.editingLabel = true"
+                    >
+                        {{ item.label || 'Click to set label' }}
+                    </div>
+                    <div v-else class="flex items-center gap-1">
+                        <Input v-model="item.label" class="h-6 text-xs w-28" autofocus @blur="item.editingLabel = false" @keyup.enter="item.editingLabel = false" />
+                    </div>
+                    <div class="variable-controls flex gap-0.5">
+                        <Button variant="ghost" size="icon" class="h-6 w-6" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script bound'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
+                            <RefreshCw class="w-3 h-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-6 w-6" @click="openWidgetScriptEditor(item)" title="Bind Script">
+                            <Code class="w-3 h-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-6 w-6 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
+                            <Trash2 class="w-3 h-3" />
+                        </Button>
+                    </div>
+                </div>
+                <div class="flex-1 flex flex-col items-center justify-center gap-1">
+                    <div v-if="!item.editingValue" class="cursor-pointer tabular-nums font-bold leading-none" :class="item.h >= 4 ? 'text-4xl' : 'text-2xl'" @click="item.editingValue = true">
+                        {{ item.value !== undefined && item.value !== null && item.value !== '' ? item.value : '—' }}
+                        <span v-if="item.unit" class="text-base font-normal text-muted-foreground ml-1">{{ item.unit }}</span>
+                    </div>
+                    <div v-else class="flex items-center gap-2">
+                        <Input v-model="item.value" class="h-9 text-xl w-36 text-center font-bold tabular-nums" autofocus @blur="item.editingValue = false" @keyup.enter="item.editingValue = false" />
+                        <Input v-model="item.unit" class="h-9 text-sm w-16 text-center" placeholder="unit" @blur="item.editingValue = false" />
+                    </div>
+                    <p v-if="item.description" class="text-xs text-muted-foreground text-center">{{ item.description }}</p>
+                </div>
+            </div>
+
+            <!-- FunctEngine Output Widget -->
+            <div v-else-if="item.type === 'FunctOutput'" class="funct-output-widget flex flex-col h-full border rounded-md p-2 bg-card">
+                <div class="flex justify-between items-center mb-2 min-h-[2rem]">
+                    <div v-if="!item.editing" class="cursor-pointer hover:underline font-medium text-sm" @click="item.editing = true">
+                        {{ item.title || 'Script Output' }}
+                    </div>
+                    <div v-else class="flex items-center gap-1">
+                        <Input v-model="item.title" class="h-7 text-sm" @keyup.enter="item.editing = false" />
+                        <Button variant="ghost" size="icon" class="h-6 w-6 text-destructive" @click="item.editing = false"><X class="w-3 h-3" /></Button>
+                    </div>
+                    <div class="funct-controls flex gap-1">
+                        <Button v-if="item.outputType === 'statreport'" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Full Report">
+                            <FileText class="w-3 h-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script — click the script button first'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
+                            <RefreshCw class="w-3 h-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="openWidgetScriptEditor(item)" title="Bind Script">
+                            <Code class="w-3 h-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
+                            <Trash2 class="w-3 h-3" />
+                        </Button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-auto min-h-0">
+                    <!-- Empty state -->
+                    <div v-if="!item.outputType" class="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 p-4">
+                        <Terminal class="w-8 h-8 opacity-30" />
+                        <p class="text-xs text-center">Bind a FunctEngine script and click Run.<br/>Supports <code class="bg-muted px-1 rounded">Table()</code>, <code class="bg-muted px-1 rounded">Chart()</code>, <code class="bg-muted px-1 rounded">StatReport()</code></p>
+                    </div>
+
+                    <!-- Chart output -->
+                    <div v-else-if="item.outputType === 'chart'" class="h-full">
+                        <BaseChart
+                            v-if="item.chartData"
+                            :type="item.chartType || 'bar'"
+                            :data="item.chartData"
+                            :height="getChartHeight(item.h - 1)"
+                            :show-header="false"
+                            :show-footer="false"
+                            :show-controls="false"
+                            :show-legend="true"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <!-- Table output -->
+                    <div v-else-if="item.outputType === 'table'" class="h-full overflow-auto border rounded-md bg-background">
+                        <table v-if="item.tableData?.length" class="text-xs w-full border-collapse">
+                            <thead class="sticky top-0 bg-secondary z-10">
+                                <tr>
+                                    <th v-for="col in item.tableColumns" :key="col.field" class="border border-border px-2 py-1 text-left font-semibold">{{ col.header }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(row, ri) in item.tableData" :key="ri" class="hover:bg-muted/40 transition-colors">
+                                    <td v-for="col in item.tableColumns" :key="col.field" class="border border-border px-2 py-1">{{ row[col.field] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- StatReport output (compact preview) -->
+                    <div v-else-if="item.outputType === 'statreport' && item.statReportData" class="text-xs space-y-2 p-1 overflow-auto h-full">
+                        <h4 class="font-semibold text-sm border-b pb-1">{{ item.statReportData.title }}</h4>
+                        <div v-for="(section, si) in (item.statReportData.sections || []).slice(0, 5)" :key="si" class="space-y-1">
+                            <p v-if="section.heading" class="font-medium text-muted-foreground">{{ section.heading }}</p>
+                            <div v-if="section.type === 'table'" class="overflow-x-auto">
+                                <table class="border-collapse w-full">
+                                    <thead><tr><th v-for="h in section.headers" :key="h" class="px-1 py-0.5 bg-muted border text-left">{{ h }}</th></tr></thead>
+                                    <tbody><tr v-for="(row, ri) in section.rows" :key="ri" class="border-t"><td v-for="(cell, ci) in row" :key="ci" class="px-1 py-0.5 border">{{ typeof cell === 'number' ? cell.toFixed(3) : cell }}</td></tr></tbody>
+                                </table>
+                            </div>
+                            <p v-else class="text-muted-foreground whitespace-pre-wrap">{{ section.content || section.text }}</p>
+                        </div>
+                        <p v-if="(item.statReportData.sections || []).length > 5" class="text-muted-foreground italic text-center mt-1">
+                            ⋯ {{ item.statReportData.sections.length - 5 }} more sections — click the report icon to view all
+                        </p>
+                    </div>
+                </div>
+            </div>
         </grid-item>
     </grid-layout>
 
@@ -2204,8 +2760,8 @@ function openWidgetScriptEditor(item) {
                 </div>
                 <div v-for="dash in dashboardStore.dashboards" :key="dash.id" class="flex justify-between items-center p-3 border rounded hover:bg-muted cursor-pointer" @click="loadFromServer(dash)">
                     <div>
-                        <div class="font-medium">{{ dash.title }}</div>
-                        <div class="text-xs text-muted-foreground">{{ dash.components?.length || 0 }} components • {{ new Date(dash.timestamp).toLocaleDateString() }}</div>
+                        <div class="font-medium">{{ dash.name || dash.title || 'Untitled' }}</div>
+                        <div class="text-xs text-muted-foreground">{{ new Date(dash.createdat || dash.CreatedAt || dash.timestamp || Date.now()).toLocaleDateString() }}</div>
                     </div>
                     <Button variant="ghost" size="sm" @click.stop="loadFromServer(dash)">Load</Button>
                 </div>
@@ -2277,6 +2833,86 @@ function openWidgetScriptEditor(item) {
                 <Button variant="outline" @click="widgetScriptDialog = false">Cancel</Button>
                 <Button @click="applyWidgetScript">
                     Save &amp; Run
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- SQL Script Picker Dialog -->
+    <Dialog v-model:open="showSqlPickerDialog">
+        <DialogContent class="sm:max-w-[600px]">
+            <DialogHeader>
+                <DialogTitle>Add SQL Visualization Widget</DialogTitle>
+                <DialogDescription>Select a saved SQL script. Its visualization settings (chart type, columns) will be used in the widget.</DialogDescription>
+            </DialogHeader>
+            <div class="py-2 max-h-[400px] overflow-auto border rounded-md">
+                <div v-if="savedSqlScripts.length === 0" class="text-center text-muted-foreground p-6">
+                    No SQL scripts found for the current project.
+                </div>
+                <div
+                    v-for="script in savedSqlScripts" :key="script.id"
+                    class="flex items-center justify-between px-3 py-2.5 border-b last:border-b-0 cursor-pointer hover:bg-muted transition-colors"
+                    :class="selectedSqlScript?.id === script.id ? 'bg-primary/10 border-l-2 border-l-primary' : ''"
+                    @click="selectedSqlScript = script"
+                >
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="h-4 w-4 rounded-full border border-primary flex items-center justify-center shrink-0">
+                            <div v-if="selectedSqlScript?.id === script.id" class="h-2 w-2 rounded-full bg-primary"></div>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-medium text-sm truncate">{{ script.name }}</p>
+                            <p class="text-xs text-muted-foreground truncate">{{ script.database || 'No database set' }}</p>
+                        </div>
+                    </div>
+                    <Badge variant="outline" class="text-xs capitalize shrink-0 ml-2">
+                        {{ (() => { try { return JSON.parse(script.visualization || '{}').type || 'table'; } catch { return 'table'; } })() }}
+                    </Badge>
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" @click="showSqlPickerDialog = false; selectedSqlScript = null">Cancel</Button>
+                <Button @click="addSqlWidget" :disabled="!selectedSqlScript">Add Widget</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- CS Script Picker Dialog -->
+    <Dialog v-model:open="showCsPickerDialog">
+        <DialogContent class="sm:max-w-[600px]">
+            <DialogHeader>
+                <DialogTitle>
+                    {{ csPickerMode === 'variable' ? 'Add CS Variable Widget' : 'Add CS Script Output Widget' }}
+                </DialogTitle>
+                <DialogDescription>
+                    {{ csPickerMode === 'variable'
+                        ? 'Select a saved CS script that calls Value(result, "label") to display a KPI metric on the dashboard.'
+                        : 'Select a saved CS script. Its Table(), Chart(), and StatReport() outputs will be displayed in the widget.' }}
+                </DialogDescription>
+            </DialogHeader>
+            <div class="py-2 max-h-[400px] overflow-auto border rounded-md">
+                <div v-if="savedCsScripts.length === 0" class="text-center text-muted-foreground p-6">
+                    No C# scripts found for the current project.
+                </div>
+                <div
+                    v-for="script in savedCsScripts" :key="script.id"
+                    class="flex items-center gap-3 px-3 py-2.5 border-b last:border-b-0 cursor-pointer hover:bg-muted transition-colors"
+                    :class="selectedCsScript?.id === script.id ? 'bg-primary/10 border-l-2 border-l-primary' : ''"
+                    @click="selectedCsScript = script"
+                >
+                    <div class="h-4 w-4 rounded-full border border-primary flex items-center justify-center shrink-0">
+                        <div v-if="selectedCsScript?.id === script.id" class="h-2 w-2 rounded-full bg-primary"></div>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-medium text-sm truncate">{{ script.name }}</p>
+                        <p class="text-xs text-muted-foreground font-mono truncate">{{ (script.code || '').split('\n')[0].substring(0, 60) }}</p>
+                    </div>
+                    <Badge variant="outline" class="text-xs shrink-0">CS</Badge>
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" @click="showCsPickerDialog = false; selectedCsScript = null">Cancel</Button>
+                <Button @click="addCsWidget" :disabled="!selectedCsScript">
+                    {{ csPickerMode === 'variable' ? 'Add Variable' : 'Add Output Widget' }}
                 </Button>
             </DialogFooter>
         </DialogContent>
@@ -3194,6 +3830,18 @@ function openWidgetScriptEditor(item) {
     font-size: 0.8rem;
     text-align: right;
 }
+
+/* SQL Widget */
+.sql-widget-container:hover .sql-widget-controls { opacity: 1; }
+.sql-widget-controls { opacity: 0; transition: opacity 0.2s; }
+
+/* Variable Widget */
+.variable-widget:hover .variable-controls { opacity: 1; }
+.variable-controls { opacity: 0; transition: opacity 0.2s; }
+
+/* FunctOutput Widget */
+.funct-output-widget:hover .funct-controls { opacity: 1; }
+.funct-controls { opacity: 0; transition: opacity 0.2s; }
 
 /* Responsive adjustments for new components */
 @media (max-width: 768px) {

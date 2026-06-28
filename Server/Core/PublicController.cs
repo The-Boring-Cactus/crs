@@ -20,19 +20,13 @@ public class PublicController
             throw new ProviderException(ResponseStatus.NotFound, "Dashboard not found or not shared");
 
         var configJson = row["config"]?.ToString() ?? row["Config"]?.ToString();
-        object config = null;
-        if (!string.IsNullOrEmpty(configJson))
-        {
-            try { config = Newtonsoft.Json.JsonConvert.DeserializeObject(configJson); }
-            catch { config = configJson; }
-        }
 
         return ValueTask.FromResult<object>(new
         {
             id = row["id"]?.ToString() ?? row["Id"]?.ToString(),
             name = row["name"]?.ToString() ?? row["Name"]?.ToString(),
             shareToken = token,
-            config
+            config = configJson   // raw JSON string — frontend parses it
         });
     }
 
@@ -48,19 +42,13 @@ public class PublicController
             throw new ProviderException(ResponseStatus.NotFound, "Report not found or not shared");
 
         var configJson = row["config"]?.ToString() ?? row["Config"]?.ToString();
-        object config = null;
-        if (!string.IsNullOrEmpty(configJson))
-        {
-            try { config = Newtonsoft.Json.JsonConvert.DeserializeObject(configJson); }
-            catch { config = configJson; }
-        }
 
         return ValueTask.FromResult<object>(new
         {
             id = row["id"]?.ToString() ?? row["Id"]?.ToString(),
             name = row["name"]?.ToString() ?? row["Name"]?.ToString(),
             shareToken = token,
-            config
+            config = configJson   // raw JSON string — frontend parses it
         });
     }
 }

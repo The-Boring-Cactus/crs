@@ -12,6 +12,7 @@ export interface DatabaseConnection {
   username: string;
   password: string;
   connectionString?: string;
+  projectId?: string;
   status: 'connected' | 'disconnected' | 'error' | 'testing';
   lastTested?: Date;
   createdAt: Date;
@@ -59,6 +60,7 @@ export const useDatabaseStore = defineStore({
             username: conn.username || conn.Username || '',
             password: conn.password || conn.Password || '',
             connectionString: conn.connectionString || conn.ConnectionString || conn.connectionstring || '',
+            projectId: conn.projectId || conn.ProjectId || conn.projectid || undefined,
             isGlobal: conn.isGlobal || conn.IsGlobal || conn.isglobal || false,
             sharedWith: conn.sharedWith || conn.SharedWith || conn.sharedwith || '',
             status: 'disconnected' as DatabaseConnection['status'],
@@ -74,12 +76,14 @@ export const useDatabaseStore = defineStore({
     },
 
     async addConnection(connection: Omit<DatabaseConnection, 'id' | 'createdAt' | 'updatedAt' | 'status'>, socket: any) {
+      const projectStore = useProjectStore();
       const newConnection: DatabaseConnection = {
         ...connection,
         id: this.generateId(),
         status: 'disconnected',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        projectId: connection.projectId ?? projectStore.currentProjectId ?? undefined
       };
 
       try {

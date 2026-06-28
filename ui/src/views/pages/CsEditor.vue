@@ -56,21 +56,7 @@ const chartTypeMap = {
 };
 
 // Editor state
-const code = ref(`// Welcome to C# Script Editor
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-public class Program
-{
-    public static void Main()
-    {
-        Console.WriteLine("Hello, World!");
-
-        // Your code here
-
-    }
-}`);
+const code = ref(`// Welcome to Script Editor`);
 
 const editorRef = ref();
 const debugText = ref('');
