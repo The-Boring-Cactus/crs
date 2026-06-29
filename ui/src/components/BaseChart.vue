@@ -14,6 +14,9 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus, RefreshCw, Pause, Play } from 'lucide-vue-next';
+import { useLayout } from '@/layout/composables/layout';
+
+const { layoutConfig } = useLayout();
 
 const props = defineProps({
     type: {
@@ -85,7 +88,13 @@ const cssHeight = computed(() => {
     return props.height || '100%';
 });
 
-const defaultPalette = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
+const palettes = {
+    indigo: ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#4f46e5', '#3730a3', '#4338ca'],
+    emerald: ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#059669', '#065f46', '#047857'],
+    blue: ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#2563eb', '#1e3a8a', '#1d4ed8'],
+    rose: ['#f43f5e', '#fb7185', '#fda4af', '#fecdd3', '#e11d48', '#9f1239', '#be123c'],
+    amber: ['#f59e0b', '#fbbf24', '#fcd34d', '#fde68a', '#d97706', '#92400e', '#b45309']
+};
 
 const chartOptions = computed(() => {
     const type = props.type;
@@ -94,32 +103,56 @@ const chartOptions = computed(() => {
 
     const isCategorical = ['line', 'bar', 'bar-h', 'area', 'mixed', 'waterfall'].includes(type) && labels.length > 0;
 
+    const isDark = layoutConfig.darkMode;
+    const themeColor = layoutConfig.themeColor || 'indigo';
+    const activePalette = palettes[themeColor] || palettes.indigo;
+
+    const textColor = isDark ? '#a1a1aa' : '#3f3f46';
+    const axisColor = isDark ? '#27272a' : '#e4e4e7';
+    const splitColor = isDark ? '#27272a' : '#f4f4f5';
+
     let options = {
-        title: props.title ? { text: props.title, left: 'center' } : undefined,
+        color: activePalette,
+        textStyle: {
+            color: textColor
+        },
+        title: props.title ? { text: props.title, left: 'center', textStyle: { color: isDark ? '#f4f4f5' : '#18181b' } } : undefined,
         tooltip: {
-            trigger: isCategorical ? 'axis' : 'item'
+            trigger: isCategorical ? 'axis' : 'item',
+            backgroundColor: isDark ? '#18181b' : '#ffffff',
+            borderColor: isDark ? '#27272a' : '#e4e4e7',
+            textStyle: { color: textColor }
         },
         legend: {
             show: props.showLegend && datasets.length > 0,
-            bottom: 0
+            bottom: 0,
+            textStyle: { color: textColor }
         },
         animation: animationEnabled.value,
         animationDuration: props.animationDuration,
         ...props.options // merge specific echart overrides if any
     };
 
+    const commonAxisOptions = {
+        axisLine: { lineStyle: { color: axisColor } },
+        axisLabel: { color: textColor },
+        splitLine: { lineStyle: { color: splitColor } }
+    };
+
     if (type === 'bar-h') {
         // Horizontal bar: swap axes
-        options.xAxis = { type: 'value' };
-        options.yAxis = { type: 'category', data: labels };
+        options.xAxis = { type: 'value', ...commonAxisOptions };
+        options.yAxis = { type: 'category', data: labels, ...commonAxisOptions };
         options.grid = { left: '3%', right: '4%', bottom: props.showLegend ? '15%' : '3%', containLabel: true };
     } else if (isCategorical) {
         options.xAxis = {
             type: 'category',
-            data: labels
+            data: labels,
+            ...commonAxisOptions
         };
         options.yAxis = {
-            type: 'value'
+            type: 'value',
+            ...commonAxisOptions
         };
         options.grid = {
             left: '3%',
@@ -128,8 +161,8 @@ const chartOptions = computed(() => {
             containLabel: true
         };
     } else if (['scatter', 'bubble'].includes(type)) {
-        options.xAxis = { type: 'value' };
-        options.yAxis = { type: 'value' };
+        options.xAxis = { type: 'value', ...commonAxisOptions };
+        options.yAxis = { type: 'value', ...commonAxisOptions };
         options.grid = { left: '3%', right: '4%', bottom: '15%', containLabel: true };
     }
 
@@ -182,7 +215,7 @@ const chartOptions = computed(() => {
 
     datasets.forEach((ds, idx) => {
         let dsType = ds.type || type;
-        const color = ds.backgroundColor || defaultPalette[idx % defaultPalette.length];
+        const color = ds.backgroundColor || activePalette[idx % activePalette.length];
         const lineColor = ds.borderColor || color;
         const pLabel = ds.label || `Series ${idx + 1}`;
 

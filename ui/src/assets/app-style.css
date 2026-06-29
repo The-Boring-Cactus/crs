@@ -622,3 +622,57 @@ body {
     border-color: #8B5CF6;
     box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
 }
+
+/* Dark Mode Support
+   ========================================================================== */
+.dark body {
+    background: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+}
+
+.dark .app-container {
+    background: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+}
+
+.dark .search-bar {
+    background: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+}
+
+.dark .search-bar input {
+    color: hsl(var(--foreground)) !important;
+}
+
+.dark .search-bar input::placeholder {
+    color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .login-card {
+    background: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
+}
+
+.dark .home-section {
+    background: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+}
+
+.dark .section-header h3 {
+    color: hsl(var(--foreground)) !important;
+}
+
+.dark .control-card {
+    background: hsl(var(--muted)/0.3) !important;
+    border-color: hsl(var(--border)) !important;
+}
+
+.dark .control-card h4 {
+    color: hsl(var(--foreground)) !important;
+}
+
+.dark .control-icon {
+    color: hsl(var(--muted-foreground)) !important;
+}
+

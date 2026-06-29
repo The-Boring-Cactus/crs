@@ -4,6 +4,9 @@ import { redo, undo } from '@codemirror/commands';
 import { search } from '@codemirror/search';
 import { Codemirror } from 'vue-codemirror';
 import { sql } from '@codemirror/lang-sql';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { basicLight } from '@fsegurai/codemirror-theme-basic-light';
+import { useLayout } from '@/layout/composables/layout';
 import { toast } from 'vue-sonner';
 import { useDatabaseStore } from '@/store/databaseStore';
 import { userStoreMe } from '@/store/userStore';
@@ -310,7 +313,10 @@ const editorStyle = computed(() => ({
 
 const availableDatabases = computed(() => databaseStore.allConnections);
 
-const extensions = [sql(), search()];
+const { layoutConfig } = useLayout();
+const extensions = computed(() => {
+    return [sql(), search(), layoutConfig.darkMode ? oneDark : basicLight];
+});
 
 const handleReady = ({ view }) => { cmView.value = view; };
 
@@ -1142,7 +1148,7 @@ watch(() => projectStore.currentProjectId, () => {
     .results-container { min-height: 300px; }
 }
 
-.editor-container {
+:global(html:not(.dark)) .editor-container {
     :deep(.cm-content) {
         .cm-keyword { color: var(--p-primary-color); font-weight: 600; }
         .cm-string { color: var(--p-green-500); }

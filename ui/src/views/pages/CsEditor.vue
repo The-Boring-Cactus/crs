@@ -5,6 +5,8 @@ import { toast } from 'vue-sonner';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 import BaseChart from '@/components/BaseChart.vue';
 import { basicLight } from '@fsegurai/codemirror-theme-basic-light';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { useLayout } from '@/layout/composables/layout';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -92,8 +94,10 @@ const editorStyle = computed(() => {
     };
 });
 
+const { layoutConfig } = useLayout();
+
 const editorTheme = computed(() => {
-    return basicLight;
+    return layoutConfig.darkMode ? oneDark : basicLight;
 });
 
 const handleSocketDebug = (e) => {

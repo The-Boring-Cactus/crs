@@ -439,4 +439,9 @@ export default {
 :deep(.cm-completionIcon-property) {
     color: #dc2626;
 }
+
+:global(.dark) .code-editor-container {
+    border-color: #27272a;
+    background: #18181b;
+}
 </style>
