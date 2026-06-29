@@ -54,8 +54,13 @@
   </ItemGroup>
 
 <ItemGroup>
-        <Content Include="Resources\**">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <!-- Resources lives at the repo root (../Resources relative to this project).
+             In development the server is run from the repo root so it finds Resources/
+             via working directory. For publish, we copy the folder into the output. -->
+        <Content Include="..\Resources\**\*">
+            <Link>Resources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         </Content>
 </ItemGroup>
 

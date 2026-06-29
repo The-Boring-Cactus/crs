@@ -13,7 +13,9 @@ const piniaSocketStore = useSocketStoreWithOut(app);
 
 app.use(router);
 
-app.use(VueNativeSock, import.meta.env.VITE_WS_URL || 'ws://localhost:9876/srv/', {
+const _wsUrl = import.meta.env.VITE_WS_URL ||
+    `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/srv/`;
+app.use(VueNativeSock, _wsUrl, {
     store: piniaSocketStore,
     format: 'json',
     connectManually: false,
