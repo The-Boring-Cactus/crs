@@ -93,7 +93,7 @@ public class SetupController
                 {
                     "mssql" => @"INSERT INTO Users (Id, Username, FullName, Email, PasswordHash, Salt, Roles) 
                                  VALUES (@Id, @Username, @FullName, @Email, @PasswordHash, @Salt, @Roles)",
-                    "postgres" => @"INSERT INTO Users (Id, Username, FullName, Email, PasswordHash, Salt, Roles) 
+                    "postgresql" => @"INSERT INTO Users (Id, Username, FullName, Email, PasswordHash, Salt, Roles)
                                     VALUES (@Id, @Username, @FullName, @Email, @PasswordHash, @Salt, @Roles)",
                     "mysql" => @"INSERT INTO Users (Id, Username, FullName, Email, PasswordHash, Salt, Roles) 
                                  VALUES (@Id, @Username, @FullName, @Email, @PasswordHash, @Salt, @Roles)",

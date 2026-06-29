@@ -8,8 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight, FileText, ChevronRight, ChevronDown, Pencil, Plus, Trash2, Sun, Moon, Palette, Check, Eye, EyeOff } from 'lucide-vue-next';
+import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight, FileText, ChevronRight, ChevronDown, Pencil, Plus, Trash2, Sun, Moon, Palette, Check, Eye, EyeOff, X } from 'lucide-vue-next';
 import { useLayout } from '@/layout/composables/layout';
 
 const router = useRouter();
@@ -517,17 +516,21 @@ const deleteProject = async (id) => {
         </div>
     </div>
 
-    <!-- Settings Dialog -->
-    <Dialog v-model:open="showSettings">
-        <DialogContent class="max-w-lg">
-            <DialogHeader>
-                <DialogTitle class="flex items-center gap-2">
+    <!-- Settings Dialog — uses same plain fixed-overlay pattern as Project/Register dialogs -->
+    <div v-if="showSettings" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showSettings = false">
+        <div class="bg-background border rounded-2xl p-6 w-full max-w-lg shadow-xl mx-4 relative">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
                     <Settings class="w-4 h-4" /> Settings
-                </DialogTitle>
-            </DialogHeader>
+                </h3>
+                <button @click="showSettings = false" class="text-muted-foreground hover:text-foreground transition-colors">
+                    <X class="w-4 h-4" />
+                </button>
+            </div>
 
             <!-- Tab nav -->
-            <div class="flex gap-1 bg-muted p-1 rounded-md mb-2">
+            <div class="flex gap-1 bg-muted p-1 rounded-md mb-4">
                 <button
                     v-for="tab in [{ id: 'profile', label: 'Profile' }, { id: 'password', label: 'Password' }, { id: 'appearance', label: 'Appearance' }]"
                     :key="tab.id"
@@ -627,8 +630,8 @@ const deleteProject = async (id) => {
                     </div>
                 </div>
             </div>
-        </DialogContent>
-    </Dialog>
+        </div>
+    </div>
 </template>
 
 <style scoped>
