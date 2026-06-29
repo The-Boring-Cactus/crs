@@ -995,7 +995,7 @@ onUnmounted(() => {
                                     @keydown.enter="finishEditingAndMoveDown"
                                     @keydown.tab.prevent="finishEditingAndMoveRight"
                                     @keydown.esc="cancelEditing"
-                                    class="excel-cell-input bg-transparent w-full h-full outline-none px-1"
+                                    class="excel-cell-input bg-transparent text-foreground w-full h-full outline-none px-1"
                                     autofocus
                                 />
                                 <span v-else class="excel-cell-value px-1 truncate w-full pointer-events-none">
@@ -1231,9 +1231,10 @@ onUnmounted(() => {
 .excel-grid-wrapper {
     flex: 1;
     overflow: auto;
-    border: 2px solid var(--surface-border);
+    border: 2px solid var(--border);
     border-radius: 8px;
-    background: white;
+    background: var(--background);
+    color: var(--foreground);
     min-height: 0;
 }
 
@@ -1242,7 +1243,7 @@ onUnmounted(() => {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--surface-100);
+    background: var(--muted);
 }
 
 .excel-corner-cell {

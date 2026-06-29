@@ -210,6 +210,43 @@ public class AuthService : IAuthService
         return secret;
     }
 
+    public async Task<bool> UpdateUserProfileAsync(string userId, string displayName)
+    {
+        using var conn = DatabasePersistence.CreateConnection();
+        if (conn == null) return false;
+        await conn.OpenAsync();
+
+        object dbId = (conn is MySqlConnector.MySqlConnection || DatabasePersistence.IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        var rows = await conn.ExecuteAsync(
+            "UPDATE Users SET FullName = @FullName WHERE Id = @Id",
+            new { FullName = displayName, Id = dbId });
+        return rows > 0;
+    }
+
+    public async Task<bool> ChangePasswordAsync(string userId, string oldPassword, string newPassword)
+    {
+        using var conn = DatabasePersistence.CreateConnection();
+        if (conn == null) return false;
+        await conn.OpenAsync();
+
+        object dbId = (conn is MySqlConnector.MySqlConnection || DatabasePersistence.IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        var user = await conn.QueryFirstOrDefaultAsync<UserRecord>(
+            "SELECT Id as UserId, PasswordHash, Salt FROM Users WHERE Id = @Id",
+            new { Id = dbId });
+        if (user == null) return false;
+
+        var currentHash = HashPassword(oldPassword, user.Salt);
+        if (currentHash != user.PasswordHash)
+        {
+            var legacyHash = HashLegacySHA256(oldPassword, user.Salt);
+            if (legacyHash != user.PasswordHash) return false;
+        }
+
+        var newHash = HashPassword(newPassword, user.Salt);
+        await conn.ExecuteAsync("UPDATE Users SET PasswordHash = @Hash WHERE Id = @Id", new { Hash = newHash, Id = dbId });
+        return true;
+    }
+
     private class UserRecord
     {
         public Guid UserId { get; set; }

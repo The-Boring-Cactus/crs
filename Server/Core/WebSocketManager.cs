@@ -653,6 +653,72 @@ public class WebSocketManager
                     }
                     break;
 
+                case "LoadReports":
+                    response.Data = DatabasePersistence.LoadReports(uuid);
+                    break;
+
+                case "SaveReport":
+                    if (parameters.ContainsKey("report"))
+                    {
+                        var repObj = JObject.FromObject(parameters["report"]);
+                        DatabasePersistence.SaveReport(uuid, repObj);
+                        response.Data = new { id = repObj["id"]?.ToString() };
+                    }
+                    break;
+
+                case "DeleteReport":
+                    if (parameters.ContainsKey("id"))
+                        DatabasePersistence.DeleteReport(uuid, parameters["id"].ToString());
+                    break;
+
+                case "ShareReport":
+                {
+                    var id = parameters.ContainsKey("id") ? parameters["id"].ToString() : null;
+                    var enable = parameters.ContainsKey("enable") && Convert.ToBoolean(parameters["enable"]);
+                    if (!string.IsNullOrEmpty(id))
+                    {
+                        if (enable)
+                        {
+                            var token = DatabasePersistence.GenerateShareToken(uuid, "Reports", id);
+                            response.Data = new { shareToken = token };
+                        }
+                        else
+                        {
+                            DatabasePersistence.RevokeShareToken(uuid, "Reports", id);
+                            response.Data = new { shareToken = (string)null };
+                        }
+                    }
+                    break;
+                }
+
+                case "UpdateUserProfile":
+                {
+                    var displayName = parameters.ContainsKey("displayName") ? parameters["displayName"]?.ToString() : null;
+                    if (!string.IsNullOrWhiteSpace(displayName))
+                    {
+                        var ok = _authService.UpdateUserProfileAsync(uuid, displayName).GetAwaiter().GetResult();
+                        if (!ok) { response.Status = MessageStatus.Error; response.ErrorMessage = "Update failed"; }
+                    }
+                    break;
+                }
+
+                case "ChangePassword":
+                {
+                    var oldPw = parameters.ContainsKey("oldPassword") ? parameters["oldPassword"]?.ToString() : null;
+                    var newPw = parameters.ContainsKey("newPassword") ? parameters["newPassword"]?.ToString() : null;
+                    if (string.IsNullOrWhiteSpace(oldPw) || string.IsNullOrWhiteSpace(newPw))
+                    {
+                        response.Status = MessageStatus.Error;
+                        response.ErrorMessage = "Both old and new passwords are required";
+                    }
+                    else
+                    {
+                        var ok = _authService.ChangePasswordAsync(uuid, oldPw, newPw).GetAwaiter().GetResult();
+                        if (!ok) { response.Status = MessageStatus.Error; response.ErrorMessage = "Current password is incorrect"; }
+                    }
+                    break;
+                }
+
                 default:
                     response.Status = MessageStatus.Error;
                     response.ErrorMessage = $"Unknown command: {cmdMessage.Command}";
