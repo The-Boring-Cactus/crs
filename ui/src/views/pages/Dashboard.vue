@@ -1507,6 +1507,41 @@ async function openLoadDialog() {
     showLoadDialog.value = true;
 }
 
+// Run after any dashboard load (server or file) to restore dynamic state that
+// is not fully captured in the saved JSON.
+async function afterLoadComponents(items) {
+    // 1. Migrate Select widgets that were saved before the CSV/SQL rework
+    //    (options were stored as objects; new format is always flat strings).
+    for (const item of items) {
+        if (item.type !== 'Select') continue;
+        // Backfill missing fields so old saves work without reconfiguring
+        if (!item.optionsSource) item.optionsSource = 'csv';
+        if (item.csvValues === undefined) item.csvValues = '';
+        if (item.sqlDatabase === undefined) item.sqlDatabase = '';
+        if (item.sqlQuery === undefined) item.sqlQuery = '';
+        // Convert object options (old format: [{name,code}]) → flat strings
+        if (Array.isArray(item.options) && item.options.some(o => o !== null && typeof o === 'object')) {
+            const lk = item.optionLabel || 'label';
+            const vk = item.optionValue || 'value';
+            item.options = item.options.map(o =>
+                typeof o === 'string' ? o :
+                (o[lk] || o[vk] || o['name'] || o['code'] || String(o))
+            );
+            item.optionsSource = 'csv';
+            item.csvValues = item.options.join(', ');
+        }
+        // Re-execute SQL queries so options are always fresh after a load
+        if (item.optionsSource === 'sql' && item.sqlDatabase && item.sqlQuery?.trim()) {
+            loadSqlSelectOptions(item); // intentionally not awaited — runs in background
+        }
+    }
+
+    // 2. Re-resolve dropdown options for bound variables.
+    //    The watch on definitions.length only fires when definitions change,
+    //    so it won't trigger if definitions were already loaded before this load.
+    await resolveAllVarOptions();
+}
+
 async function loadFromServer(dash) {
     // Components may be directly on the object or inside the config JSON string
     let components = dash.components;
@@ -1535,9 +1570,11 @@ async function loadFromServer(dash) {
             isPublic: isPublic
         };
         currentShareToken.value = shareToken || '';
-        
         showLoadDialog.value = false;
-        
+
+        // Restore dynamic state (variable options, Select settings migration)
+        await afterLoadComponents(components);
+
         // Force re-render
         renderComponent.value = false;
         await nextTick();
@@ -1569,6 +1606,9 @@ function loadDashboardLayout() {
                     if (layoutData.components && Array.isArray(layoutData.components)) {
                         MyTitle.value = layoutData.title || 'Imported Dashboard';
                         layout.value.componentes = layoutData.components;
+
+                        // Restore dynamic state (variable options, Select settings migration)
+                        await afterLoadComponents(layoutData.components);
 
                         // Force re-render
                         renderComponent.value = false;
