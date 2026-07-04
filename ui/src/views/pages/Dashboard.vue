@@ -578,10 +578,12 @@ const addcomponent = async (type) => {
             type: 'Select',
             title: 'Select Dropdown',
             selectedValue: null,
-            options: generateSelectOptions(),
-            placeholder: 'Select an option',
-            optionLabel: 'name',
-            optionValue: 'code'
+            options: [],
+            optionsSource: 'csv',
+            csvValues: '',
+            sqlDatabase: '',
+            sqlQuery: '',
+            placeholder: 'Select an option'
         };
     } else if (type === 'InputText') {
         newComponent = {
@@ -1311,54 +1313,51 @@ function onToggleChange(item, event) {
     });
 }
 
-// Select helper functions
-function generateSelectOptions() {
-    return [
-        { name: 'Australia', code: 'AU' },
-        { name: 'Brazil', code: 'BR' },
-        { name: 'China', code: 'CN' },
-        { name: 'Egypt', code: 'EG' },
-        { name: 'France', code: 'FR' },
-        { name: 'Germany', code: 'DE' },
-        { name: 'India', code: 'IN' },
-        { name: 'Japan', code: 'JP' },
-        { name: 'Spain', code: 'ES' },
-        { name: 'United States', code: 'US' }
-    ];
+// Select widget helpers
+// Applies comma-separated text to item.options immediately (CSV mode).
+function applyCsvOptions(item) {
+    item.options = (item.csvValues || '').split(',').map(s => s.trim()).filter(Boolean);
 }
 
-function refreshSelectOptions(item) {
-    const additionalOptions = [
-        { name: 'Canada', code: 'CA' },
-        { name: 'Mexico', code: 'MX' },
-        { name: 'Italy', code: 'IT' },
-        { name: 'United Kingdom', code: 'GB' }
-    ];
-
-    // Add some new options
-    item.options = [...item.options, ...additionalOptions.filter((opt) => !item.options.find((existing) => existing.code === opt.code))];
-
-    toast.add({
-        severity: 'info',
-        summary: 'Options Refreshed',
-        detail: 'New options have been added to the dropdown',
-        life: 2000
-    });
+// Executes a SQL query and stores first-column values as item.options (SQL mode).
+async function loadSqlSelectOptions(item) {
+    if (!item.sqlDatabase || !item.sqlQuery?.trim()) {
+        toast.add({ severity: 'warn', summary: 'Missing Config', detail: 'Select a database and enter a SQL query.', life: 3000 });
+        return;
+    }
+    item.sqlLoading = true;
+    try {
+        const result = await userStore.executeCommand('ExecuteSql', {
+            database: item.sqlDatabase,
+            code: item.sqlQuery
+        }, proxy.$socket);
+        const rows = result?.Data?.rows || [];
+        const columns = result?.Data?.columns || [];
+        const firstCol = columns[0]?.field;
+        item.options = rows.map(r => String(r[firstCol] ?? '')).filter(Boolean);
+        toast.add({ severity: 'success', summary: 'Options Loaded', detail: `${item.options.length} option(s) loaded`, life: 2000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Query Failed', detail: error.message, life: 3000 });
+    } finally {
+        item.sqlLoading = false;
+    }
 }
 
-function onSelectChange(item, event) {
-    toast.add({
-        severity: 'info',
-        summary: 'Selection Changed',
-        detail: `Selected: ${getSelectedOptionLabel(item)}`,
-        life: 2000
-    });
+// Database connections available to the Select widget SQL panel.
+const selectDatabases = ref([]);
+async function ensureSelectDatabases() {
+    if (selectDatabases.value.length > 0) return;
+    try {
+        const result = await userStore.executeCommand('LoadDatabaseConnections', {}, proxy.$socket);
+        selectDatabases.value = (result?.Data || []).map(d => ({
+            id: d.id || d.Id,
+            name: d.name || d.Name || 'Unnamed'
+        }));
+    } catch { selectDatabases.value = []; }
 }
 
-function getSelectedOptionLabel(item) {
-    if (!item.selectedValue) return 'None';
-    const option = item.options.find((opt) => opt[item.optionValue] === item.selectedValue);
-    return option ? option[item.optionLabel] : item.selectedValue;
+function onSelectChange(item) {
+    toast.add({ severity: 'info', summary: 'Selection Changed', detail: `Selected: ${item.selectedValue || 'None'}`, life: 2000 });
 }
 
 // Variable binding
@@ -1371,7 +1370,34 @@ function openBindDialog(item) {
 function setVariableBinding(varName) {
     if (bindingDialogItem.value) bindingDialogItem.value.boundVariable = varName || undefined;
     bindingDialogOpen.value = false;
+    // Re-resolve options for the newly bound variable
+    if (varName) {
+        const def = variableStore.definitions.find(d => d.name === varName);
+        if (def?.type === 'dropdown') {
+            variableStore.resolveDropdownOptions(def, proxy.$socket).then(opts => {
+                varOptions.value[varName] = opts;
+            });
+        }
+    }
 }
+
+// Resolved dropdown options for bound variables (variable name → string[])
+const varOptions = ref({});
+
+async function resolveAllVarOptions() {
+    const seen = new Set();
+    for (const item of layout.value.componentes) {
+        if (!item.boundVariable || seen.has(item.boundVariable)) continue;
+        seen.add(item.boundVariable);
+        const def = variableStore.definitions.find(d => d.name === item.boundVariable);
+        if (def?.type === 'dropdown') {
+            varOptions.value[item.boundVariable] = await variableStore.resolveDropdownOptions(def, proxy.$socket);
+        }
+    }
+}
+
+// Re-resolve whenever variable definitions are (re)loaded
+watch(() => variableStore.definitions.length, resolveAllVarOptions);
 
 // InputText helper functions
 function clearInputText(item) {
@@ -2356,7 +2382,7 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
             </div>
 
             <!-- Select Component -->
-            <div v-else-if="item.type === 'Select'" class="select-container flex flex-col h-full border rounded-md p-2 bg-card">
+            <div v-else-if="item.type === 'Select'" class="select-container flex flex-col h-full border rounded-md p-2 bg-card overflow-auto">
                 <div class="select-header flex justify-between items-center mb-2">
                     <div v-if="!item.editing" class="cursor-pointer hover:underline font-medium text-sm" @click="item.editing = true">
                         {{ item.title || 'Select Dropdown' }}
@@ -2368,8 +2394,10 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         </Button>
                     </div>
                     <div class="select-controls flex gap-1">
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="refreshSelectOptions(item)" title="Refresh Options">
-                            <RefreshCw class="w-3 h-3 text-xs" />
+                        <Button variant="ghost" size="icon" class="h-7 w-7" :class="item.configOpen ? 'text-primary' : ''"
+                            title="Configure Options"
+                            @click="item.configOpen = !item.configOpen; if (item.configOpen) ensureSelectDatabases()">
+                            <Settings class="w-3 h-3 text-xs" />
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7" :class="item.boundVariable ? 'text-primary' : ''" @click="openBindDialog(item)" title="Bind to Variable">
                             <Braces class="w-3 h-3 text-xs" />
@@ -2380,23 +2408,71 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                     </div>
                 </div>
 
+                <!-- Options configuration panel -->
+                <div v-if="item.configOpen" class="border-t border-dashed pt-2 mb-2 flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <Label class="text-xs whitespace-nowrap">Source</Label>
+                        <select v-model="item.optionsSource" class="flex-1 h-7 text-xs rounded border border-input bg-background px-2">
+                            <option value="csv">Comma-separated values</option>
+                            <option value="sql">SQL query</option>
+                        </select>
+                    </div>
+                    <!-- CSV mode -->
+                    <div v-if="item.optionsSource !== 'sql'" class="flex flex-col gap-1">
+                        <Textarea
+                            v-model="item.csvValues"
+                            placeholder="Option A, Option B, Option C"
+                            class="text-xs h-14 resize-none"
+                            @input="applyCsvOptions(item)"
+                        />
+                        <span class="text-xs text-muted-foreground">{{ item.options.length }} option(s) configured</span>
+                    </div>
+                    <!-- SQL mode -->
+                    <div v-else class="flex flex-col gap-1">
+                        <select v-model="item.sqlDatabase" class="h-7 text-xs rounded border border-input bg-background px-2">
+                            <option value="">Select database connection…</option>
+                            <option v-for="db in selectDatabases" :key="db.id" :value="db.id">{{ db.name }}</option>
+                        </select>
+                        <Textarea
+                            v-model="item.sqlQuery"
+                            placeholder="SELECT option_value FROM table ORDER BY 1"
+                            class="text-xs h-14 resize-none"
+                        />
+                        <Button size="sm" variant="outline" class="h-6 text-xs" :disabled="item.sqlLoading" @click="loadSqlSelectOptions(item)">
+                            <RefreshCw class="w-3 h-3 mr-1" :class="item.sqlLoading ? 'animate-spin' : ''" /> Load
+                        </Button>
+                        <span v-if="item.options.length" class="text-xs text-muted-foreground">{{ item.options.length }} option(s) loaded</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Label class="text-xs whitespace-nowrap">Placeholder</Label>
+                        <Input v-model="item.placeholder" class="h-7 text-xs flex-1" />
+                    </div>
+                </div>
+
                 <div class="select-content flex-1 flex flex-col gap-2 p-2">
                     <div v-if="item.boundVariable" class="flex items-center gap-1 mb-1">
                         <span class="text-xs text-muted-foreground">Bound to:</span>
                         <Badge variant="outline" class="text-xs py-0 h-5">{{ item.boundVariable }}</Badge>
                     </div>
-                    <!-- Native Select for simplicity over building out the full Combobox here -->
                     <select
                         class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        :value="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.selectedValue"
-                        @change="(e) => { if (item.boundVariable) variableStore.setValue(item.boundVariable, e.target.value); else { item.selectedValue = e.target.value; onSelectChange(item, e); } }"
+                        :value="item.boundVariable ? (variableStore.values[item.boundVariable] || variableStore.definitions.find(d => d.name === item.boundVariable)?.defaultValue || '') : (item.selectedValue || '')"
+                        @change="(e) => { if (item.boundVariable) variableStore.setValue(item.boundVariable, e.target.value); else { item.selectedValue = e.target.value; onSelectChange(item); } }"
                     >
-                        <option value="" disabled v-if="item.placeholder">{{ item.placeholder }}</option>
-                        <option v-for="opt in item.options" :key="opt[item.optionValue || 'value'] || opt" :value="opt[item.optionValue || 'value'] || opt">
-                            {{ opt[item.optionLabel || 'label'] || opt }}
-                        </option>
+                        <option value="" disabled>{{ item.placeholder || 'Select an option…' }}</option>
+                        <!-- Bound to a variable: use that variable's resolved dropdown options -->
+                        <template v-if="item.boundVariable && varOptions[item.boundVariable]">
+                            <option v-for="opt in varOptions[item.boundVariable]" :key="opt" :value="opt">{{ opt }}</option>
+                        </template>
+                        <!-- Own options: always a flat string array (CSV or SQL sourced) -->
+                        <template v-else>
+                            <option v-for="opt in item.options" :key="opt" :value="opt">{{ opt }}</option>
+                        </template>
                     </select>
-                    <div class="select-value text-sm text-muted-foreground mt-2" v-if="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.selectedValue">Selected: {{ item.boundVariable ? variableStore.getValue(item.boundVariable) : getSelectedOptionLabel(item) }}</div>
+                    <div class="select-value text-sm text-muted-foreground mt-2"
+                         v-if="item.boundVariable ? (variableStore.values[item.boundVariable] || variableStore.definitions.find(d => d.name === item.boundVariable)?.defaultValue) : item.selectedValue">
+                        Selected: {{ item.boundVariable ? (variableStore.values[item.boundVariable] || variableStore.definitions.find(d => d.name === item.boundVariable)?.defaultValue || '') : item.selectedValue }}
+                    </div>
                 </div>
             </div>
 
@@ -2430,13 +2506,17 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <span class="text-xs text-muted-foreground">Bound to:</span>
                         <Badge variant="outline" class="text-xs py-0 h-5">{{ item.boundVariable }}</Badge>
                     </div>
-                    <Input
-                        :model-value="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.value"
+                    <input
+                        type="text"
+                        class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        :value="item.boundVariable ? (variableStore.values[item.boundVariable] || variableStore.definitions.find(d => d.name === item.boundVariable)?.defaultValue || '') : item.value"
                         :placeholder="item.placeholder"
-                        class="w-full"
-                        @update:model-value="v => { if (item.boundVariable) variableStore.setValue(item.boundVariable, v); else item.value = v; }"
+                        @input="e => { if (item.boundVariable) variableStore.setValue(item.boundVariable, e.target.value); else item.value = e.target.value; }"
                     />
-                    <div class="input-info text-xs text-muted-foreground mt-1" v-if="item.boundVariable ? variableStore.getValue(item.boundVariable) : item.value">Length: {{ (item.boundVariable ? variableStore.getValue(item.boundVariable) : item.value).length }} characters</div>
+                    <div class="input-info text-xs text-muted-foreground mt-1"
+                         v-if="item.boundVariable ? (variableStore.values[item.boundVariable] || variableStore.definitions.find(d => d.name === item.boundVariable)?.defaultValue) : item.value">
+                        Length: {{ (item.boundVariable ? (variableStore.values[item.boundVariable] || variableStore.definitions.find(d => d.name === item.boundVariable)?.defaultValue || '') : item.value).length }} characters
+                    </div>
                 </div>
             </div>
 
