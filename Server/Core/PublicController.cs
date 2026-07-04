@@ -94,6 +94,23 @@ public class PublicController
         return new { rows = rowList, columns };
     }
 
+    // ── Execute a SQL query for a Select widget's options ─────────────────
+    // Used by the public view to populate SQL-sourced Select dropdowns using
+    // the dashboard owner's database connection without exposing credentials.
+
+    [ResourceMethod(RequestMethod.Post, "dashboard/:token/select-options")]
+    public async ValueTask<object> GetPublicSelectOptions(string token, [FromBody] SelectOptionsRequest request)
+    {
+        var dashRow = LoadAndValidateDashboard(token);
+        var userId  = (dashRow["userid"] ?? dashRow["UserId"])?.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(request.DatabaseId) || string.IsNullOrWhiteSpace(request.Query))
+            return new { options = Array.Empty<string>() };
+
+        var options = await ResolveQueryFirstColumn(userId, request.DatabaseId, request.Query);
+        return new { options };
+    }
+
     // ── Public report ──────────────────────────────────────────────────────
 
     [ResourceMethod("report/:token")]
@@ -236,4 +253,10 @@ public class RefreshWidgetRequest
 {
     public string WidgetId { get; set; } = "";
     public Dictionary<string, string>? Variables { get; set; }
+}
+
+public class SelectOptionsRequest
+{
+    public string DatabaseId { get; set; } = "";
+    public string Query { get; set; } = "";
 }

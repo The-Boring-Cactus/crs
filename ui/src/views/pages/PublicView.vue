@@ -92,6 +92,56 @@ function onVariableChange(varName, value) {
     refreshAllDataWidgets();
 }
 
+// Fetches first-column values from a SQL query via the public endpoint so
+// SQL-sourced Select widgets work without exposing the owner's credentials.
+async function loadPublicSelectOptions(item, token) {
+    try {
+        const resp = await fetch(`${apiUrl}/api/public/dashboard/${token}/select-options`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ databaseId: item.sqlDatabase, query: item.sqlQuery })
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            item.options = data.options || [];
+        }
+    } catch (e) {
+        console.error('Failed to load select options:', e);
+    }
+}
+
+// Mirrors Dashboard.vue's afterLoadComponents: migrate old object options to flat
+// strings, backfill missing fields, and refresh SQL-sourced option lists.
+async function afterLoadComponents(items, token) {
+    for (const item of items) {
+        if (item.type !== 'Select') continue;
+        // Backfill fields that pre-rework saves won't have
+        if (!item.optionsSource) item.optionsSource = 'csv';
+        if (item.csvValues === undefined) item.csvValues = '';
+        if (item.sqlDatabase === undefined) item.sqlDatabase = '';
+        if (item.sqlQuery === undefined) item.sqlQuery = '';
+        // Convert old object options ({name,code}) to flat strings
+        if (Array.isArray(item.options) && item.options.some(o => o !== null && typeof o === 'object')) {
+            const lk = item.optionLabel || 'label';
+            const vk = item.optionValue || 'value';
+            item.options = item.options.map(o =>
+                typeof o === 'string' ? o :
+                (o[lk] || o[vk] || o['name'] || o['code'] || String(o))
+            );
+            item.optionsSource = 'csv';
+            item.csvValues = item.options.join(', ');
+        }
+        // CSV: derive options from csvValues when options array is empty
+        if (item.optionsSource !== 'sql' && item.csvValues && !item.options?.length) {
+            item.options = item.csvValues.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        // SQL: fetch fresh options from the server (non-blocking)
+        if (item.optionsSource === 'sql' && item.sqlDatabase && item.sqlQuery?.trim()) {
+            loadPublicSelectOptions(item, token);
+        }
+    }
+}
+
 // Only pass items that are valid grid objects to the layout engine.
 // Using :layout (not v-model:layout) since the view is read-only — v-model on a
 // computed causes an infinite reactive loop when GridLayout emits layout updates.
@@ -214,7 +264,7 @@ onMounted(async () => {
         const config = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
         components.value = config?.components || [];
 
-        // Variable definitions (with resolved dropdown options) are now included
+        // Variable definitions (with resolved dropdown options) are included
         // in the main dashboard response — no second fetch needed.
         varDefs.value = data.variables || [];
         variableStore.loadFromStorage();
@@ -223,6 +273,9 @@ onMounted(async () => {
                 variableStore.setValue(def.name, def.defaultValue);
             }
         }
+
+        // Migrate old Select options and refresh SQL-sourced option lists.
+        await afterLoadComponents(components.value, token);
     } catch (e) {
         error.value = 'Failed to load dashboard.';
     } finally {
@@ -467,21 +520,25 @@ onMounted(async () => {
                         <div v-else class="flex-1 flex items-center justify-center text-sm text-muted-foreground">{{ item.value }}</div>
                     </div>
 
-                    <!-- Select (editable when bound to variable) -->
+                    <!-- Select: bound widgets update a variable + trigger SQL refresh;
+                         unbound widgets store selection locally (display only). -->
                     <div v-else-if="item.type === 'Select'" class="flex flex-col h-full border rounded-md p-2 bg-card">
                         <div class="font-medium text-sm mb-2">{{ item.title || 'Select' }}</div>
-                        <div v-if="item.boundVariable" class="flex flex-col gap-1 flex-1 justify-center">
-                            <label class="text-xs text-muted-foreground">{{ item.boundVariable }}</label>
+                        <div class="flex flex-col gap-1 flex-1 justify-center">
+                            <label v-if="item.boundVariable" class="text-xs text-muted-foreground">{{ item.boundVariable }}</label>
                             <select
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                :value="variableStore.values[item.boundVariable] || getVarDef(item.boundVariable)?.defaultValue || ''"
-                                @change="e => onVariableChange(item.boundVariable, e.target.value)"
+                                :value="item.boundVariable
+                                    ? (variableStore.values[item.boundVariable] || getVarDef(item.boundVariable)?.defaultValue || '')
+                                    : (item.selectedValue || '')"
+                                @change="e => item.boundVariable
+                                    ? onVariableChange(item.boundVariable, e.target.value)
+                                    : (item.selectedValue = e.target.value)"
                             >
                                 <option value="" disabled>{{ item.placeholder || 'Select…' }}</option>
                                 <option v-for="opt in getSelectOptions(item)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                             </select>
                         </div>
-                        <div v-else class="flex-1 flex items-center justify-center text-sm text-muted-foreground">{{ item.selectedValue || item.placeholder }}</div>
                     </div>
 
                     <!-- Fallback -->
