@@ -1,0 +1,1 @@
+import{b as t,d as l,aa as o,m as r,g as c,an as n,q as p}from"./index-B5xJnHWn.js";const u={class:"relative w-full overflow-auto"},i={__name:"Table",props:{class:{type:null,required:!1}},setup(e){const s=e;return(a,m)=>(p(),t("div",u,[l("table",{class:r(c(n)("w-full caption-bottom text-sm",s.class))},[o(a.$slots,"default")],2)]))}};export{i as _};

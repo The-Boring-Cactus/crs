@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue';
+import { ref, onMounted, computed, nextTick, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import BaseChart from '@/components/BaseChart.vue';
 import GridLayout from '@/components/draggable/GridLayout.vue';
@@ -140,9 +140,16 @@ function migrateSelectComponents(items) {
     }
 }
 
-// Only pass items that are valid grid objects to the layout engine.
-// Using :layout (not v-model:layout) since the view is read-only — v-model on a
-// computed causes an infinite reactive loop when GridLayout emits layout updates.
+// Position-only objects fed to GridLayout's :layout prop.
+// Using shallowRef so Vue only tracks the array reference — NOT properties
+// inside the items. This means GridLayout's internal compact() can freely
+// mutate x/y on these plain objects without triggering a reactive cascade that
+// would cause "Maximum recursive updates exceeded."
+const gridLayout = shallowRef([]);
+
+// Reactive filter used by v-for — items here are the original reactive objects
+// from components.value, so item.options / item.queryResults etc. update
+// correctly in the template when async data (e.g. SQL select options) arrives.
 const validComponents = computed(() =>
     components.value.filter(item =>
         item &&
@@ -268,6 +275,15 @@ onMounted(async () => {
         migrateSelectComponents(rawComponents);
         components.value = rawComponents;
 
+        // Build position-only plain objects for gridLayout (shallowRef).
+        // GridLayout's compact() mutates these — since they are plain objects
+        // inside a shallowRef, Vue never tracks those mutations, breaking the cycle.
+        gridLayout.value = rawComponents
+            .filter(c => c && c.i !== undefined &&
+                typeof c.x === 'number' && typeof c.y === 'number' &&
+                typeof c.w === 'number' && typeof c.h === 'number')
+            .map(({ i, x, y, w, h }) => ({ i, x, y, w, h }));
+
         // Variable definitions (with resolved dropdown options) are included
         // in the main dashboard response — no second fetch needed.
         varDefs.value = data.variables || [];
@@ -324,10 +340,12 @@ onMounted(async () => {
         </div>
 
         <!-- Dashboard (read-only grid) -->
-        <!-- :layout not v-model:layout — GridLayout emits layout updates that would recurse on a computed -->
+        <!-- gridLayout is shallowRef position-only objects; validComponents is the
+             reactive source for v-for so item.options etc. update in the template.
+             Keeping them separate prevents GridLayout's compact() from recursing. -->
         <div v-else class="p-4">
             <grid-layout
-                :layout="validComponents"
+                :layout="gridLayout"
                 :col-num="15"
                 :row-height="40"
                 :is-draggable="false"
