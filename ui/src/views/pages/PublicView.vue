@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import BaseChart from '@/components/BaseChart.vue';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
-import { BarChart2, LayoutDashboard, AlertCircle } from 'lucide-vue-next';
+import { BarChart2, LayoutDashboard, AlertCircle, RefreshCw, Loader2 } from 'lucide-vue-next';
 import { useVariableStore } from '@/store/variableStore';
 
 const route = useRoute();
@@ -13,6 +13,84 @@ const error = ref('');
 const dashboard = ref(null);
 const components = ref([]);
 const variableStore = useVariableStore();
+
+// Variable definitions loaded from the server (includes resolved dropdown options)
+const varDefs = ref([]);
+
+function getVarDef(name) {
+    return varDefs.value.find(d => d.name === name) ?? null;
+}
+
+// Normalize item.options (may be strings or objects with arbitrary label/value keys)
+// to a uniform {value, label} pair so the template never renders raw objects.
+function normalizeItemOptions(item) {
+    return (item.options || []).map(opt => {
+        if (typeof opt === 'string') return { value: opt, label: opt };
+        const vk = item.optionValue || 'value';
+        const lk = item.optionLabel || 'label';
+        const v = opt[vk] ?? opt[lk] ?? Object.values(opt)[0] ?? '';
+        const l = opt[lk] ?? opt[vk] ?? Object.values(opt)[0] ?? '';
+        return { value: String(v), label: String(l) };
+    });
+}
+
+// Returns normalized {value, label} option pairs for a Select widget:
+// • bound to a variable → variable's resolved dropdown options (strings from server)
+//   returns [] while varDefs is still loading (prevents raw object fallback)
+// • unbound → widget's own item.options, normalized to {value, label}
+function getSelectOptions(item) {
+    if (item.boundVariable) {
+        const def = getVarDef(item.boundVariable);
+        if (def && def.options && def.options.length > 0)
+            return def.options.map(o => ({ value: o, label: o }));
+        return []; // wait for varDefs to load; never fall back to object array
+    }
+    return normalizeItemOptions(item);
+}
+
+// ── Variable-driven refresh ────────────────────────────────────────────────
+
+const VAR_PATTERN = /\{\{\w+\}\}/;
+
+async function refreshPublicWidget(item) {
+    if (!item.sqlCode || !VAR_PATTERN.test(item.sqlCode)) return;
+    item.refreshing = true;
+    try {
+        const resp = await fetch(
+            `${apiUrl}/api/public/dashboard/${route.params.shareToken}/refresh-widget`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    widgetId: item.i,
+                    variables: variableStore.getValuesDict()
+                })
+            }
+        );
+        if (resp.ok) {
+            const data = await resp.json();
+            item.queryResults = data.rows || [];
+            item.queryColumns = data.columns || [];
+        }
+    } catch (e) {
+        console.error('Widget refresh failed:', e);
+    } finally {
+        item.refreshing = false;
+    }
+}
+
+async function refreshAllDataWidgets() {
+    await Promise.all(
+        components.value
+            .filter(item => item.type === 'SqlWidget' && item.sqlCode && VAR_PATTERN.test(item.sqlCode))
+            .map(item => refreshPublicWidget(item))
+    );
+}
+
+function onVariableChange(varName, value) {
+    variableStore.setValue(varName, value);
+    refreshAllDataWidgets();
+}
 
 // Only pass items that are valid grid objects to the layout engine.
 // Using :layout (not v-model:layout) since the view is read-only — v-model on a
@@ -135,7 +213,16 @@ onMounted(async () => {
         dashboard.value = data;
         const config = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
         components.value = config?.components || [];
+
+        // Variable definitions (with resolved dropdown options) are now included
+        // in the main dashboard response — no second fetch needed.
+        varDefs.value = data.variables || [];
         variableStore.loadFromStorage();
+        for (const def of varDefs.value) {
+            if (!variableStore.values[def.name] && def.defaultValue) {
+                variableStore.setValue(def.name, def.defaultValue);
+            }
+        }
     } catch (e) {
         error.value = 'Failed to load dashboard.';
     } finally {
@@ -229,8 +316,22 @@ onMounted(async () => {
                     </div>
 
                     <!-- SqlWidget: displays stored queryResults with the configured visualization -->
-                    <div v-else-if="item.type === 'SqlWidget'" class="flex flex-col h-full border rounded-md p-2 bg-card">
-                        <div class="font-medium text-sm mb-2 truncate">{{ item.title || item.sqlScriptName || 'SQL Query' }}</div>
+                    <div v-else-if="item.type === 'SqlWidget'" class="flex flex-col h-full border rounded-md p-2 bg-card relative">
+                        <!-- Loading overlay during variable-driven refresh -->
+                        <div v-if="item.refreshing" class="absolute inset-0 bg-background/60 flex items-center justify-center z-10 rounded-md">
+                            <Loader2 class="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="font-medium text-sm truncate">{{ item.title || item.sqlScriptName || 'SQL Query' }}</div>
+                            <button
+                                v-if="item.sqlCode && item.sqlCode.match(/\{\{/)"
+                                class="text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
+                                title="Refresh with current variable values"
+                                @click="refreshPublicWidget(item)"
+                            >
+                                <RefreshCw class="w-3.5 h-3.5" />
+                            </button>
+                        </div>
                         <div class="flex-1 overflow-auto min-h-0">
                             <!-- Table view -->
                             <div v-if="getSqlWidgetViz(item).type === 'table'" class="h-full overflow-auto border rounded-md bg-background">
@@ -358,9 +459,9 @@ onMounted(async () => {
                             <label class="text-xs text-muted-foreground">{{ item.boundVariable }}</label>
                             <input
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                :value="variableStore.getValue(item.boundVariable)"
+                                :value="variableStore.values[item.boundVariable] || getVarDef(item.boundVariable)?.defaultValue || ''"
                                 :placeholder="item.placeholder"
-                                @input="e => variableStore.setValue(item.boundVariable, e.target.value)"
+                                @change="e => onVariableChange(item.boundVariable, e.target.value)"
                             />
                         </div>
                         <div v-else class="flex-1 flex items-center justify-center text-sm text-muted-foreground">{{ item.value }}</div>
@@ -373,11 +474,11 @@ onMounted(async () => {
                             <label class="text-xs text-muted-foreground">{{ item.boundVariable }}</label>
                             <select
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                :value="variableStore.getValue(item.boundVariable)"
-                                @change="e => variableStore.setValue(item.boundVariable, e.target.value)"
+                                :value="variableStore.values[item.boundVariable] || getVarDef(item.boundVariable)?.defaultValue || ''"
+                                @change="e => onVariableChange(item.boundVariable, e.target.value)"
                             >
-                                <option value="" disabled v-if="item.placeholder">{{ item.placeholder }}</option>
-                                <option v-for="opt in item.options" :key="opt[item.optionValue || 'value'] || opt" :value="opt[item.optionValue || 'value'] || opt">{{ opt[item.optionLabel || 'label'] || opt }}</option>
+                                <option value="" disabled>{{ item.placeholder || 'Select…' }}</option>
+                                <option v-for="opt in getSelectOptions(item)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                             </select>
                         </div>
                         <div v-else class="flex-1 flex items-center justify-center text-sm text-muted-foreground">{{ item.selectedValue || item.placeholder }}</div>
