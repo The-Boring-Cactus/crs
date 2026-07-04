@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import BaseChart from '@/components/BaseChart.vue';
 import GridLayout from '@/components/draggable/GridLayout.vue';
@@ -110,17 +110,19 @@ async function loadPublicSelectOptions(item, token) {
     }
 }
 
-// Mirrors Dashboard.vue's afterLoadComponents: migrate old object options to flat
-// strings, backfill missing fields, and refresh SQL-sourced option lists.
-async function afterLoadComponents(items, token) {
+// Synchronous migration: backfill fields and normalize old-format options.
+// Called on a plain JS array BEFORE assigning to components.value so that
+// Vue sees a single reactive assignment rather than incremental mutations —
+// incremental mutations during GridLayout's mounted resize handler trigger
+// the "Maximum recursive updates exceeded" loop.
+function migrateSelectComponents(items) {
     for (const item of items) {
         if (item.type !== 'Select') continue;
-        // Backfill fields that pre-rework saves won't have
         if (!item.optionsSource) item.optionsSource = 'csv';
         if (item.csvValues === undefined) item.csvValues = '';
         if (item.sqlDatabase === undefined) item.sqlDatabase = '';
         if (item.sqlQuery === undefined) item.sqlQuery = '';
-        // Convert old object options ({name,code}) to flat strings
+        // Convert old object options ({name,code} etc.) to flat strings
         if (Array.isArray(item.options) && item.options.some(o => o !== null && typeof o === 'object')) {
             const lk = item.optionLabel || 'label';
             const vk = item.optionValue || 'value';
@@ -131,13 +133,9 @@ async function afterLoadComponents(items, token) {
             item.optionsSource = 'csv';
             item.csvValues = item.options.join(', ');
         }
-        // CSV: derive options from csvValues when options array is empty
+        // CSV: derive options from csvValues when the options array is empty
         if (item.optionsSource !== 'sql' && item.csvValues && !item.options?.length) {
             item.options = item.csvValues.split(',').map(s => s.trim()).filter(Boolean);
-        }
-        // SQL: fetch fresh options from the server (non-blocking)
-        if (item.optionsSource === 'sql' && item.sqlDatabase && item.sqlQuery?.trim()) {
-            loadPublicSelectOptions(item, token);
         }
     }
 }
@@ -262,20 +260,33 @@ onMounted(async () => {
         const data = await resp.json();
         dashboard.value = data;
         const config = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
-        components.value = config?.components || [];
+
+        // Migrate on a plain JS array BEFORE making it reactive.
+        // This avoids incremental mutations on a live reactive array during
+        // GridLayout's mounted hook, which causes infinite reactive recursion.
+        const rawComponents = config?.components || [];
+        migrateSelectComponents(rawComponents);
+        components.value = rawComponents;
 
         // Variable definitions (with resolved dropdown options) are included
         // in the main dashboard response — no second fetch needed.
         varDefs.value = data.variables || [];
-        variableStore.loadFromStorage();
+        // Seed default values for any variable that has no stored value yet.
         for (const def of varDefs.value) {
             if (!variableStore.values[def.name] && def.defaultValue) {
                 variableStore.setValue(def.name, def.defaultValue);
             }
         }
 
-        // Migrate old Select options and refresh SQL-sourced option lists.
-        await afterLoadComponents(components.value, token);
+        // Defer async SQL option fetches until after GridLayout has mounted and
+        // stabilised its resize handling; firing them immediately causes the
+        // reactive item mutations to collide with GridLayout's resize cascade.
+        await nextTick();
+        for (const item of components.value) {
+            if (item.type === 'Select' && item.optionsSource === 'sql' && item.sqlDatabase && item.sqlQuery?.trim()) {
+                loadPublicSelectOptions(item, token); // intentionally non-blocking
+            }
+        }
     } catch (e) {
         error.value = 'Failed to load dashboard.';
     } finally {
@@ -521,22 +532,32 @@ onMounted(async () => {
                     </div>
 
                     <!-- Select: bound widgets update a variable + trigger SQL refresh;
-                         unbound widgets store selection locally (display only). -->
+                         unbound widgets store selection locally (display only).
+                         :selected is used per-option (rather than :value on the <select>)
+                         so the correct option is guaranteed to be highlighted on first render
+                         and after async option lists arrive. -->
                     <div v-else-if="item.type === 'Select'" class="flex flex-col h-full border rounded-md p-2 bg-card">
                         <div class="font-medium text-sm mb-2">{{ item.title || 'Select' }}</div>
                         <div class="flex flex-col gap-1 flex-1 justify-center">
                             <label v-if="item.boundVariable" class="text-xs text-muted-foreground">{{ item.boundVariable }}</label>
                             <select
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                :value="item.boundVariable
-                                    ? (variableStore.values[item.boundVariable] || getVarDef(item.boundVariable)?.defaultValue || '')
-                                    : (item.selectedValue || '')"
                                 @change="e => item.boundVariable
                                     ? onVariableChange(item.boundVariable, e.target.value)
                                     : (item.selectedValue = e.target.value)"
                             >
-                                <option value="" disabled>{{ item.placeholder || 'Select…' }}</option>
-                                <option v-for="opt in getSelectOptions(item)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                <option value="" disabled
+                                    :selected="!(item.boundVariable
+                                        ? (variableStore.values[item.boundVariable] || getVarDef(item.boundVariable)?.defaultValue)
+                                        : item.selectedValue)">
+                                    {{ item.placeholder || 'Select…' }}
+                                </option>
+                                <option v-for="opt in getSelectOptions(item)" :key="opt.value" :value="opt.value"
+                                    :selected="(item.boundVariable
+                                        ? (variableStore.values[item.boundVariable] || getVarDef(item.boundVariable)?.defaultValue || '')
+                                        : (item.selectedValue || '')) === opt.value">
+                                    {{ opt.label }}
+                                </option>
                             </select>
                         </div>
                     </div>
