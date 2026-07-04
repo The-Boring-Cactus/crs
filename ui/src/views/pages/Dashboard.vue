@@ -473,6 +473,16 @@ function generateChartData(chartType) {
     }
 }
 
+// Always produces a unique i value even after components have been removed.
+// Using length would re-issue an already-used ID once a component is deleted.
+function nextComponentId() {
+    const max = layout.value.componentes.reduce((m, c) => {
+        const n = parseInt(c.i);
+        return isNaN(n) ? m : Math.max(m, n);
+    }, -1);
+    return (max + 1).toString();
+}
+
 const addcomponent = async (type) => {
     console.log('Adding component:', type);
 
@@ -484,7 +494,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 3,
             h: 2,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'Text',
             value: 'Click to edit'
@@ -495,7 +505,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 8,
             h: 8,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'ExcelEditor',
             title: 'Excel Editor',
@@ -511,7 +521,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 10,
             h: 8,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'DataTable',
             title: 'Data Table',
@@ -527,7 +537,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 10,
             h: 8,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'TreeTable',
             title: 'Tree Table',
@@ -541,7 +551,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 4,
             h: 5,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'Image',
             title: 'Image Component',
@@ -557,7 +567,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 3,
             h: 3,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'ToggleButton',
             title: 'Toggle Button',
@@ -573,7 +583,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 4,
             h: 3,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'Select',
             title: 'Select Dropdown',
@@ -591,7 +601,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: 4,
             h: 2,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'InputText',
             title: 'Input Text',
@@ -602,7 +612,7 @@ const addcomponent = async (type) => {
     } else if (type === 'Variable') {
         newComponent = {
             x: 1, y: 0, w: 3, h: 3,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'Variable',
             label: 'KPI',
@@ -615,7 +625,7 @@ const addcomponent = async (type) => {
     } else if (type === 'FunctOutput') {
         newComponent = {
             x: 1, y: 0, w: 6, h: 7,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'FunctOutput',
             title: 'Script Output',
@@ -648,7 +658,7 @@ const addcomponent = async (type) => {
             y: 0,
             w: size.w,
             h: size.h,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: type,
             title: getDefaultChartTitle(type),
@@ -1360,6 +1370,15 @@ function onSelectChange(item) {
     toast.add({ severity: 'info', summary: 'Selection Changed', detail: `Selected: ${item.selectedValue || 'None'}`, life: 2000 });
 }
 
+// Select widget config dialog
+const selectConfigDialog = ref(false);
+const selectConfigItem = ref(null);
+function openSelectConfig(item) {
+    selectConfigItem.value = item;
+    selectConfigDialog.value = true;
+    ensureSelectDatabases();
+}
+
 // Variable binding
 const bindingDialogItem = ref(null);
 const bindingDialogOpen = ref(false);
@@ -1833,7 +1852,7 @@ async function addSqlWidget() {
     const script = selectedSqlScript.value;
     const newComponent = {
         x: 1, y: 0, w: 6, h: 7,
-        i: layout.value.componentes.length.toString(),
+        i: nextComponentId(),
         static: false,
         type: 'SqlWidget',
         title: script.name,
@@ -1977,7 +1996,7 @@ function addCsWidget() {
     const newComponent = isVariable
         ? {
             x: 0, y: 0, w: 3, h: 3,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'Variable',
             label: script.name,
@@ -1989,7 +2008,7 @@ function addCsWidget() {
           }
         : {
             x: 0, y: 0, w: 6, h: 7,
-            i: layout.value.componentes.length.toString(),
+            i: nextComponentId(),
             static: false,
             type: 'FunctOutput',
             title: script.name,
@@ -2382,7 +2401,7 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
             </div>
 
             <!-- Select Component -->
-            <div v-else-if="item.type === 'Select'" class="select-container flex flex-col h-full border rounded-md p-2 bg-card overflow-auto">
+            <div v-else-if="item.type === 'Select'" class="select-container flex flex-col h-full border rounded-md p-2 bg-card">
                 <div class="select-header flex justify-between items-center mb-2">
                     <div v-if="!item.editing" class="cursor-pointer hover:underline font-medium text-sm" @click="item.editing = true">
                         {{ item.title || 'Select Dropdown' }}
@@ -2394,9 +2413,7 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         </Button>
                     </div>
                     <div class="select-controls flex gap-1">
-                        <Button variant="ghost" size="icon" class="h-7 w-7" :class="item.configOpen ? 'text-primary' : ''"
-                            title="Configure Options"
-                            @click="item.configOpen = !item.configOpen; if (item.configOpen) ensureSelectDatabases()">
+                        <Button variant="ghost" size="icon" class="h-7 w-7" title="Configure Options" @click="openSelectConfig(item)">
                             <Settings class="w-3 h-3 text-xs" />
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7" :class="item.boundVariable ? 'text-primary' : ''" @click="openBindDialog(item)" title="Bind to Variable">
@@ -2405,47 +2422,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
                             <Trash2 class="w-3 h-3 text-xs" />
                         </Button>
-                    </div>
-                </div>
-
-                <!-- Options configuration panel -->
-                <div v-if="item.configOpen" class="border-t border-dashed pt-2 mb-2 flex flex-col gap-2">
-                    <div class="flex items-center gap-2">
-                        <Label class="text-xs whitespace-nowrap">Source</Label>
-                        <select v-model="item.optionsSource" class="flex-1 h-7 text-xs rounded border border-input bg-background px-2">
-                            <option value="csv">Comma-separated values</option>
-                            <option value="sql">SQL query</option>
-                        </select>
-                    </div>
-                    <!-- CSV mode -->
-                    <div v-if="item.optionsSource !== 'sql'" class="flex flex-col gap-1">
-                        <Textarea
-                            v-model="item.csvValues"
-                            placeholder="Option A, Option B, Option C"
-                            class="text-xs h-14 resize-none"
-                            @input="applyCsvOptions(item)"
-                        />
-                        <span class="text-xs text-muted-foreground">{{ item.options.length }} option(s) configured</span>
-                    </div>
-                    <!-- SQL mode -->
-                    <div v-else class="flex flex-col gap-1">
-                        <select v-model="item.sqlDatabase" class="h-7 text-xs rounded border border-input bg-background px-2">
-                            <option value="">Select database connection…</option>
-                            <option v-for="db in selectDatabases" :key="db.id" :value="db.id">{{ db.name }}</option>
-                        </select>
-                        <Textarea
-                            v-model="item.sqlQuery"
-                            placeholder="SELECT option_value FROM table ORDER BY 1"
-                            class="text-xs h-14 resize-none"
-                        />
-                        <Button size="sm" variant="outline" class="h-6 text-xs" :disabled="item.sqlLoading" @click="loadSqlSelectOptions(item)">
-                            <RefreshCw class="w-3 h-3 mr-1" :class="item.sqlLoading ? 'animate-spin' : ''" /> Load
-                        </Button>
-                        <span v-if="item.options.length" class="text-xs text-muted-foreground">{{ item.options.length }} option(s) loaded</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Label class="text-xs whitespace-nowrap">Placeholder</Label>
-                        <Input v-model="item.placeholder" class="h-7 text-xs flex-1" />
                     </div>
                 </div>
 
@@ -2460,11 +2436,9 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         @change="(e) => { if (item.boundVariable) variableStore.setValue(item.boundVariable, e.target.value); else { item.selectedValue = e.target.value; onSelectChange(item); } }"
                     >
                         <option value="" disabled>{{ item.placeholder || 'Select an option…' }}</option>
-                        <!-- Bound to a variable: use that variable's resolved dropdown options -->
                         <template v-if="item.boundVariable && varOptions[item.boundVariable]">
                             <option v-for="opt in varOptions[item.boundVariable]" :key="opt" :value="opt">{{ opt }}</option>
                         </template>
-                        <!-- Own options: always a flat string array (CSV or SQL sourced) -->
                         <template v-else>
                             <option v-for="opt in item.options" :key="opt" :value="opt">{{ opt }}</option>
                         </template>
@@ -3070,6 +3044,79 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
     </Dialog>
 
     <!-- Bind Variable Dialog -->
+    <!-- Select widget options configuration dialog -->
+    <Dialog v-model:open="selectConfigDialog">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Configure Select Options</DialogTitle>
+                <DialogDescription>
+                    Choose how options are provided for "{{ selectConfigItem?.title || 'Select Dropdown' }}".
+                </DialogDescription>
+            </DialogHeader>
+
+            <div v-if="selectConfigItem" class="flex flex-col gap-4 py-2">
+                <!-- Source selector -->
+                <div class="flex items-center gap-3">
+                    <Label class="w-24 shrink-0 text-sm">Source</Label>
+                    <select v-model="selectConfigItem.optionsSource"
+                        class="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="csv">Comma-separated values</option>
+                        <option value="sql">SQL query</option>
+                    </select>
+                </div>
+
+                <!-- CSV mode -->
+                <div v-if="selectConfigItem.optionsSource !== 'sql'" class="flex flex-col gap-2">
+                    <Label class="text-sm">Values</Label>
+                    <Textarea
+                        v-model="selectConfigItem.csvValues"
+                        placeholder="Option A, Option B, Option C"
+                        class="resize-none h-20"
+                        @input="applyCsvOptions(selectConfigItem)"
+                    />
+                    <span class="text-xs text-muted-foreground">
+                        {{ selectConfigItem.options.length }} option(s) — separated by commas
+                    </span>
+                </div>
+
+                <!-- SQL mode -->
+                <div v-else class="flex flex-col gap-2">
+                    <Label class="text-sm">Database connection</Label>
+                    <select v-model="selectConfigItem.sqlDatabase"
+                        class="h-9 rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="">Select a connection…</option>
+                        <option v-for="db in selectDatabases" :key="db.id" :value="db.id">{{ db.name }}</option>
+                    </select>
+                    <Label class="text-sm">Query <span class="text-muted-foreground font-normal">(first column used as options)</span></Label>
+                    <Textarea
+                        v-model="selectConfigItem.sqlQuery"
+                        placeholder="SELECT option_value FROM table ORDER BY 1"
+                        class="resize-none h-20 font-mono text-sm"
+                    />
+                    <div class="flex items-center gap-2">
+                        <Button variant="outline" size="sm" :disabled="selectConfigItem.sqlLoading" @click="loadSqlSelectOptions(selectConfigItem)">
+                            <RefreshCw class="w-3.5 h-3.5 mr-1.5" :class="selectConfigItem.sqlLoading ? 'animate-spin' : ''" />
+                            Load Options
+                        </Button>
+                        <span v-if="selectConfigItem.options.length" class="text-xs text-muted-foreground">
+                            {{ selectConfigItem.options.length }} option(s) loaded
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Placeholder -->
+                <div class="flex items-center gap-3">
+                    <Label class="w-24 shrink-0 text-sm">Placeholder</Label>
+                    <Input v-model="selectConfigItem.placeholder" class="flex-1 h-9" placeholder="Select an option…" />
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" @click="selectConfigDialog = false">Done</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
     <Dialog v-model:open="bindingDialogOpen">
         <DialogContent class="max-w-sm">
             <DialogHeader>
