@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, nextTick, shallowRef } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import BaseChart from '@/components/BaseChart.vue';
 import GridLayout from '@/components/draggable/GridLayout.vue';
@@ -80,7 +80,6 @@ async function refreshPublicWidget(item) {
         );
         if (resp.ok) {
             const data = await resp.json();
-            console.log(data);
             item.queryResults = data.rows || [];
             item.queryColumns = data.columns || [];
         }
@@ -91,11 +90,76 @@ async function refreshPublicWidget(item) {
     }
 }
 
+// Applies one FunctEngine output event (Chart/Table/StatReport) to a
+// FunctOutput widget — mirrors Dashboard.vue's handleWidgetOutput FunctOutput branch.
+function applyScriptOutput(item, dataType, payload) {
+    if (dataType === 'Chart') {
+        item.outputType = 'chart';
+        item.chartType = payload.chartType || 'bar';
+        item.chartData = { labels: payload.labels || [], datasets: payload.datasets || [] };
+    } else if (dataType === 'Table') {
+        item.outputType = 'table';
+        item.tableColumns = (payload.columns || []).map(col => ({ field: col, header: col }));
+        item.tableData = payload.rows || [];
+    } else if (dataType === 'StatReport') {
+        item.outputType = 'statreport';
+        item.statReportData = payload;
+    }
+}
+
+// Executes a "CS Script Output" widget's bound script via the public
+// run-script endpoint — always runs the script's current saved content.
+async function runPublicScript(item) {
+    if (!item.scriptId) return;
+    item.refreshing = true;
+    try {
+        const resp = await fetch(
+            `${apiUrl}/api/public/dashboard/${route.params.shareToken}/run-script`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scriptId: item.scriptId, variables: getPublicValuesDict() })
+            }
+        );
+        if (resp.ok) {
+            const data = await resp.json();
+            for (const output of data.outputs || []) {
+                applyScriptOutput(item, output.dataType, output.payload);
+            }
+        }
+    } catch (e) {
+        console.error('Script execution failed:', e);
+    } finally {
+        item.refreshing = false;
+    }
+}
+
+// Auto-refresh timers per widget, keyed by component id.
+const widgetTimers = {};
+
+function startPublicAutoRefresh(item) {
+    if (!item.refreshInterval || item.refreshInterval <= 0) return;
+    stopPublicAutoRefresh(item);
+    widgetTimers[item.i] = setInterval(() => runPublicScript(item), item.refreshInterval * 60 * 1000);
+}
+
+function stopPublicAutoRefresh(item) {
+    if (widgetTimers[item.i]) {
+        clearInterval(widgetTimers[item.i]);
+        delete widgetTimers[item.i];
+    }
+}
+
 async function refreshAllDataWidgets() {
     await Promise.all(
         components.value
             .filter(item => item.type === 'SqlWidget' && item.sqlCode && VAR_PATTERN.test(item.sqlCode))
             .map(item => refreshPublicWidget(item))
+            .concat(
+                components.value
+                    .filter(item => item.type === 'FunctOutput' && item.scriptId)
+                    .map(item => runPublicScript(item))
+            )
     );
 }
 
@@ -314,12 +378,20 @@ onMounted(async () => {
             if (item.type === 'Select' && item.optionsSource === 'sql' && item.sqlDatabase && item.sqlQuery?.trim()) {
                 loadPublicSelectOptions(item, token); // intentionally non-blocking
             }
+            if (item.type === 'FunctOutput' && item.scriptId) {
+                runPublicScript(item); // intentionally non-blocking — populates live output
+                startPublicAutoRefresh(item);
+            }
         }
     } catch (e) {
         error.value = 'Failed to load dashboard.';
     } finally {
         loading.value = false;
     }
+});
+
+onUnmounted(() => {
+    Object.keys(widgetTimers).forEach(id => clearInterval(widgetTimers[id]));
 });
 </script>
 
@@ -495,8 +567,12 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <!-- FunctEngine Output widget (displays stored output) -->
-                    <div v-else-if="item.type === 'FunctOutput'" class="flex flex-col h-full border rounded-md p-2 bg-card">
+                    <!-- FunctEngine Output widget: executes the bound script live -->
+                    <div v-else-if="item.type === 'FunctOutput'" class="flex flex-col h-full border rounded-md p-2 bg-card relative">
+                        <!-- Loading overlay while the bound script re-executes -->
+                        <div v-if="item.refreshing" class="absolute inset-0 bg-background/60 flex items-center justify-center z-10 rounded-md">
+                            <Loader2 class="w-6 h-6 animate-spin text-primary" />
+                        </div>
                         <div class="font-medium text-sm mb-2">{{ item.title || 'Script Output' }}</div>
                         <div class="flex-1 overflow-auto min-h-0">
                             <!-- Chart output -->

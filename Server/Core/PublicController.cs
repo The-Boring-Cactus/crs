@@ -1,5 +1,6 @@
 #nullable enable
 using Dapper;
+using FunctEngine;
 using GenHTTP.Api.Content;
 using GenHTTP.Api.Protocol;
 using GenHTTP.Modules.Reflection;
@@ -111,6 +112,58 @@ public class PublicController
         return new { options };
     }
 
+    // ── Execute a saved C# script for a "CS Script Output" widget ──────────
+    // Always runs the script's *current* saved code (never a frozen copy),
+    // using the dashboard owner's database connections and datasets, without
+    // requiring an authenticated WebSocket session or exposing credentials.
+
+    [ResourceMethod(RequestMethod.Post, "dashboard/:token/run-script")]
+    public ValueTask<object> RunPublicScript(string token, [FromBody] RunScriptRequest request)
+    {
+        var dashRow   = LoadAndValidateDashboard(token);
+        var userId    = (dashRow["userid"] ?? dashRow["UserId"])?.ToString() ?? "";
+        var projectId = (dashRow["projectid"] ?? dashRow["ProjectId"])?.ToString();
+
+        if (string.IsNullOrWhiteSpace(request.ScriptId))
+            return ValueTask.FromResult<object>(new { outputs = Array.Empty<object>() });
+
+        var scripts = DatabasePersistence.LoadScripts(userId, "csharp", projectId);
+        var script  = scripts.FirstOrDefault(s => (s["id"]?.ToString() ?? s["Id"]?.ToString()) == request.ScriptId);
+        var code    = (script?["code"] ?? script?["Code"])?.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(code))
+            return ValueTask.FromResult<object>(new { outputs = Array.Empty<object>() });
+
+        var variables = request.Variables ?? new Dictionary<string, string>();
+        var outputs   = new List<object>();
+
+        using var engine = new CodeEngine(Guid.NewGuid().ToString());
+        LoadEngineDlls(engine);
+        RegisterOwnerConnections(engine, userId);
+        RegisterOwnerFunctions(engine, userId, projectId);
+
+        engine.RegisterExternalFunction("GetVar", args =>
+        {
+            if (args.Length == 0) return "";
+            var name = args[0]?.ToString() ?? "";
+            return variables.TryGetValue(name, out var v) ? v : "";
+        });
+
+        engine.OutputEmitted += (_, e) => outputs.Add(new { dataType = e.OutputType, payload = e.Payload });
+
+        try
+        {
+            engine.Execute(code);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[PublicController] RunPublicScript failed (scriptId={request.ScriptId}): {ex.Message}");
+            return ValueTask.FromResult<object>(new { outputs, error = ex.Message });
+        }
+
+        return ValueTask.FromResult<object>(new { outputs });
+    }
+
     // ── Public report ──────────────────────────────────────────────────────
 
     [ResourceMethod("report/:token")]
@@ -185,7 +238,11 @@ public class PublicController
         var cfg = connections.FirstOrDefault(c =>
             (c["id"]?.ToString() ?? c["Id"]?.ToString()) == connectionId)
             ?? throw new ProviderException(ResponseStatus.NotFound, "Database connection not found");
+        return BuildConnection(cfg);
+    }
 
+    private static System.Data.IDbConnection BuildConnection(JObject cfg)
+    {
         var dbType  = (cfg["type"]?.ToString() ?? cfg["Type"]?.ToString() ?? "").ToLower();
         var connStr = cfg["connectionstring"]?.ToString() ?? cfg["ConnectionString"]?.ToString();
         if (string.IsNullOrWhiteSpace(connStr)) connStr = null;
@@ -205,6 +262,104 @@ public class PublicController
                                 connStr ?? $"Server={host};Port={port};Database={dbName};Uid={dbUser};Pwd={dbPass};"),
             _            => throw new InvalidOperationException($"Unsupported database type: {dbType}")
         };
+    }
+
+    // Loads the same built-in function DLLs the authenticated WebSocket session loads.
+    private static void LoadEngineDlls(CodeEngine engine)
+    {
+        engine.LoadExternalDll("MathFunctions.dll");
+        engine.LoadExternalDll("DateTimeFunctions.dll");
+        engine.LoadExternalDll("DoeFunctions.dll");
+        engine.LoadExternalDll("FinancialFunctions.dll");
+        engine.LoadExternalDll("StringUtilities.dll");
+        engine.LoadExternalDll("DataTableFunctions.dll");
+    }
+
+    // Registers every database connection belonging to the dashboard owner,
+    // by both id and name, mirroring WebSocketManager.RegisterConnectionsToInterpreter.
+    private static void RegisterOwnerConnections(CodeEngine engine, string userId)
+    {
+        var connections = DatabasePersistence.LoadDatabaseConnections(userId);
+        foreach (var cfg in connections)
+        {
+            var id   = cfg["id"]?.ToString()   ?? cfg["Id"]?.ToString();
+            var name = cfg["name"]?.ToString() ?? cfg["Name"]?.ToString() ?? id;
+            if (string.IsNullOrEmpty(id)) continue;
+
+            try
+            {
+                var conn = BuildConnection(cfg);
+                engine.RegisterDatabaseConnection(id, conn);
+                if (!string.IsNullOrEmpty(name) && name != id)
+                    engine.RegisterDatabaseConnection(name, conn);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PublicController] Error registering connection {id}: {ex.Message}");
+            }
+        }
+    }
+
+    // Registers ExecuteScript/ReadDataset/ReadSpreadsheet scoped to the dashboard
+    // owner's own data, mirroring WebSocketManager.RegisterProjectFunctions.
+    private static void RegisterOwnerFunctions(CodeEngine engine, string userId, string? projectId)
+    {
+        engine.RegisterExternalFunction("ExecuteScript", args =>
+        {
+            if (args.Length == 0) return new List<object>();
+            string scriptName = args[0]?.ToString() ?? "";
+
+            var scripts = DatabasePersistence.LoadScripts(userId, "sql", projectId);
+            var script = scripts.FirstOrDefault(s =>
+                string.Equals(s["name"]?.ToString() ?? s["Name"]?.ToString() ?? "",
+                              scriptName, StringComparison.OrdinalIgnoreCase));
+            if (script == null) return new List<object>();
+
+            string sqlCode = script["code"]?.ToString() ?? script["Code"]?.ToString() ?? "";
+            string dbId = script["databaseconnectionid"]?.ToString()
+                       ?? script["DatabaseConnectionId"]?.ToString()
+                       ?? script["database"]?.ToString()
+                       ?? script["Database"]?.ToString() ?? "";
+
+            if (string.IsNullOrEmpty(sqlCode) || string.IsNullOrEmpty(dbId)) return new List<object>();
+
+            return engine.ExecuteDatabaseQuery(dbId, sqlCode);
+        });
+
+        engine.RegisterExternalFunction("ReadDataset", args =>
+            args.Length == 0 ? new List<object>() : LoadProjectDataRows(userId, projectId, args[0]?.ToString() ?? ""));
+
+        engine.RegisterExternalFunction("ReadSpreadsheet", args =>
+            args.Length == 0 ? new List<object>() : LoadProjectDataRows(userId, projectId, args[0]?.ToString() ?? ""));
+    }
+
+    private static List<object> LoadProjectDataRows(string userId, string? projectId, string name)
+    {
+        var entities = DatabasePersistence.LoadEntities(userId, "Datasets", projectId);
+        var entity = entities.FirstOrDefault(e =>
+            string.Equals(e["name"]?.ToString() ?? e["Name"]?.ToString() ?? "", name, StringComparison.OrdinalIgnoreCase));
+        if (entity == null) return new List<object>();
+
+        string configStr = entity["config"]?.ToString() ?? entity["Config"]?.ToString() ?? "";
+        if (string.IsNullOrEmpty(configStr)) return new List<object>();
+
+        try
+        {
+            var config = JObject.Parse(configStr);
+            var dataArray = config["data"] as JArray;
+            if (dataArray == null) return new List<object>();
+
+            return dataArray.Select(row =>
+                (object)(row is JObject rowObj
+                    ? rowObj.ToObject<Dictionary<string, object>>() ?? new Dictionary<string, object>()
+                    : new Dictionary<string, object>())
+            ).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[PublicController] LoadProjectDataRows failed ('{name}'): {ex.Message}");
+            return new List<object>();
+        }
     }
 
     // Runs a query and returns the first column of every row as a string list.
@@ -261,4 +416,10 @@ public class SelectOptionsRequest
 {
     public string DatabaseId { get; set; } = "";
     public string Query { get; set; } = "";
+}
+
+public class RunScriptRequest
+{
+    public string ScriptId { get; set; } = "";
+    public Dictionary<string, string>? Variables { get; set; }
 }

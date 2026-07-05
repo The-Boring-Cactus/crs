@@ -113,6 +113,10 @@ const showCsPickerDialog = ref(false);
 const savedCsScripts = ref([]);
 const selectedCsScript = ref(null);
 const csPickerMode = ref('output'); // 'output' | 'variable'
+// Set when the picker is rebinding an existing FunctOutput widget to a
+// (possibly different) script, instead of adding a brand-new widget.
+const csPickerBindTarget = ref(null);
+const csPickerRefreshInterval = ref(0);
 
 let layout = ref({
     componentes: [{ x: 6, y: 0, w: 3, h: 1, i: '0', static: false, type: 'Text', value: 'Sample Text' }],
@@ -1540,6 +1544,12 @@ async function afterLoadComponents(items) {
     //    The watch on definitions.length only fires when definitions change,
     //    so it won't trigger if definitions were already loaded before this load.
     await resolveAllVarOptions();
+
+    // 3. Resume auto-refresh timers for script-bound widgets — timers are
+    //    runtime-only state and don't survive a reload otherwise.
+    for (const item of items) {
+        if (item.scriptId && item.refreshInterval > 0) startAutoRefresh(item);
+    }
 }
 
 async function loadFromServer(dash) {
@@ -1851,14 +1861,37 @@ onUnmounted(() => {
     Object.keys(widgetTimers).forEach(id => clearInterval(widgetTimers[id]));
 });
 
+// Fetches the current saved content of a CS script by id, so a widget bound
+// to a script always runs its latest version rather than a frozen copy.
+async function resolveScriptCodeById(scriptId) {
+    try {
+        const params = { language: 'csharp' };
+        if (projectStore.currentProjectId) params.projectId = projectStore.currentProjectId;
+        const result = await userStore.executeCommand('LoadScripts', params, proxy.$socket);
+        const match = (result?.Data || []).find(s => (s.id || s.Id) === scriptId);
+        return match ? (match.code ?? match.Code ?? '') : null;
+    } catch {
+        return null;
+    }
+}
+
 async function runWidgetScript(item) {
-    if (!item.scriptCode || !item.scriptCode.trim()) {
-        toast.add({ severity: 'warn', summary: 'No Script', detail: 'Set a script for this widget first (click the script icon)', life: 3000 });
+    let codeToRun = item.scriptCode;
+    if (item.scriptId) {
+        const fresh = await resolveScriptCodeById(item.scriptId);
+        if (fresh !== null) {
+            codeToRun = fresh;
+            item.scriptCode = fresh;
+        }
+    }
+
+    if (!codeToRun || !codeToRun.trim()) {
+        toast.add({ severity: 'warn', summary: 'No Script', detail: 'Select a script for this widget first (click the script icon)', life: 3000 });
         return;
     }
     widgetExecutingId.value = item.i;
     try {
-        await userStore.executeCommand('ExecuteCs', { code: item.scriptCode, variables: variableStore.getValuesDict() }, proxy.$socket);
+        await userStore.executeCommand('ExecuteCs', { code: codeToRun, variables: variableStore.getValuesDict() }, proxy.$socket);
     } catch (error) {
         widgetExecutingId.value = null;
         toast.add({ severity: 'error', summary: 'Execution Failed', detail: error.message, life: 3000 });
@@ -2013,8 +2046,13 @@ function getSqlWidgetPivotData(item) {
 }
 
 // ── CS Script Widget helpers ───────────────────────────────────────────────
-async function openCsPickerDialog(mode = 'output') {
+// `existingItem` is set when re-binding an already-placed FunctOutput widget
+// to a (possibly different) saved script; left undefined when adding a new
+// widget from the sidebar.
+async function openCsPickerDialog(mode = 'output', existingItem = null) {
     csPickerMode.value = mode;
+    csPickerBindTarget.value = existingItem;
+    csPickerRefreshInterval.value = existingItem?.refreshInterval || 0;
     try {
         const params = { language: 'csharp' };
         if (projectStore.currentProjectId) params.projectId = projectStore.currentProjectId;
@@ -2022,15 +2060,36 @@ async function openCsPickerDialog(mode = 'output') {
         savedCsScripts.value = (result?.Data || []).map(s => ({
             id: s.id || s.Id,
             name: s.name || s.Name || 'Untitled',
-            code: s.content || s.Content || s.code || s.Code || ''
+            code: s.code || s.Code || ''
         }));
     } catch { savedCsScripts.value = []; }
+    selectedCsScript.value = existingItem?.scriptId
+        ? savedCsScripts.value.find(s => s.id === existingItem.scriptId) || null
+        : null;
     showCsPickerDialog.value = true;
 }
 
-function addCsWidget() {
+function confirmCsPickerSelection() {
     if (!selectedCsScript.value) return;
     const script = selectedCsScript.value;
+
+    // Re-binding an existing FunctOutput widget to the selected script.
+    if (csPickerBindTarget.value) {
+        const item = csPickerBindTarget.value;
+        item.scriptId = script.id;
+        item.scriptCode = script.code;
+        if (!item.title) item.title = script.name;
+        item.refreshInterval = csPickerRefreshInterval.value;
+
+        showCsPickerDialog.value = false;
+        selectedCsScript.value = null;
+        csPickerBindTarget.value = null;
+
+        startAutoRefresh(item);
+        runWidgetScript(item);
+        return;
+    }
+
     const isVariable = csPickerMode.value === 'variable';
 
     const newComponent = isVariable
@@ -2043,8 +2102,9 @@ function addCsWidget() {
             value: '',
             unit: '',
             description: 'From: ' + script.name,
+            scriptId: script.id,
             scriptCode: script.code,
-            refreshInterval: 0
+            refreshInterval: csPickerRefreshInterval.value
           }
         : {
             x: 0, y: 0, w: 6, h: 7,
@@ -2052,6 +2112,7 @@ function addCsWidget() {
             static: false,
             type: 'FunctOutput',
             title: script.name,
+            scriptId: script.id,
             scriptCode: script.code,
             outputType: null,
             chartType: 'bar',
@@ -2060,13 +2121,14 @@ function addCsWidget() {
             tableData: [],
             statReportData: null,
             printOutput: '',
-            refreshInterval: 0
+            refreshInterval: csPickerRefreshInterval.value
           };
 
     layout.value.componentes.push(newComponent);
     showCsPickerDialog.value = false;
     selectedCsScript.value = null;
     visibleCompo.value = false;
+    startAutoRefresh(newComponent);
     runWidgetScript(newComponent);
 }
 
@@ -2781,10 +2843,10 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <Button v-if="item.outputType === 'statreport'" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Full Report">
                             <FileText class="w-3 h-3" />
                         </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script — click the script button first'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptId ? 'Run Script' : 'No script — select one first'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
                             <RefreshCw class="w-3 h-3" />
                         </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="openWidgetScriptEditor(item)" title="Bind Script">
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="openCsPickerDialog('output', item)" :title="item.scriptId ? 'Change Script' : 'Select Script'">
                             <Code class="w-3 h-3" />
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
@@ -3011,12 +3073,13 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
         <DialogContent class="sm:max-w-[600px]">
             <DialogHeader>
                 <DialogTitle>
-                    {{ csPickerMode === 'variable' ? 'Add CS Variable Widget' : 'Add CS Script Output Widget' }}
+                    {{ csPickerBindTarget ? 'Select Script to Execute'
+                        : csPickerMode === 'variable' ? 'Add CS Variable Widget' : 'Add CS Script Output Widget' }}
                 </DialogTitle>
                 <DialogDescription>
                     {{ csPickerMode === 'variable'
                         ? 'Select a saved CS script that calls Value(result, "label") to display a KPI metric on the dashboard.'
-                        : 'Select a saved CS script. Its Table(), Chart(), and StatReport() outputs will be displayed in the widget.' }}
+                        : 'Select a saved CS script to execute. Its Table(), Chart(), and StatReport() outputs will be displayed in the widget — the widget always runs the script\'s current saved content, so edits made later in the CS Editor take effect automatically.' }}
                 </DialogDescription>
             </DialogHeader>
             <div class="py-2 max-h-[400px] overflow-auto border rounded-md">
@@ -3039,10 +3102,22 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                     <Badge variant="outline" class="text-xs shrink-0">CS</Badge>
                 </div>
             </div>
+            <div v-if="csPickerMode === 'output'" class="flex items-center gap-2">
+                <Clock class="w-4 h-4 text-muted-foreground" />
+                <span class="text-sm text-muted-foreground">Auto-refresh every</span>
+                <Input
+                    type="number"
+                    :model-value="csPickerRefreshInterval"
+                    @update:model-value="val => csPickerRefreshInterval = parseInt(val) || 0"
+                    class="h-7 w-20 text-sm"
+                    min="0"
+                />
+                <span class="text-sm text-muted-foreground">minutes (0 = off)</span>
+            </div>
             <DialogFooter>
-                <Button variant="outline" @click="showCsPickerDialog = false; selectedCsScript = null">Cancel</Button>
-                <Button @click="addCsWidget" :disabled="!selectedCsScript">
-                    {{ csPickerMode === 'variable' ? 'Add Variable' : 'Add Output Widget' }}
+                <Button variant="outline" @click="showCsPickerDialog = false; selectedCsScript = null; csPickerBindTarget = null">Cancel</Button>
+                <Button @click="confirmCsPickerSelection" :disabled="!selectedCsScript">
+                    {{ csPickerBindTarget ? 'Select & Run' : csPickerMode === 'variable' ? 'Add Variable' : 'Add Output Widget' }}
                 </Button>
             </DialogFooter>
         </DialogContent>
