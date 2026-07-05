@@ -188,6 +188,7 @@ public class PublicController
 
         var dbType  = (cfg["type"]?.ToString() ?? cfg["Type"]?.ToString() ?? "").ToLower();
         var connStr = cfg["connectionstring"]?.ToString() ?? cfg["ConnectionString"]?.ToString();
+        if (string.IsNullOrWhiteSpace(connStr)) connStr = null;
         var host    = cfg["host"]?.ToString()         ?? cfg["Host"]?.ToString();
         var dbName  = cfg["databasename"]?.ToString() ?? cfg["DatabaseName"]?.ToString();
         var dbUser  = cfg["username"]?.ToString()     ?? cfg["Username"]?.ToString();
@@ -229,8 +230,9 @@ public class PublicController
             }
             return await Task.FromResult(opts);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[PublicController] ResolveQueryFirstColumn failed (connectionId={connectionId}): {ex.Message}");
             return new List<string>();
         }
     }

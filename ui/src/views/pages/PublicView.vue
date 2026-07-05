@@ -52,6 +52,17 @@ function getSelectOptions(item) {
 
 const VAR_PATTERN = /\{\{\w+\}\}/;
 
+// variableStore.getValuesDict() reads variableStore.definitions, which is only
+// populated by the authenticated loadDefinitions() WebSocket call — never made
+// in the public view. Build the dict from the locally-fetched varDefs instead.
+function getPublicValuesDict() {
+    const result = {};
+    for (const def of varDefs.value) {
+        result[def.name] = variableStore.values[def.name] ?? def.defaultValue ?? '';
+    }
+    return result;
+}
+
 async function refreshPublicWidget(item) {
     if (!item.sqlCode || !VAR_PATTERN.test(item.sqlCode)) return;
     item.refreshing = true;
@@ -63,12 +74,13 @@ async function refreshPublicWidget(item) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     widgetId: item.i,
-                    variables: variableStore.getValuesDict()
+                    variables: getPublicValuesDict()
                 })
             }
         );
         if (resp.ok) {
             const data = await resp.json();
+            console.log(data);
             item.queryResults = data.rows || [];
             item.queryColumns = data.columns || [];
         }

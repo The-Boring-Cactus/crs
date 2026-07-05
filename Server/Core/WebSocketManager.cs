@@ -142,6 +142,7 @@ public class WebSocketManager
             var id = c["id"]?.ToString() ?? c["Id"]?.ToString();
             var type = (c["type"]?.ToString() ?? c["Type"]?.ToString() ?? "").ToLower();
             var connectionString = c["connectionString"]?.ToString() ?? c["ConnectionString"]?.ToString();
+            if (string.IsNullOrWhiteSpace(connectionString)) connectionString = null;
 
             if (string.IsNullOrEmpty(id)) continue;
 
@@ -182,6 +183,7 @@ public class WebSocketManager
             var id = c["id"]?.ToString() ?? c["Id"]?.ToString();
             var type = (c["type"]?.ToString() ?? c["Type"]?.ToString() ?? "").ToLower();
             var connectionString = c["connectionString"]?.ToString() ?? c["ConnectionString"]?.ToString();
+            if (string.IsNullOrWhiteSpace(connectionString)) connectionString = null;
             var name = c["name"]?.ToString() ?? c["Name"]?.ToString() ?? id;
 
             if (string.IsNullOrEmpty(id)) continue;
@@ -318,13 +320,13 @@ public class WebSocketManager
         if (connectionInfo == null) return;
 
         string uuid = !string.IsNullOrEmpty(connectionInfo.UserId) ? connectionInfo.UserId : connectionInfo.ConnectionId;
-
+        // Console.WriteLine($"{uuid}: {e.Message.ToString()}");
         var cmdMessage = e.Message as CommandMessage;
         
         if (cmdMessage == null) return;
 
         var parameters = cmdMessage.Parameters;
-
+        // Console.WriteLine( JsonConvert.SerializeObject(parameters));
         var response = new ResponseMessage
         {
             RequestId = cmdMessage.Id,
@@ -640,7 +642,7 @@ public class WebSocketManager
                             var opts = new List<string>();
                             foreach (var row in qResult)
                             {
-                                var rd = RowToDictionary(row);
+                                Dictionary<string, object> rd = RowToDictionary(row);
                                 if (rd.Count > 0) opts.Add(rd.Values.First()?.ToString() ?? "");
                             }
                             response.Data = opts;

@@ -75,7 +75,7 @@ const hasExecuted = ref(false);
 const currentScript = reactive({
     id: null,
     name: '',
-    content: '',
+    code: '',
     language: 'csharp'
 });
 
@@ -116,7 +116,7 @@ const handleSocketDebug = (e) => {
 // Editor operations
 const handleCodeChange = (newCode) => {
     code.value = newCode;
-    currentScript.content = newCode;
+    currentScript.code = newCode;
 };
 
 const handleLanguageChange = (language) => {
@@ -261,7 +261,7 @@ const clearDebug = () => {
 const newScript = () => {
     currentScript.id = null;
     currentScript.name = '';
-    currentScript.content = '';
+    currentScript.code = '';
     currentScript.language = 'csharp';
 
     code.value = `// New C# Script\nusing System;\n\npublic class Program\n{\n    public static void Main()\n    {\n        Console.WriteLine("Hello, World!");\n\n        // Your code here\n\n    }\n}`;
@@ -278,7 +278,7 @@ const saveScript = async () => {
     const script = {
         id: currentScript.id || generateId(),
         name: currentScript.name || 'Untitled C# Script',
-        content: code.value,
+        code: code.value,
         language: 'csharp',
         projectId: projectStore.currentProjectId || undefined,
         createdAt: currentScript.id ? undefined : new Date(),
@@ -315,15 +315,15 @@ const confirmLoadScript = () => {
     const script = selectedScriptToLoad.value;
     currentScript.id = script.id;
     currentScript.name = script.name;
-    currentScript.content = script.content;
+    currentScript.code = script.code;
     currentScript.language = script.language || 'csharp';
 
-    code.value = script.content;
+    code.value = script.code || '';
     debugText.value = '';
     hasExecuted.value = false;
 
     if (editorRef.value?.setCode) {
-        editorRef.value.setCode(script.content);
+        editorRef.value.setCode(script.code || '');
     }
 
     showLoadDialog.value = false;
