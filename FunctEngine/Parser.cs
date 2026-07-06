@@ -378,7 +378,15 @@ namespace FunctEngine
             if (Match(TokenType.Identifier))
             {
                 var name = Previous().Value;
-                
+
+                // Qualified names for external (DLL-loaded) functions, which are
+                // registered under "Type.Method" — e.g. DateTimeLibrary.Datediff(...).
+                while (Match(TokenType.Dot))
+                {
+                    var member = Consume(TokenType.Identifier, "Expected identifier after '.'").Value;
+                    name = name + "." + member;
+                }
+
                 if (Match(TokenType.LeftParen))
                 {
                     return ParseFunctionCall(name);
@@ -389,7 +397,7 @@ namespace FunctEngine
                     Consume(TokenType.RightBracket, "Expected ']' after array index");
                     return new ArrayAccessNode { ArrayName = name, Index = index };
                 }
-                
+
                 return new IdentifierNode { Name = name };
             }
             engine.PrintCore($"Unexpected token: {Peek().Value} at line {Peek().Line}");

@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -892,6 +892,311 @@ MaxVar('highScore', 87);
 MaxVar('highScore', 95);
 MaxVar('highScore', 62);
 Print(Concat('High score: ', LoadFromVar('highScore')));`
+            }
+        ]
+    },
+    {
+        // Every function is registered under a dotted "Type.Method" name (e.g.
+        // DateTimeLibrary.Datediff), which the parser now supports calling.
+        name: 'Date & Time', icon: markRaw(Calendar),
+        snippets: [
+            {
+                name: 'Current Date & Time',
+                description: 'The current moment in several forms, and its components',
+                code: `// Date & Time: current moment in several forms and its components
+Print(Concat('Date(): ', DateTimeLibrary.Date()));
+Print(Concat('Date(yyyy-MM): ', DateTimeLibrary.Date('yyyy-MM')));
+Print(Concat('Now(): ', DateTimeLibrary.Now()));
+Print(Concat('UtcNow(): ', DateTimeLibrary.UtcNow()));
+
+var now = DateTimeLibrary.Now();
+Print(Concat('Year: ', ToString(DateTimeLibrary.Year(now))));
+Print(Concat('Month: ', ToString(DateTimeLibrary.Month(now))));
+Print(Concat('Day: ', ToString(DateTimeLibrary.Day(now))));
+Print(Concat('Hour: ', ToString(DateTimeLibrary.Hour(now))));
+Print(Concat('Minute: ', ToString(DateTimeLibrary.Minute(now))));
+Print(Concat('Second: ', ToString(DateTimeLibrary.Second(now))));
+Print(Concat('WeekDay (0=Sun): ', ToString(DateTimeLibrary.WeekDay(now))));
+Print(Concat('Quarter: ', ToString(DateTimeLibrary.Quarter(now))));
+Print(Concat('WeekNum: ', ToString(DateTimeLibrary.WeekNum(now))));
+
+var today = DateTimeLibrary.Today();
+Print(Concat('Today(): ', ToString(DateTimeLibrary.Year(today)), '-', ToString(DateTimeLibrary.Month(today)), '-', ToString(DateTimeLibrary.Day(today))));`
+            },
+            {
+                name: 'Date Arithmetic & Parsing',
+                description: 'Parse dates/times from text and compute differences',
+                code: `// Date & Time: parse dates/times from text and compute differences
+var start = DateTimeLibrary.Datevalue('2024-01-01');
+var end = DateTimeLibrary.Datevalue('2024-09-15');
+Print(Concat('Days between: ', ToString(DateTimeLibrary.Datediff(start, end))));
+Print(Concat('Years between: ', ToString(DateTimeLibrary.YearFrac(start, end))));
+
+var meetingTime = DateTimeLibrary.Time(14, 30, 0);
+Print(Concat('Meeting hour: ', ToString(DateTimeLibrary.Hour(meetingTime)), ':', ToString(DateTimeLibrary.Minute(meetingTime))));
+
+var parsedTime = DateTimeLibrary.Timevalue('09:15:45');
+Print(Concat('Parsed seconds: ', ToString(DateTimeLibrary.Second(parsedTime))));`
+            }
+        ]
+    },
+    {
+        name: 'Design of Experiments', icon: markRaw(TestTube),
+        snippets: [
+            {
+                name: 'Regression',
+                description: 'Simple, multiple, and GLM linear regression',
+                code: `// DOE: simple and multiple linear regression
+var xs = Array(1, 2, 3, 4, 5);
+var ys = Array(2.1, 3.9, 6.2, 7.8, 10.1);
+var simple = DoeLibrary.LinearRegression(xs, ys);
+Print(Concat('slope=', ToString(ArrayGet(simple, 0)), ' intercept=', ToString(ArrayGet(simple, 1)), ' R2=', ToString(ArrayGet(simple, 2))));
+
+// Multiple regression: y from two predictors
+var predictors = Array(
+    Array(1, 50), Array(2, 55), Array(3, 65), Array(4, 70), Array(5, 80)
+);
+var targets = Array(20, 24, 29, 33, 38);
+var coefficients = DoeLibrary.MultipleLinearRegression(predictors, targets);
+Print(Concat('Intercept: ', ToString(ArrayGet(coefficients, 0)), '  Coef 1: ', ToString(ArrayGet(coefficients, 1)), '  Coef 2: ', ToString(ArrayGet(coefficients, 2))));
+
+// Glm defaults to a Gaussian family, equivalent to MultipleLinearRegression
+var glmCoefficients = DoeLibrary.Glm(predictors, targets);
+Print(Concat('GLM intercept: ', ToString(ArrayGet(glmCoefficients, 0))));`
+            },
+            {
+                name: 'Native ANOVA (One/Two-Way, MANOVA)',
+                description: 'Call the library\'s own ANOVA implementations directly',
+                code: `// DOE: run the built-in ANOVA implementations directly (see the Statistics
+// category's "One-Way ANOVA" snippet for how this is computed from scratch)
+var groupA = Array(20.1, 21.4, 19.8, 22.0, 20.6);
+var groupB = Array(23.5, 24.1, 22.9, 23.8, 24.6);
+var groupC = Array(19.2, 18.7, 20.1, 19.5, 18.9);
+var oneWay = DoeLibrary.OneWayAnova(Array(groupA, groupB, groupC));
+Print(Concat('One-Way ANOVA -- F=', ToString(ArrayGet(oneWay, 0)), ' p=', ToString(ArrayGet(oneWay, 1))));
+
+// Two-Way ANOVA: 2 fertilizer levels x 2 soil levels, 3 replicates each
+var data = Array(
+    Array(20.0), Array(21.0), Array(19.5),
+    Array(24.0), Array(23.5), Array(24.5),
+    Array(18.0), Array(17.5), Array(18.5),
+    Array(22.0), Array(21.5), Array(22.5)
+);
+var factorA = Array(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1);
+var factorB = Array(0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1);
+var twoWay = DoeLibrary.TwoWayAnova(data, factorA, factorB);
+Print(Concat('Two-Way ANOVA -- F(A)=', ToString(ArrayGet(twoWay, 0)), ' F(B)=', ToString(ArrayGet(twoWay, 1)), ' F(interaction)=', ToString(ArrayGet(twoWay, 2))));
+
+// MANOVA: 2 groups, 3 observations each, 2 dependent variables per observation
+var group1 = Array(Array(10.0, 5.0), Array(12.0, 6.0), Array(11.0, 5.5));
+var group2 = Array(Array(15.0, 8.0), Array(16.0, 8.5), Array(14.5, 7.8));
+var manova = DoeLibrary.Manova(Array(group1, group2));
+Print(Concat('MANOVA -- Wilks Lambda=', ToString(ArrayGet(manova, 0)), ' Pillai Trace=', ToString(ArrayGet(manova, 1))));`
+            },
+            {
+                name: 'Hypothesis Tests',
+                description: 't-tests, chi-square, Mann-Whitney U, and confidence intervals',
+                code: `// DOE: common hypothesis tests
+var groupA = Array(23, 25, 22, 27, 24);
+var groupB = Array(30, 32, 29, 31, 33);
+var tTest = DoeLibrary.IndependentTTest(groupA, groupB);
+Print(Concat('Independent t-test -- t=', ToString(ArrayGet(tTest, 0)), ' p=', ToString(ArrayGet(tTest, 2))));
+
+var before = Array(150, 155, 148, 160, 152);
+var after = Array(145, 150, 146, 155, 148);
+var pairedTest = DoeLibrary.PairedTTest(before, after);
+Print(Concat('Paired t-test -- t=', ToString(ArrayGet(pairedTest, 0)), ' p=', ToString(ArrayGet(pairedTest, 2))));
+
+var observed = Array(18, 22, 20, 40);
+var expected = Array(25, 25, 25, 25);
+var chiSquare = DoeLibrary.ChiSquareTest(observed, expected);
+Print(Concat('Chi-square -- stat=', ToString(ArrayGet(chiSquare, 0)), ' p=', ToString(ArrayGet(chiSquare, 2))));
+
+var mannWhitney = DoeLibrary.MannWhitneyU(groupA, groupB);
+Print(Concat('Mann-Whitney U -- U=', ToString(ArrayGet(mannWhitney, 0)), ' p=', ToString(ArrayGet(mannWhitney, 1))));
+
+var sample = Array(12, 15, 14, 10, 18, 21, 14, 16, 13, 19);
+var ci = DoeLibrary.ConfidenceInterval(sample);
+Print(Concat('95% CI -- [', ToString(ArrayGet(ci, 0)), ', ', ToString(ArrayGet(ci, 1)), ']  mean=', ToString(ArrayGet(ci, 2))));`
+            },
+            {
+                name: 'Post-Hoc & Effect Size',
+                description: 'Tukey HSD, Bonferroni correction, Cohen\'s d, eta-squared',
+                code: `// DOE: post-hoc pairwise comparisons and effect sizes
+var groupA = Array(20.1, 21.4, 19.8, 22.0, 20.6);
+var groupB = Array(23.5, 24.1, 22.9, 23.8, 24.6);
+var groupC = Array(19.2, 18.7, 20.1, 19.5, 18.9);
+var names = Array('A', 'B', 'C');
+var pairs = DoeLibrary.TukeyHSD(Array(groupA, groupB, groupC), names);
+for (var i = 0; i < ArrayLength(pairs); i = i + 1) {
+    var pair = ArrayGet(pairs, i);
+    Print(Concat(GetRowValue(pair, 'groupA'), ' vs ', GetRowValue(pair, 'groupB'), ': meanDiff=', ToString(GetRowValue(pair, 'meanDiff')), ' significant=', ToString(GetRowValue(pair, 'significant'))));
+}
+
+var pValues = Array(0.01, 0.04, 0.03, 0.20);
+var corrected = DoeLibrary.BonferroniCorrection(pValues);
+Print(Concat('Bonferroni-corrected p-values: ', ArrayJoin(corrected, ', ')));
+
+var cohensD = DoeLibrary.CohenD(groupA, groupB);
+Print(Concat('Cohen D (A vs B): ', ToString(cohensD)));
+
+var etaSq = DoeLibrary.EtaSquared(52.5, 58.66);
+Print(Concat('Eta-squared: ', ToString(etaSq)));`
+            },
+            {
+                name: 'Descriptive Stats & Gage R&R',
+                description: 'The library\'s own Mean/Variance/StdDev/Correlation, plus Gage R&R',
+                code: `// DOE: the library's own Mean/Variance/StandardDeviation/Correlation (equivalent
+// to the plain built-ins already shown in the Statistics category) plus GageRR
+var data = Array(12, 15, 14, 10, 18, 21, 14, 16, 13, 19);
+Print(Concat('DoeLibrary.Mean: ', ToString(DoeLibrary.Mean(data))));
+Print(Concat('DoeLibrary.Variance: ', ToString(DoeLibrary.Variance(data))));
+Print(Concat('DoeLibrary.StandardDeviation: ', ToString(DoeLibrary.StandardDeviation(data))));
+
+var x = Array(1, 2, 3, 4, 5);
+var y = Array(2, 4, 5, 4, 5);
+Print(Concat('DoeLibrary.Correlation: ', ToString(DoeLibrary.Correlation(x, y))));
+
+// Gage R&R: 3 parts, 2 operators, 2 replicates each
+var measurements = Array(
+    Array(Array(10.1, 10.3), Array(10.0, 10.2)),
+    Array(Array(12.2, 12.0), Array(12.1, 12.3)),
+    Array(Array(9.8, 9.9), Array(9.7, 10.0))
+);
+var gageRR = DoeLibrary.GageRR(measurements);
+Print(Concat('Repeatability: ', ToString(ArrayGet(gageRR, 0)), ' Reproducibility: ', ToString(ArrayGet(gageRR, 1)), ' Gage R&R: ', ToString(ArrayGet(gageRR, 2)), ' Part Variation: ', ToString(ArrayGet(gageRR, 3))));`
+            }
+        ]
+    },
+    {
+        name: 'Financial', icon: markRaw(DollarSign),
+        snippets: [
+            {
+                name: 'Time Value of Money',
+                description: 'Fv, Pv, Pmt, Nper, Rate for a simple loan',
+                code: `// Financial: time value of money for a $10,000 loan, 60 months at 0.5%/month
+var monthlyRate = 0.005;
+var nper = 60;
+var loanAmount = 10000;
+
+var payment = FinancialLibrary.Pmt(monthlyRate, nper, loanAmount);
+Print(Concat('Monthly payment: ', ToString(payment)));
+
+var futureValue = FinancialLibrary.Fv(monthlyRate, nper, payment, loanAmount);
+Print(Concat('Future value (should be ~0 if paid off): ', ToString(futureValue)));
+
+var presentValue = FinancialLibrary.Pv(monthlyRate, nper, payment);
+Print(Concat('Present value implied by payment: ', ToString(presentValue)));
+
+var periodsNeeded = FinancialLibrary.Nper(monthlyRate, payment, loanAmount);
+Print(Concat('Periods to pay off: ', ToString(periodsNeeded)));
+
+var impliedRate = FinancialLibrary.Rate(nper, payment, loanAmount, 0, 0, 0.005);
+Print(Concat('Implied monthly rate: ', ToString(impliedRate)));`
+            },
+            {
+                name: 'Loan Amortization',
+                description: 'Interest/principal split per period, and cumulative totals',
+                code: `// Financial: interest/principal breakdown per period, and cumulative totals
+var rate = 0.005;
+var nper = 60;
+var pv = 10000;
+
+var interestPeriod1 = FinancialLibrary.Ipmt(rate, 1, nper, pv);
+var principalPeriod1 = FinancialLibrary.Ppmt(rate, 1, nper, pv);
+Print(Concat('Period 1 -- interest: ', ToString(interestPeriod1), ', principal: ', ToString(principalPeriod1)));
+
+var totalInterestYear1 = FinancialLibrary.Cumipmt(rate, nper, pv, 1, 12, 0);
+var totalPrincipalYear1 = FinancialLibrary.Cumprinc(rate, nper, pv, 1, 12, 0);
+Print(Concat('Year 1 -- total interest: ', ToString(totalInterestYear1), ', total principal: ', ToString(totalPrincipalYear1)));
+
+var straightLineInterest = FinancialLibrary.Ispmt(rate, 1, nper, pv);
+Print(Concat('Straight-line interest estimate, period 1: ', ToString(straightLineInterest)));`
+            },
+            {
+                name: 'Depreciation Methods',
+                description: 'Compare straight-line, SYD, and declining-balance depreciation',
+                code: `// Financial: compare depreciation methods for a $10,000 asset, $1,000 salvage, 5-year life
+var cost = 10000;
+var salvage = 1000;
+var life = 5;
+
+Print(Concat('Straight-line (Sln): ', ToString(FinancialLibrary.Sln(cost, salvage, life))));
+Print(Concat('Sum-of-years-digits, year 1 (Syd): ', ToString(FinancialLibrary.Syd(cost, salvage, life, 1))));
+Print(Concat('Fixed-declining balance, year 1 (Db): ', ToString(FinancialLibrary.Db(cost, salvage, life, 1))));
+Print(Concat('Double-declining balance, year 1 (Ddb): ', ToString(FinancialLibrary.Ddb(cost, salvage, life, 1))));`
+            },
+            {
+                name: 'Interest Rate Conversion & Growth',
+                description: 'Effect, Nominal, Rri, and Pduration',
+                code: `// Financial: convert between nominal/effective rates, and solve for growth
+var effectiveRate = FinancialLibrary.Effect(0.06, 12);
+Print(Concat('Effective annual rate from 6% nominal (monthly compounding): ', ToString(effectiveRate)));
+
+var nominalRate = FinancialLibrary.Nominal(effectiveRate, 12);
+Print(Concat('Nominal rate recovered: ', ToString(nominalRate)));
+
+var growthRate = FinancialLibrary.Rri(10, 5000, 8000);
+Print(Concat('Equivalent rate for $5,000 -> $8,000 over 10 periods: ', ToString(growthRate)));
+
+var periodsToDouble = FinancialLibrary.Pduration(0.07, 5000, 10000);
+Print(Concat('Periods to double $5,000 at 7%: ', ToString(periodsToDouble)));`
+            },
+            {
+                name: 'Cash Flow Analysis (Xnpv/Xirr)',
+                description: 'Net present value and internal rate of return for irregular cash flows',
+                code: `// Financial: net present value and internal rate of return for irregular cash flows
+var values = Array(-10000, 3000, 4200, 6800);
+var dates = Array(
+    DateTimeLibrary.Datevalue('2024-01-01'),
+    DateTimeLibrary.Datevalue('2024-06-01'),
+    DateTimeLibrary.Datevalue('2025-01-01'),
+    DateTimeLibrary.Datevalue('2025-06-01')
+);
+
+var npv = FinancialLibrary.Xnpv(0.1, values, dates);
+Print(Concat('XNPV at 10%: ', ToString(npv)));
+
+var irr = FinancialLibrary.Xirr(values, dates);
+Print(Concat('XIRR: ', ToString(irr)));`
+            },
+            {
+                name: 'Bond & T-Bill Pricing',
+                description: 'Disc, Intrate, Received, Pricedisc, Tbillprice, TbillYield, Tbilleq',
+                code: `// Financial: bond and T-bill pricing between a settlement and maturity date
+var settlement = DateTimeLibrary.Datevalue('2024-01-01');
+var maturity = DateTimeLibrary.Datevalue('2024-07-01');
+
+var discountRate = FinancialLibrary.Disc(settlement, maturity, 98, 100);
+Print(Concat('Discount rate (Disc): ', ToString(discountRate)));
+
+var investRate = FinancialLibrary.Intrate(settlement, maturity, 98, 100);
+Print(Concat('Interest rate (Intrate): ', ToString(investRate)));
+
+var receivedAmount = FinancialLibrary.Received(settlement, maturity, 98, 0.04);
+Print(Concat('Amount received at maturity (Received): ', ToString(receivedAmount)));
+
+var priceDiscounted = FinancialLibrary.Pricedisc(settlement, maturity, 0.04, 100);
+Print(Concat('Price per $100 face value (Pricedisc): ', ToString(priceDiscounted)));
+
+var tbillPrice = FinancialLibrary.Tbillprice(settlement, maturity, 0.04);
+Print(Concat('T-bill price (Tbillprice): ', ToString(tbillPrice)));
+
+var tbillYield = FinancialLibrary.TbillYield(settlement, maturity, tbillPrice);
+Print(Concat('T-bill yield (TbillYield): ', ToString(tbillYield)));
+
+var tbillEquivalent = FinancialLibrary.Tbilleq(settlement, maturity, 0.04);
+Print(Concat('Bond-equivalent yield (Tbilleq): ', ToString(tbillEquivalent)));`
+            },
+            {
+                name: 'Fractional Price Conversion',
+                description: 'Convert between fractional and decimal price quotes (e.g. bond ticks)',
+                code: `// Financial: convert between fractional and decimal price quotes (e.g. bond ticks)
+var decimalPrice = FinancialLibrary.Dollarde(1.10, 32);
+Print(Concat('Dollarde(1.10, 32): ', ToString(decimalPrice)));
+
+var fractionalPrice = FinancialLibrary.Dollarfr(decimalPrice, 32);
+Print(Concat('Dollarfr back to fraction: ', ToString(fractionalPrice)));`
             }
         ]
     }

@@ -252,16 +252,36 @@ namespace FunctEngine
                         externalFunctions[functionName] = args => {
                             try
                             {
-                                // Convertir argumentos al tipo esperado
+                                // Convertir argumentos al tipo esperado — soporta arrays
+                                // (List<object> del script -> T[]/T[][]/...), tipos anulables,
+                                // y parámetros opcionales omitidos por el script.
                                 ParameterInfo[] parameters = method.GetParameters();
                                 object[] convertedArgs = new object[parameters.Length];
 
-                                for (int i = 0; i < Math.Min(args.Length, parameters.Length); i++)
+                                for (int i = 0; i < parameters.Length; i++)
                                 {
-                                    convertedArgs[i] = Convert.ChangeType(args[i], parameters[i].ParameterType);
+                                    if (i < args.Length && args[i] != null)
+                                    {
+                                        convertedArgs[i] = ConvertExternalArgument(args[i], parameters[i].ParameterType);
+                                    }
+                                    else if (parameters[i].HasDefaultValue)
+                                    {
+                                        convertedArgs[i] = parameters[i].DefaultValue;
+                                    }
+                                    else
+                                    {
+                                        convertedArgs[i] = parameters[i].ParameterType.IsValueType
+                                            ? Activator.CreateInstance(parameters[i].ParameterType)
+                                            : null;
+                                    }
                                 }
 
-                                return method.Invoke(null, convertedArgs);
+                                var result = method.Invoke(null, convertedArgs);
+                                return ConvertExternalReturnValue(result);
+                            }
+                            catch (TargetInvocationException tie) when (tie.InnerException != null)
+                            {
+                                throw new Exception($"Error calling external function {functionName}: {tie.InnerException.Message}");
                             }
                             catch (Exception ex)
                             {
@@ -275,6 +295,68 @@ namespace FunctEngine
             {
                 throw new Exception($"Error loading DLL {dllPath}: {ex.Message}");
             }
+        }
+
+        // Converts a pseudocode value (double/string/bool/List<object>) into the
+        // .NET type an external DLL function parameter expects. List<object> is
+        // converted element-by-element into a properly-typed (possibly jagged)
+        // array; Nullable<T> targets unwrap to T; everything else falls back to
+        // Convert.ChangeType (handles double/int/string/DateTime as before).
+        private static object ConvertExternalArgument(object value, Type targetType)
+        {
+            var underlying = Nullable.GetUnderlyingType(targetType);
+            if (underlying != null)
+            {
+                return ConvertExternalArgument(value, underlying);
+            }
+
+            if (targetType.IsInstanceOfType(value))
+            {
+                return value;
+            }
+
+            if (targetType.IsArray)
+            {
+                var elementType = targetType.GetElementType()!;
+                if (value is List<object> list)
+                {
+                    var typedArray = Array.CreateInstance(elementType, list.Count);
+                    for (int i = 0; i < list.Count; i++)
+                        typedArray.SetValue(ConvertExternalArgument(list[i], elementType), i);
+                    return typedArray;
+                }
+                throw new ArgumentException($"Expected an array value for a {targetType.Name} parameter");
+            }
+
+            return Convert.ChangeType(value, targetType);
+        }
+
+        // Converts an external function's .NET return value back into something
+        // the pseudocode can use: tuples and arrays (including jagged arrays)
+        // become List<object> so ArrayLength()/ArrayGet() work on them; scalars
+        // and dictionaries (e.g. from TukeyHSD, usable via GetRowValue) pass
+        // through unchanged.
+        private static object ConvertExternalReturnValue(object result)
+        {
+            if (result == null) return null;
+
+            if (result is System.Runtime.CompilerServices.ITuple tuple)
+            {
+                var list = new List<object>();
+                for (int i = 0; i < tuple.Length; i++)
+                    list.Add(ConvertExternalReturnValue(tuple[i]));
+                return list;
+            }
+
+            if (result is Array arr)
+            {
+                var list = new List<object>();
+                foreach (var item in arr)
+                    list.Add(ConvertExternalReturnValue(item));
+                return list;
+            }
+
+            return result;
         }
 
         public void RegisterExternalFunction(string name, Func<object[], object> function)
