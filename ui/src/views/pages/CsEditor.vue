@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue';
+import { ref, computed, onMounted, onUnmounted, reactive, markRaw } from 'vue';
 import { getCurrentInstance } from 'vue';
 import { toast } from 'vue-sonner';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
@@ -14,7 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2 } from 'lucide-vue-next';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -264,7 +265,7 @@ const newScript = () => {
     currentScript.code = '';
     currentScript.language = 'csharp';
 
-    code.value = `// New C# Script\nusing System;\n\npublic class Program\n{\n    public static void Main()\n    {\n        Console.WriteLine("Hello, World!");\n\n        // Your code here\n\n    }\n}`;
+    code.value = `// Your code here\n\n`;
 
     debugText.value = '';
     hasExecuted.value = false;
@@ -277,7 +278,7 @@ const newScript = () => {
 const saveScript = async () => {
     const script = {
         id: currentScript.id || generateId(),
-        name: currentScript.name || 'Untitled C# Script',
+        name: currentScript.name || 'Untitled Script',
         code: code.value,
         language: 'csharp',
         projectId: projectStore.currentProjectId || undefined,
@@ -444,11 +445,36 @@ while(index < ArrayLength(numbers) && !found) {
     } else {
         index = index + 1;
     }
+}
+
+// Con incremento explícito
+for(var k = 0; k < 3; k = k + 1) {
+    Print(Concat('k = ', ToString(k)));
+}
+
+// Con operador ++
+for(var k = 0; k < 3; k++) {
+    Print(Concat('k = ', ToString(k)));
+}
+
+// Con operador --
+for(var k = 10; k > 0; k--) {
+    Print(ToString(k));
+}
+
+// Con incrementos personalizados
+for(var k = 0; k < 10; k = k + 2) {
+    Print(ToString(k)); // 0, 2, 4, 6, 8
+}
+
+// Con expresiones más complejas
+for(var k = 1; k < 100; k = k * 2) {
+    Print(ToString(k)); // 1, 2, 4, 8, 16, 32, 64
 }`;
 
 const loadSampleScript = () => {
     currentScript.id = null;
-    currentScript.name = 'Linear Search Sample';
+    currentScript.name = 'Sample';
     code.value = SAMPLE_SCRIPT;
     if (editorRef.value?.setCode) editorRef.value.setCode(SAMPLE_SCRIPT);
     debugText.value = '';
@@ -586,6 +612,303 @@ const functionCategories = [
     },
 ];
 
+// Runnable example scripts for the Snippets Toolbar, organized by the same
+// categories as functionCategories above. Each snippet is a complete,
+// self-contained script that only calls functions actually reachable from
+// this pseudocode language (built-in functions registered under a plain
+// name — DLL-loaded functions such as "DoeLibrary.OneWayAnova" use a
+// dotted Type.Method name the parser doesn't support calling, so those are
+// intentionally not used here).
+const snippetCategories = [
+    {
+        name: 'Basic', icon: markRaw(Hash),
+        snippets: [
+            {
+                name: 'Print & Concat',
+                description: 'Build and print formatted strings in a loop',
+                code: `// Basic: printing and string concatenation
+var name = 'World';
+var count = 3;
+for (var i = 0; i < count; i = i + 1) {
+    Print(Concat('Hello, ', name, '! (', ToString(i + 1), '/', ToString(count), ')'));
+}`
+            }
+        ]
+    },
+    {
+        name: 'Arrays', icon: markRaw(Braces),
+        snippets: [
+            {
+                name: 'Array Basics',
+                description: 'Create, push, sort, reverse, and slice an array',
+                code: `// Arrays: create, push, sort, reverse, slice
+var numbers = Array(5, 3, 8, 1, 9, 2);
+Print(Concat('Original: ', ArrayJoin(numbers, ', ')));
+
+ArrayPush(numbers, 7);
+Print(Concat('After push(7): ', ArrayJoin(numbers, ', ')));
+
+var sorted = ArraySort(numbers);
+Print(Concat('Sorted: ', ArrayJoin(sorted, ', ')));
+
+var reversed = ArrayReverse(sorted);
+Print(Concat('Reversed: ', ArrayJoin(reversed, ', ')));
+
+var smallestThree = ArraySlice(sorted, 0, 3);
+Print(Concat('3 smallest: ', ArrayJoin(smallestThree, ', ')));`
+            }
+        ]
+    },
+    {
+        name: 'Math', icon: markRaw(Sigma),
+        snippets: [
+            {
+                name: 'Math Operations',
+                description: 'Powers, roots, rounding, and trig functions',
+                code: `// Math: arithmetic, powers, roots, rounding, trig
+var numBase = 2;
+var exponent = 10;
+Print(Concat(ToString(numBase), '^', ToString(exponent), ' = ', ToString(Power(numBase, exponent))));
+Print(Concat('Sqrt(144) = ', ToString(Sqrt(144))));
+Print(Concat('Round(3.7) = ', ToString(Round(3.7)), '  Floor(3.7) = ', ToString(Floor(3.7)), '  Ceil(3.2) = ', ToString(Ceil(3.2))));
+Print(Concat('Sin(PI/2) = ', ToString(Sin(Divide(PI(), 2)))));
+Print(Concat('Max(4, 9) = ', ToString(Max(4, 9)), '  Min(4, 9) = ', ToString(Min(4, 9))));`
+            }
+        ]
+    },
+    {
+        name: 'Strings', icon: markRaw(Type),
+        snippets: [
+            {
+                name: 'String Utilities',
+                description: 'Trim, case conversion, search, split, and padding',
+                code: `// Strings: case conversion, search, split, padding
+var text = '  Hello, FunctEngine World!  ';
+var trimmed = Trim(text);
+Print(Concat('Trimmed: [', trimmed, ']'));
+Print(Concat('Upper: ', ToUpper(trimmed)));
+Print(Concat('Lower: ', ToLower(trimmed)));
+Print(Concat('Contains "Engine"? ', ToString(Contains(trimmed, 'Engine'))));
+Print(Concat('Index of "FunctEngine": ', ToString(IndexOf(trimmed, 'FunctEngine'))));
+
+var words = Split(trimmed, ' ');
+Print(Concat('Word count: ', ToString(ArrayLength(words))));
+
+var padded = PadLeft(ToString(42), 6, '0');
+Print(Concat('Padded: ', padded));`
+            }
+        ]
+    },
+    {
+        name: 'Statistics', icon: markRaw(FlaskConical),
+        snippets: [
+            {
+                name: 'Descriptive Statistics',
+                description: 'Mean, median, mode, std dev, and a five-number summary chart',
+                code: `// Statistics: descriptive summary of a dataset
+var data = Array(12, 15, 14, 10, 18, 21, 14, 16, 13, 19, 22, 17, 15, 20, 11);
+
+Print(Concat('Count: ', ToString(Count(data))));
+Print(Concat('Mean: ', ToString(Mean(data))));
+Print(Concat('Median: ', ToString(Median(data))));
+Print(Concat('Mode: ', ToString(Mode(data))));
+Print(Concat('Std Dev: ', ToString(StandardDeviation(data))));
+
+Chart('bar', Array('Min', 'Q1', 'Median', 'Q3', 'Max'),
+    Array(Percentile(data, 0), Percentile(data, 25), Median(data), Percentile(data, 75), Percentile(data, 100)),
+    'Five-Number Summary');`
+            },
+            {
+                name: 'Correlation',
+                description: 'Pearson correlation between two variables, plotted as a scatter chart',
+                code: `// Statistics: Pearson correlation between two variables
+var hoursStudied = Array(1, 2, 3, 4, 5, 6, 7, 8);
+var examScore    = Array(52, 58, 63, 65, 70, 74, 80, 85);
+
+var r = Correlation(hoursStudied, examScore);
+Print(Concat('Correlation (r): ', ToString(r)));
+
+Chart('scatter', hoursStudied, examScore, 'Exam Score vs. Hours Studied');`
+            },
+            {
+                name: 'One-Way ANOVA',
+                description: 'Compare means across groups: F-statistic, group table, and fitted-vs-actual chart',
+                code: `// Statistics: One-Way ANOVA — compare crop yield (kg) across 3 fertilizer
+// treatments. Built from Array()/Mean()/Variance() primitives since ANOVA
+// isn't exposed as a single built-in function.
+var groupA = Array(20.1, 21.4, 19.8, 22.0, 20.6); // Fertilizer A
+var groupB = Array(23.5, 24.1, 22.9, 23.8, 24.6); // Fertilizer B
+var groupC = Array(19.2, 18.7, 20.1, 19.5, 18.9); // Fertilizer C
+var groupNames = Array('Fertilizer A', 'Fertilizer B', 'Fertilizer C');
+
+// Matrix of groups — one row per treatment
+var groups = Array(groupA, groupB, groupC);
+var k = ArrayLength(groups);
+
+// Combine all observations to compute the grand mean
+var allValues = Array();
+for (var g = 0; g < k; g = g + 1) {
+    var group = ArrayGet(groups, g);
+    var n = ArrayLength(group);
+    for (var j = 0; j < n; j = j + 1) {
+        ArrayPush(allValues, ArrayGet(group, j));
+    }
+}
+var grandMean = Mean(allValues);
+var totalN = ArrayLength(allValues);
+
+// Between-groups (SSB) and within-groups (SSW) sums of squares
+var ssBetween = 0;
+var ssWithin = 0;
+var groupMeans = Array();
+var tableRows = Array();
+
+for (var g = 0; g < k; g = g + 1) {
+    var group = ArrayGet(groups, g);
+    var n = ArrayLength(group);
+    var groupMean = Mean(group);
+    var groupVariance = Variance(group); // population variance = SS / n
+
+    var diff = groupMean - grandMean;
+    ssBetween = ssBetween + n * diff * diff;
+    ssWithin = ssWithin + groupVariance * n;
+
+    ArrayPush(groupMeans, groupMean);
+    ArrayPush(tableRows, Array(ArrayGet(groupNames, g), n, Round(groupMean * 100) / 100, Round(groupVariance * 100) / 100));
+}
+
+var dfBetween = k - 1;
+var dfWithin = totalN - k;
+var msBetween = ssBetween / dfBetween;
+var msWithin = ssWithin / dfWithin;
+var fStatistic = msBetween / msWithin;
+
+Print(Concat('Grand mean: ', ToString(grandMean)));
+Print(Concat('SS between: ', ToString(ssBetween), '  SS within: ', ToString(ssWithin)));
+Print(Concat('df between: ', ToString(dfBetween), '  df within: ', ToString(dfWithin)));
+Print(Concat('MS between: ', ToString(msBetween), '  MS within: ', ToString(msWithin)));
+Print(Concat('F statistic: ', ToString(fStatistic)));
+
+// Descriptive table: one row per treatment (Group, N, Mean, Variance)
+Table(tableRows, 'ANOVA Group Statistics (Group, N, Mean, Variance)');
+
+// Compare group means visually
+Chart('bar', groupNames, groupMeans, 'Mean Yield by Fertilizer Treatment');
+
+// "Adjusted predictors": the ANOVA model's prediction for each observation
+// is simply its own group's mean — chart actual vs. that fitted value.
+var obsLabels = Array();
+var actualValues = Array();
+var fittedValues = Array();
+for (var g = 0; g < k; g = g + 1) {
+    var group = ArrayGet(groups, g);
+    var n = ArrayLength(group);
+    var groupMean = ArrayGet(groupMeans, g);
+    for (var j = 0; j < n; j = j + 1) {
+        ArrayPush(obsLabels, Concat(ArrayGet(groupNames, g), ' #', ToString(j + 1)));
+        ArrayPush(actualValues, ArrayGet(group, j));
+        ArrayPush(fittedValues, groupMean);
+    }
+}
+Chart('line', obsLabels, Array(actualValues, fittedValues), 'Actual vs. Fitted (Group Mean) Values');
+
+StatReport(Concat('One-Way ANOVA: F(', ToString(dfBetween), ', ', ToString(dfWithin), ') = ', ToString(fStatistic)));`
+            }
+        ]
+    },
+    {
+        name: 'Output', icon: markRaw(BarChart2),
+        snippets: [
+            {
+                name: 'Table Output',
+                description: 'Render row/column data as a Table widget',
+                code: `// Output: render structured data with Table()
+var rows = Array(
+    Array('Alice', 29, 'Engineering'),
+    Array('Bob', 34, 'Sales'),
+    Array('Carol', 41, 'Marketing')
+);
+Table(rows, 'Employee Directory');`
+            },
+            {
+                name: 'Chart Output',
+                description: 'Single-series and multi-series charts',
+                code: `// Output: single-series and multi-series charts
+var months = Array('Jan', 'Feb', 'Mar', 'Apr', 'May');
+var revenue = Array(12000, 15000, 14000, 18000, 21000);
+Chart('line', months, revenue, 'Monthly Revenue');
+
+var costs = Array(8000, 9000, 8500, 10000, 11000);
+Chart('bar', months, Array(revenue, costs), 'Revenue vs. Costs');`
+            },
+            {
+                name: 'StatReport Output',
+                description: 'A titled report panel — pair with Table()/Chart() for the data',
+                code: `// Output: StatReport renders a titled panel. Structured sections require
+// a result dictionary (e.g. from a native statistics function); from plain
+// script the simplest reliable form is a title-only summary, paired with
+// Table()/Chart() for the actual data.
+StatReport('Quarterly Review');
+Table(Array(Array('Q1', 41000), Array('Q2', 47000), Array('Q3', 52000)), 'Revenue by Quarter');`
+            }
+        ]
+    },
+    {
+        name: 'Database', icon: markRaw(Database),
+        snippets: [
+            {
+                name: 'Query a Connection',
+                description: 'Run SQL against a connection configured in this project',
+                code: `// Database: query a connection already configured in this project's
+// Database Connections panel — replace with its name or id.
+var rows = ExecuteQuery('my-connection-name', 'SELECT name, amount FROM sales ORDER BY amount DESC LIMIT 10');
+Table(rows, 'Top 10 Sales');`
+            },
+            {
+                name: 'Saved Script & Dataset',
+                description: 'Reuse a saved SQL script and a saved Dataset by name',
+                code: `// Database: reuse work already saved elsewhere in the project
+var salesRows = ExecuteScript('My Saved SQL Script'); // runs a saved SQL script by name
+var importedRows = ReadDataset('My Dataset');         // loads a saved Dataset by name
+Table(salesRows, 'From Saved SQL Script');
+Table(importedRows, 'From Saved Dataset');`
+            }
+        ]
+    },
+    {
+        name: 'Memory', icon: markRaw(Save),
+        snippets: [
+            {
+                name: 'Counters & Variables',
+                description: 'Named counters and persisted script variables',
+                code: `// Memory: named counters and persisted script variables
+var visits = Counter('page_views');
+Print(Concat('Page views so far: ', ToString(visits)));
+
+SaveToVar('lastRun', ToString(Random()));
+Print(Concat('Last run token: ', LoadFromVar('lastRun')));
+
+MaxVar('highScore', 87);
+MaxVar('highScore', 95);
+MaxVar('highScore', 62);
+Print(Concat('High score: ', LoadFromVar('highScore')));`
+            }
+        ]
+    }
+];
+
+// Replaces the editor's content with a snippet's example code — mirrors
+// loadSampleScript's "load a canned example" behavior.
+const insertSnippet = (snippet) => {
+    currentScript.id = null;
+    currentScript.name = snippet.name;
+    code.value = snippet.code;
+    if (editorRef.value?.setCode) editorRef.value.setCode(snippet.code);
+    debugText.value = '';
+    scriptOutputs.value = [];
+    hasExecuted.value = false;
+};
+
 // Initialize component
 onMounted(() => {
     window.addEventListener('socket-debug', handleSocketDebug);
@@ -661,6 +984,31 @@ onUnmounted(() => {
                     <Trash2 class="w-4 h-4" />
                 </Button>
             </div>
+        </div>
+
+        <!-- Snippets Toolbar: runnable example scripts, organized by category -->
+        <div class="flex items-center gap-1.5 mb-3 bg-muted/30 p-2 border rounded-md flex-wrap">
+            <span class="text-xs font-medium text-muted-foreground px-1">Snippets:</span>
+            <DropdownMenu v-for="category in snippetCategories" :key="category.name">
+                <DropdownMenuTrigger as-child>
+                    <Button variant="outline" size="sm" class="gap-1.5 h-8">
+                        <component :is="category.icon" class="w-3.5 h-3.5" />
+                        {{ category.name }}
+                        <ChevronDown class="w-3 h-3 opacity-60" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" class="w-80">
+                    <DropdownMenuLabel>{{ category.name }} Snippets</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <template v-for="(snippet, si) in category.snippets" :key="snippet.name">
+                        <DropdownMenuItem class="flex flex-col items-start gap-0.5 py-2" @click="insertSnippet(snippet)">
+                            <span class="font-medium text-sm">{{ snippet.name }}</span>
+                            <span class="text-xs text-muted-foreground whitespace-normal">{{ snippet.description }}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator v-if="si < category.snippets.length - 1" />
+                    </template>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
 
         <!-- Code Editor -->
