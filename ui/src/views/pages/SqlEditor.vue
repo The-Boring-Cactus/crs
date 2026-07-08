@@ -16,7 +16,7 @@ import { getCurrentInstance } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import BaseChart from '@/components/BaseChart.vue';
@@ -40,10 +40,6 @@ const showVariableManager = ref(false);
 const editingVariable = ref(null);
 const newVar = reactive({ id: '', name: '', label: '', type: 'input', defaultValue: '', dropdownSource: 'static', dropdownValues: '', dropdownQuery: '', dropdownConnectionId: '' });
 
-// Computed: variables detected in current SQL
-const detectedVars = computed(() => variableStore.detectInSql(code.value));
-const hasVariables = computed(() => detectedVars.value.length > 0);
-
 // Editor state
 const code = ref('SELECT 1;');
 const cmView = shallowRef();
@@ -55,6 +51,28 @@ const config = reactive({
     autofocus: true,
     height: '300px'
 });
+
+// Computed: variables detected in current SQL
+const detectedVars = computed(() => variableStore.detectInSql(code.value));
+const hasVariables = computed(() => detectedVars.value.length > 0);
+
+// Resolved options for dropdown-type variables (supports both static and SQL sources)
+const resolvedOptions = ref({});
+
+async function resolveDetectedOptions(vars) {
+    for (const name of vars) {
+        const def = variableStore.definitions.find(d => d.name === name);
+        if (def?.type === 'dropdown') {
+            resolvedOptions.value[name] = await variableStore.resolveDropdownOptions(def, proxy.$socket);
+        }
+    }
+}
+
+// Re-resolve whenever detected variables or definitions change
+watch(
+    [detectedVars, () => variableStore.definitions.length],
+    ([vars]) => resolveDetectedOptions(vars)
+);
 
 // Database and script state
 const selectedDatabase = ref(null);
@@ -581,6 +599,7 @@ watch(() => projectStore.currentProjectId, () => {
     loadScriptsFromStorage();
     variableStore.loadDefinitions(proxy.$socket);
 });
+
 </script>
 
 <template>
@@ -687,23 +706,30 @@ watch(() => projectStore.currentProjectId, () => {
                 <div v-for="varName in detectedVars" :key="varName" class="flex items-center gap-2">
                     <label class="text-sm font-medium whitespace-nowrap">{{ varName }}:</label>
                     <template v-if="variableStore.definitions.find(d => d.name === varName)?.type === 'dropdown'">
-                        <Select :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)">
+                        <Select :model-value="variableStore.values[varName] || variableStore.definitions.find(d => d.name === varName)?.defaultValue || ''" @update:model-value="v => variableStore.setValue(varName, v)">
                             <SelectTrigger class="h-8 w-[180px] text-xs">
                                 <SelectValue :placeholder="varName" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem v-for="opt in (variableStore.definitions.find(d => d.name === varName)?.dropdownValues || '').split(',').map(s => s.trim()).filter(Boolean)" :key="opt" :value="opt">{{ opt }}</SelectItem>
+                                <SelectItem v-for="opt in (resolvedOptions[varName] || [])" :key="opt" :value="opt">{{ opt }}</SelectItem>
                             </SelectContent>
                         </Select>
                     </template>
                     <template v-else-if="variableStore.definitions.find(d => d.name === varName)?.type === 'date'">
-                        <Input type="date" class="h-8 w-[160px] text-xs" :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)" />
+                        <input type="date" class="flex h-8 w-[160px] rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            :value="variableStore.values[varName] || variableStore.definitions.find(d => d.name === varName)?.defaultValue || ''"
+                            @change="variableStore.setValue(varName, $event.target.value)" />
                     </template>
                     <template v-else-if="variableStore.definitions.find(d => d.name === varName)?.type === 'datetime'">
-                        <Input type="datetime-local" class="h-8 w-[200px] text-xs" :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)" />
+                        <input type="datetime-local" class="flex h-8 w-[200px] rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            :value="variableStore.values[varName] || variableStore.definitions.find(d => d.name === varName)?.defaultValue || ''"
+                            @change="variableStore.setValue(varName, $event.target.value)" />
                     </template>
                     <template v-else>
-                        <Input class="h-8 w-[160px] text-xs" :model-value="variableStore.getValue(varName)" @update:model-value="v => variableStore.setValue(varName, v)" :placeholder="varName" />
+                        <input type="text" class="flex h-8 w-[160px] rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            :value="variableStore.values[varName] || variableStore.definitions.find(d => d.name === varName)?.defaultValue || ''"
+                            @input="variableStore.setValue(varName, $event.target.value)"
+                            :placeholder="varName" />
                     </template>
                 </div>
             </div>
@@ -956,6 +982,7 @@ watch(() => projectStore.currentProjectId, () => {
             <DialogContent class="sm:max-w-[700px]">
                 <DialogHeader>
                     <DialogTitle>Load Script</DialogTitle>
+                    <DialogDescription>Select a saved SQL script to load into the editor.</DialogDescription>
                 </DialogHeader>
                 <div class="py-4 max-h-[400px] overflow-auto border rounded-md">
                     <Table v-if="savedScripts.length > 0">
@@ -1009,6 +1036,7 @@ watch(() => projectStore.currentProjectId, () => {
             <DialogContent class="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Variable Manager</DialogTitle>
+                    <DialogDescription>Define variables that can be referenced in SQL with &#123;&#123;variableName&#125;&#125; syntax.</DialogDescription>
                 </DialogHeader>
 
                 <!-- Existing variables -->

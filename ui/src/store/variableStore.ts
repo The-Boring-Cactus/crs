@@ -62,7 +62,8 @@ export const useVariableStore = defineStore('variables', {
                 }));
                 this.loadFromStorage();
                 for (const def of this.definitions) {
-                    if (this.values[def.name] === undefined && def.defaultValue) {
+                    // Use falsy check so empty-string values (e.g. from a prior bug) also get restored
+                    if (!this.values[def.name] && def.defaultValue) {
                         this.values[def.name] = def.defaultValue;
                     }
                 }

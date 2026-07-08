@@ -464,40 +464,20 @@ const deleteProject = async (id) => {
         <div class="main-content flex-1 flex flex-col min-w-0">
             <!-- Search Bar -->
             <div class="search-bar h-14 border-b bg-background flex items-center px-4 gap-4 sticky top-0 z-10 transition-colors duration-300">
+                <!-- Current project name or Welcome -->
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-[15px] font-semibold text-foreground leading-none truncate max-w-[180px]">
+                        {{ projectStore.currentProject?.name || 'Welcome' }}
+                    </span>
+                    <div class="h-4 w-px bg-border"></div>
+                </div>
+
                 <div class="relative flex-1 max-w-md">
                     <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input type="text" placeholder="Buscar..." v-model="searchQuery" class="pl-9 bg-muted/50 w-full" />
                 </div>
                 
-                <!-- Theme Colors Selector (Row of colored circles) -->
-                <div class="flex items-center gap-1.5 px-3 py-1 bg-muted/40 rounded-full border border-zinc-200 dark:border-zinc-800 transition-colors">
-                    <button
-                        v-for="color in themeColors"
-                        :key="color"
-                        @click="setThemeColor(color)"
-                        class="w-4 h-4 rounded-full transition-all duration-200 hover:scale-125 focus:outline-none"
-                        :class="[
-                            color === 'indigo' ? 'bg-indigo-500' : '',
-                            color === 'emerald' ? 'bg-emerald-500' : '',
-                            color === 'blue' ? 'bg-blue-500' : '',
-                            color === 'rose' ? 'bg-rose-500' : '',
-                            color === 'amber' ? 'bg-amber-500' : '',
-                            layoutConfig.themeColor === color ? 'scale-110 ring-2 ring-primary ring-offset-2 dark:ring-offset-zinc-950' : 'opacity-60 hover:opacity-100'
-                        ]"
-                        :title="'Theme: ' + color"
-                    ></button>
-                </div>
-
-                <!-- Dark Mode Toggle -->
-                <button 
-                    @click="toggleDarkMode" 
-                    class="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                    title="Toggle dark mode"
-                >
-                    <Sun v-if="layoutConfig.darkMode" class="w-4.5 h-4.5" />
-                    <Moon v-else class="w-4.5 h-4.5" />
-                </button>
-
+                
                 <button @click="openSettings" class="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors" title="Settings">
                     <Settings class="w-4.5 h-4.5" />
                 </button>

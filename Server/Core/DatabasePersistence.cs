@@ -441,17 +441,16 @@ public static class DatabasePersistence
         using var conn = CreateConnection();
         if (conn == null) return new List<JObject>();
         conn.Open();
-        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        // Variables table uses VARCHAR(36) in all databases — pass strings, not Guid objects.
         IEnumerable<dynamic> rows;
         if (!string.IsNullOrEmpty(projectId))
         {
-            object dbProjId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? projectId : Guid.Parse(projectId);
             rows = conn.Query("SELECT * FROM Variables WHERE UserId = @UserId AND (ProjectId = @ProjectId OR ProjectId IS NULL)",
-                new { UserId = dbUserId, ProjectId = dbProjId });
+                new { UserId = userId, ProjectId = projectId });
         }
         else
         {
-            rows = conn.Query("SELECT * FROM Variables WHERE UserId = @UserId", new { UserId = dbUserId });
+            rows = conn.Query("SELECT * FROM Variables WHERE UserId = @UserId", new { UserId = userId });
         }
         return rows.Select(r => JObject.Parse(JsonConvert.SerializeObject(r))).Cast<JObject>().ToList();
     }
@@ -463,16 +462,13 @@ public static class DatabasePersistence
         conn.Open();
         var id = varObj["id"]?.ToString() ?? varObj["Id"]?.ToString();
         if (string.IsNullOrEmpty(id)) { id = Guid.NewGuid().ToString(); varObj["id"] = id; }
-        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
-        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
+        // Variables table uses VARCHAR(36) in all databases — pass strings, not Guid objects.
         var projIdStr = varObj["projectId"]?.ToString() ?? varObj["ProjectId"]?.ToString();
-        object dbProjId = string.IsNullOrEmpty(projIdStr) ? null :
-            ((conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? (object)projIdStr : Guid.Parse(projIdStr));
-        conn.Execute("DELETE FROM Variables WHERE Id = @Id AND UserId = @UserId", new { Id = dbId, UserId = dbUserId });
+        conn.Execute("DELETE FROM Variables WHERE Id = @Id AND UserId = @UserId", new { Id = id, UserId = userId });
         conn.Execute(@"INSERT INTO Variables (Id, UserId, ProjectId, Name, Label, Type, DefaultValue, DropdownSource, DropdownValues, DropdownQuery, DropdownConnectionId)
                        VALUES (@Id, @UserId, @ProjectId, @Name, @Label, @Type, @DefaultValue, @DropdownSource, @DropdownValues, @DropdownQuery, @DropdownConnectionId)",
             new {
-                Id = dbId, UserId = dbUserId, ProjectId = dbProjId,
+                Id = id, UserId = userId, ProjectId = string.IsNullOrEmpty(projIdStr) ? null : projIdStr,
                 Name = varObj["name"]?.ToString() ?? "var",
                 Label = varObj["label"]?.ToString(),
                 Type = varObj["type"]?.ToString() ?? "input",
@@ -489,8 +485,7 @@ public static class DatabasePersistence
         using var conn = CreateConnection();
         if (conn == null) return;
         conn.Open();
-        object dbId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? id : Guid.Parse(id);
-        object dbUserId = (conn is MySqlConnector.MySqlConnection || IsOracleConnection(conn)) ? userId : Guid.Parse(userId);
-        conn.Execute("DELETE FROM Variables WHERE Id = @Id AND UserId = @UserId", new { Id = dbId, UserId = dbUserId });
+        // Variables table uses VARCHAR(36) in all databases — pass strings, not Guid objects.
+        conn.Execute("DELETE FROM Variables WHERE Id = @Id AND UserId = @UserId", new { Id = id, UserId = userId });
     }
 }
