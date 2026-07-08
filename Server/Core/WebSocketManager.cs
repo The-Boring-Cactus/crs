@@ -54,6 +54,7 @@ public class WebSocketManager
         connectionInfo.interpreter.LoadExternalDll("FinancialFunctions.dll");
         connectionInfo.interpreter.LoadExternalDll("StringUtilities.dll");
         connectionInfo.interpreter.LoadExternalDll("DataTableFunctions.dll");
+        connectionInfo.interpreter.LoadExternalDll("TimeSeriesFunctions.dll");
 
         if (!_connections.TryAdd(connectionId, connectionInfo))
         {

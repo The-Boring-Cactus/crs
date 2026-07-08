@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -1197,6 +1197,129 @@ Print(Concat('Dollarde(1.10, 32): ', ToString(decimalPrice)));
 
 var fractionalPrice = FinancialLibrary.Dollarfr(decimalPrice, 32);
 Print(Concat('Dollarfr back to fraction: ', ToString(fractionalPrice)));`
+            }
+        ]
+    },
+    {
+        name: 'Time Series', icon: markRaw(TrendingUp),
+        snippets: [
+            {
+                name: 'Autocorrelation (ACF & PACF)',
+                description: 'Autocorrelation and partial autocorrelation functions, with lag-bar charts',
+                code: `// Time Series: autocorrelation (ACF) and partial autocorrelation (PACF)
+var series = Array(10.2, 10.8, 10.5, 11.1, 11.6, 11.4, 12.0, 12.5, 12.3, 12.9, 13.4, 13.2, 13.8, 14.3, 14.1, 14.7, 15.2, 15.0, 15.6, 16.1);
+var maxLag = 5;
+
+var acfValues = TimeSeriesLibrary.Acf(series, maxLag);
+var pacfValues = TimeSeriesLibrary.Pacf(series, maxLag);
+
+var lags = Array();
+var acfRows = Array();
+var pacfRows = Array();
+for (var k = 0; k <= maxLag; k = k + 1) {
+    ArrayPush(lags, Concat('Lag ', ToString(k)));
+    ArrayPush(acfRows, Array(k, Round(ArrayGet(acfValues, k) * 1000) / 1000));
+    ArrayPush(pacfRows, Array(k, Round(ArrayGet(pacfValues, k) * 1000) / 1000));
+}
+
+Table(acfRows, 'ACF (Lag, Value)');
+Table(pacfRows, 'PACF (Lag, Value)');
+Chart('bar', lags, acfValues, 'Autocorrelation Function (ACF)');
+Chart('bar', lags, pacfValues, 'Partial Autocorrelation Function (PACF)');`
+            },
+            {
+                name: 'Smoothing & Transformations',
+                description: 'Moving average, exponential smoothing, and Box-Cox / log transforms',
+                code: `// Time Series: moving average, exponential smoothing, and Box-Cox / log transforms
+var rawSeries = Array(100, 105, 98, 110, 115, 108, 120, 125, 118, 130, 135, 128, 140, 145, 138);
+
+var ma = TimeSeriesLibrary.MovingAverage(rawSeries, 3);
+var smoothed = TimeSeriesLibrary.ExponentialSmoothing(rawSeries, 0.3);
+var boxCox = TimeSeriesLibrary.BoxCoxTransform(rawSeries, 0.5);
+var logged = TimeSeriesLibrary.LogTransform(rawSeries);
+
+var labels = Array();
+for (var i = 0; i < ArrayLength(rawSeries); i = i + 1) {
+    ArrayPush(labels, Concat('t', ToString(i + 1)));
+}
+Chart('line', labels, rawSeries, 'Original Series');
+Chart('line', labels, smoothed, 'Exponential Smoothing (alpha=0.3)');
+
+var maLabels = Array();
+for (var i = 0; i < ArrayLength(ma); i = i + 1) {
+    ArrayPush(maLabels, Concat('t', ToString(i + 3)));
+}
+Chart('line', maLabels, ma, 'Moving Average (window=3)');
+
+Print(Concat('Box-Cox(lambda=0.5) first value: ', ToString(ArrayGet(boxCox, 0))));
+Print(Concat('Log transform first value: ', ToString(ArrayGet(logged, 0))));`
+            },
+            {
+                name: 'Residual Diagnostics (Ljung-Box & Durbin-Watson)',
+                description: 'Test for autocorrelation in a series and in regression residuals',
+                code: `// Time Series: Ljung-Box test for autocorrelation, and Durbin-Watson for
+// first-order autocorrelation in regression residuals
+var series = Array(10.2, 10.8, 10.5, 11.1, 11.6, 11.4, 12.0, 12.5, 12.3, 12.9, 13.4, 13.2, 13.8, 14.3, 14.1, 14.7, 15.2, 15.0, 15.6, 16.1);
+
+var ljungBox = TimeSeriesLibrary.LjungBoxTest(series, 5);
+Print(Concat('Ljung-Box Q = ', ToString(ArrayGet(ljungBox, 0)), ', df = ', ToString(ArrayGet(ljungBox, 1)), ', p-value = ', ToString(ArrayGet(ljungBox, 2))));
+
+// Fit a simple linear trend (DoeLibrary, another built-in library) and check
+// its residuals for leftover autocorrelation
+var x = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+var y = Array(2.1, 4.3, 5.8, 8.2, 9.9, 12.3, 13.8, 16.1, 18.2, 20.1);
+var fit = DoeLibrary.LinearRegression(x, y);
+var slope = ArrayGet(fit, 0);
+var intercept = ArrayGet(fit, 1);
+
+var residuals = Array();
+for (var i = 0; i < ArrayLength(x); i = i + 1) {
+    var predicted = slope * ArrayGet(x, i) + intercept;
+    ArrayPush(residuals, ArrayGet(y, i) - predicted);
+}
+
+var dw = TimeSeriesLibrary.DurbinWatsonTest(residuals);
+Value(dw, 'Durbin-Watson Statistic', '(~2 = no autocorrelation)');`
+            },
+            {
+                name: 'Granger Causality',
+                description: 'Test whether one series helps predict another, beyond its own past',
+                code: `// Time Series: Granger causality -- does 'cause' help predict 'effect'
+// beyond effect's own past values?
+var cause = Array(1.2, 0.8, 1.5, 0.9, 1.7, 1.1, 1.9, 1.0, 2.1, 1.3, 2.0, 1.4, 2.2, 1.6, 2.4, 1.8, 2.5, 1.9, 2.6, 2.0);
+var effect = Array(0.5, 0.3, 2.5, 1.8, 3.1, 2.0, 3.5, 2.3, 3.9, 2.5, 4.2, 2.9, 4.5, 3.2, 4.8, 3.6, 5.1, 3.9, 5.4, 4.1);
+
+var granger = TimeSeriesLibrary.GrangerCausalityTest(cause, effect, 2);
+Print(Concat('F statistic = ', ToString(ArrayGet(granger, 0))));
+Print(Concat('df1 = ', ToString(ArrayGet(granger, 1)), ', df2 = ', ToString(ArrayGet(granger, 2))));
+Print(Concat('p-value = ', ToString(ArrayGet(granger, 3))));
+Print('A small p-value means cause Granger-causes effect.');`
+            },
+            {
+                name: 'Cointegration (Engle-Granger & Johansen)',
+                description: 'Test whether two (or more) non-stationary series share a long-run equilibrium',
+                code: `// Time Series: cointegration -- Engle-Granger (two series) and Johansen (N series)
+var seriesA = Array(100, 101, 99, 103, 105, 104, 108, 110, 107, 112, 115, 113, 118, 120, 117, 122, 125, 123, 128, 130);
+var seriesB = Array();
+for (var i = 0; i < ArrayLength(seriesA); i = i + 1) {
+    ArrayPush(seriesB, ArrayGet(seriesA, i) * 2.05 + 3);
+}
+
+var eg = TimeSeriesLibrary.EngleGrangerTest(seriesB, seriesA);
+Print(Concat('Engle-Granger -- alpha=', ToString(ArrayGet(eg, 0)), ' beta=', ToString(ArrayGet(eg, 1))));
+Print(Concat('ADF statistic=', ToString(ArrayGet(eg, 2)), ' (5% critical value=', ToString(ArrayGet(eg, 3)), ')'));
+Print(Concat('Cointegrated: ', ToString(ArrayGet(eg, 4))));
+
+// Johansen takes a matrix: one row per observation, one column per variable
+var matrix = Array();
+for (var i = 0; i < ArrayLength(seriesA); i = i + 1) {
+    ArrayPush(matrix, Array(ArrayGet(seriesA, i), ArrayGet(seriesB, i)));
+}
+var johansen = TimeSeriesLibrary.JohansenTest(matrix);
+var eigenvalues = ArrayGet(johansen, 0);
+var traceStats = ArrayGet(johansen, 1);
+Print(Concat('Johansen eigenvalues: ', ToString(ArrayGet(eigenvalues, 0)), ', ', ToString(ArrayGet(eigenvalues, 1))));
+Print(Concat('Johansen trace statistics: ', ToString(ArrayGet(traceStats, 0)), ', ', ToString(ArrayGet(traceStats, 1))));`
             }
         ]
     }
