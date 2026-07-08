@@ -1643,6 +1643,20 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </template>
+
+                <!-- Value output -->
+                <template v-else-if="output.type === 'Value'">
+                    <div class="flex items-center gap-3 p-3 border rounded bg-muted/20">
+                        <Hash class="w-5 h-5 text-muted-foreground shrink-0" />
+                        <div>
+                            <div class="text-2xl font-bold tabular-nums">
+                                {{ output.payload.value }}
+                                <span v-if="output.payload.unit" class="text-sm font-normal text-muted-foreground ml-1">{{ output.payload.unit }}</span>
+                            </div>
+                            <div v-if="output.payload.label" class="text-xs text-muted-foreground">{{ output.payload.label }}</div>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
 

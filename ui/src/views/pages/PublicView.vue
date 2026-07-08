@@ -104,6 +104,9 @@ function applyScriptOutput(item, dataType, payload) {
     } else if (dataType === 'StatReport') {
         item.outputType = 'statreport';
         item.statReportData = payload;
+    } else if (dataType === 'Value') {
+        item.outputType = 'value';
+        item.valueData = payload;
     }
 }
 
@@ -616,6 +619,14 @@ onUnmounted(() => {
                                     </div>
                                     <p v-else class="text-muted-foreground whitespace-pre-wrap">{{ section.content || section.text }}</p>
                                 </div>
+                            </div>
+                            <!-- Value output -->
+                            <div v-else-if="item.outputType === 'value' && item.valueData" class="h-full flex flex-col items-center justify-center gap-1">
+                                <div class="text-2xl font-bold tabular-nums">
+                                    {{ item.valueData.value }}
+                                    <span v-if="item.valueData.unit" class="text-sm font-normal text-muted-foreground ml-1">{{ item.valueData.unit }}</span>
+                                </div>
+                                <div v-if="item.valueData.label" class="text-xs text-muted-foreground uppercase tracking-wider">{{ item.valueData.label }}</div>
                             </div>
                             <!-- No output stored -->
                             <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs">No output data</div>

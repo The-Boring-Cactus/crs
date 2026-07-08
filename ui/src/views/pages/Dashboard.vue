@@ -1834,6 +1834,9 @@ const handleWidgetOutput = (e) => {
         } else if (dataType === 'StatReport') {
             widget.outputType = 'statreport';
             widget.statReportData = payload;
+        } else if (dataType === 'Value') {
+            widget.outputType = 'value';
+            widget.valueData = payload;
         }
     }
 
@@ -2859,7 +2862,7 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                     <!-- Empty state -->
                     <div v-if="!item.outputType" class="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 p-4">
                         <Terminal class="w-8 h-8 opacity-30" />
-                        <p class="text-xs text-center">Bind a FunctEngine script and click Run.<br/>Supports <code class="bg-muted px-1 rounded">Table()</code>, <code class="bg-muted px-1 rounded">Chart()</code>, <code class="bg-muted px-1 rounded">StatReport()</code></p>
+                        <p class="text-xs text-center">Bind a FunctEngine script and click Run.<br/>Supports <code class="bg-muted px-1 rounded">Table()</code>, <code class="bg-muted px-1 rounded">Chart()</code>, <code class="bg-muted px-1 rounded">StatReport()</code>, <code class="bg-muted px-1 rounded">Value()</code></p>
                     </div>
 
                     <!-- Chart output -->
@@ -2909,6 +2912,15 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <p v-if="(item.statReportData.sections || []).length > 5" class="text-muted-foreground italic text-center mt-1">
                             ⋯ {{ item.statReportData.sections.length - 5 }} more sections — click the report icon to view all
                         </p>
+                    </div>
+
+                    <!-- Value output -->
+                    <div v-else-if="item.outputType === 'value' && item.valueData" class="h-full flex flex-col items-center justify-center gap-1">
+                        <div class="tabular-nums font-bold leading-none" :class="item.h >= 4 ? 'text-4xl' : 'text-2xl'">
+                            {{ item.valueData.value }}
+                            <span v-if="item.valueData.unit" class="text-base font-normal text-muted-foreground ml-1">{{ item.valueData.unit }}</span>
+                        </div>
+                        <div v-if="item.valueData.label" class="text-xs text-muted-foreground uppercase tracking-wider">{{ item.valueData.label }}</div>
                     </div>
                 </div>
             </div>
