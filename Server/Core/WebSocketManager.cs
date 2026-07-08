@@ -211,6 +211,8 @@ public class WebSocketManager
 
                 if (conn != null)
                 {
+                    conn.Open();
+
                     // Register by both ID and name so scripts can reference either
                     connectionInfo.interpreter.RegisterDatabaseConnection(id, conn);
                     if (!string.IsNullOrEmpty(name) && name != id)

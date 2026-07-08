@@ -291,6 +291,7 @@ public class PublicController
             try
             {
                 var conn = BuildConnection(cfg);
+                conn.Open();
                 engine.RegisterDatabaseConnection(id, conn);
                 if (!string.IsNullOrEmpty(name) && name != id)
                     engine.RegisterDatabaseConnection(name, conn);
