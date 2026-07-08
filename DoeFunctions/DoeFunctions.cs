@@ -1,5 +1,6 @@
 using FunctEngine;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DoeFunctions
@@ -320,9 +321,20 @@ namespace DoeFunctions
 
         // Gage R&R Analysis
 
-        [FunctEngineExport("GageRR", "Realiza un análisis Gage R&R")]
-        public static (double repeatability, double reproducibility, double gageRR, double partVariation) GageRR(
-            double[][][] measurements) // [parts][operators][replicates]
+        [FunctEngineExport("GageRR", "Realiza un análisis Gage R&R, incluyendo %Contribución y límites de control (X-barra y R) para graficar el estudio completo")]
+        public static (
+            double repeatability,
+            double reproducibility,
+            double gageRR,
+            double partVariation,
+            double[] percentContribution, // [repetibilidad%, reproducibilidad%, gageRR%, parte-a-parte%] de la varianza total
+            double xBarCenterLine,
+            double xBarUcl,
+            double xBarLcl,
+            double rCenterLine,
+            double rUcl,
+            double rLcl
+        ) GageRR(double[][][] measurements) // [parts][operators][replicates]
         {
             if (measurements.Length == 0)
                 throw new ArgumentException("Se requieren mediciones");
@@ -367,7 +379,62 @@ namespace DoeFunctions
             double ssPartVariation = partMeans.Sum(m => Math.Pow(m - grandMean, 2)) * numOperators * numReplicates;
             double partVariation = Math.Sqrt(ssPartVariation / (numParts - 1));
 
-            return (repeatability, reproducibility, gageRR, partVariation);
+            // % Contribución por fuente de variación, basada en varianza (norma AIAG MSA)
+            double totalVariance = Math.Pow(gageRR, 2) + Math.Pow(partVariation, 2);
+            double[] percentContribution = totalVariance > 0
+                ? new[]
+                {
+                    Math.Pow(repeatability, 2) / totalVariance * 100,
+                    Math.Pow(reproducibility, 2) / totalVariance * 100,
+                    Math.Pow(gageRR, 2) / totalVariance * 100,
+                    Math.Pow(partVariation, 2) / totalVariance * 100
+                }
+                : new double[] { 0, 0, 0, 0 };
+
+            // Límites de control para las cartas X-barra y R: cada combinación
+            // parte-operador es un subgrupo de tamaño numReplicates.
+            double rBar = 0;
+            for (int p = 0; p < numParts; p++)
+                for (int o = 0; o < numOperators; o++)
+                    rBar += measurements[p][o].Max() - measurements[p][o].Min();
+            rBar /= numParts * numOperators;
+
+            var (a2, d3, d4) = ControlChartConstants(numReplicates);
+
+            double xBarCenterLine = grandMean;
+            double xBarUcl = grandMean + a2 * rBar;
+            double xBarLcl = grandMean - a2 * rBar;
+
+            double rCenterLine = rBar;
+            double rUcl = d4 * rBar;
+            double rLcl = Math.Max(0, d3 * rBar);
+
+            return (repeatability, reproducibility, gageRR, partVariation, percentContribution,
+                    xBarCenterLine, xBarUcl, xBarLcl, rCenterLine, rUcl, rLcl);
+        }
+
+        // Constantes estándar de cartas de control de Shewhart (Montgomery, "Introduction
+        // to Statistical Quality Control") según el tamaño de subgrupo n (aquí, el número
+        // de réplicas por combinación parte-operador).
+        private static (double a2, double d3, double d4) ControlChartConstants(int subgroupSize)
+        {
+            var table = new Dictionary<int, (double a2, double d3, double d4)>
+            {
+                [2] = (1.880, 0.000, 3.267),
+                [3] = (1.023, 0.000, 2.574),
+                [4] = (0.729, 0.000, 2.282),
+                [5] = (0.577, 0.000, 2.114),
+                [6] = (0.483, 0.000, 2.004),
+                [7] = (0.419, 0.076, 1.924),
+                [8] = (0.373, 0.136, 1.864),
+                [9] = (0.337, 0.184, 1.816),
+                [10] = (0.308, 0.223, 1.777)
+            };
+
+            if (!table.TryGetValue(subgroupSize, out var constants))
+                throw new ArgumentException($"No hay constantes de carta de control tabuladas para un tamaño de subgrupo de {subgroupSize} (se admiten de 2 a 10 réplicas)");
+
+            return constants;
         }
 
         // Statistical Helper Functions

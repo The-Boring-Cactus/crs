@@ -1065,6 +1065,101 @@ var measurements = Array(
 );
 var gageRR = DoeLibrary.GageRR(measurements);
 Print(Concat('Repeatability: ', ToString(ArrayGet(gageRR, 0)), ' Reproducibility: ', ToString(ArrayGet(gageRR, 1)), ' Gage R&R: ', ToString(ArrayGet(gageRR, 2)), ' Part Variation: ', ToString(ArrayGet(gageRR, 3))));`
+            },
+            {
+                name: 'Gage R&R -- Full Study with Charts',
+                description: 'All 6 standard Gage R&R charts: Components of Variation, X-Bar/R by Operator, Measurements by Part/Operator, and Interaction',
+                code: `// DOE: Gage R&R -- full measurement systems analysis with all 6 standard charts
+// (Components of Variation, X-Bar by Operator, R Chart by Operator,
+// Measurements by Part, Measurements by Operator, Operator x Part Interaction)
+var measurements = Array(
+    Array(Array(10.02, 9.98, 10.05), Array(10.15, 10.20, 10.10), Array(9.92, 9.88, 9.95)),
+    Array(Array(12.05, 11.95, 12.00), Array(12.20, 12.15, 12.25), Array(11.90, 11.85, 11.95)),
+    Array(Array(9.52, 9.48, 9.55), Array(9.65, 9.70, 9.60), Array(9.42, 9.38, 9.45)),
+    Array(Array(11.02, 10.98, 11.05), Array(11.18, 11.12, 11.20), Array(10.90, 10.95, 10.88)),
+    Array(Array(10.52, 10.48, 10.55), Array(10.65, 10.60, 10.70), Array(10.40, 10.45, 10.38))
+);
+var partLabels = Array('Part 1', 'Part 2', 'Part 3', 'Part 4', 'Part 5');
+var operatorLabels = Array('Operator A', 'Operator B', 'Operator C');
+var numParts = ArrayLength(measurements);
+var numOperators = ArrayLength(operatorLabels);
+
+// GageRR now returns: repeatability, reproducibility, gageRR, partVariation,
+// percentContribution[4], xBarCenter, xBarUcl, xBarLcl, rCenter, rUcl, rLcl
+var gageRR = DoeLibrary.GageRR(measurements);
+var repeatability = ArrayGet(gageRR, 0);
+var reproducibility = ArrayGet(gageRR, 1);
+var totalGageRR = ArrayGet(gageRR, 2);
+var partVariation = ArrayGet(gageRR, 3);
+var percentContribution = ArrayGet(gageRR, 4);
+var xBarCenter = ArrayGet(gageRR, 5);
+var xBarUcl = ArrayGet(gageRR, 6);
+var xBarLcl = ArrayGet(gageRR, 7);
+var rCenter = ArrayGet(gageRR, 8);
+var rUcl = ArrayGet(gageRR, 9);
+var rLcl = ArrayGet(gageRR, 10);
+
+Print(Concat('Repeatability (EV): ', ToString(repeatability), '  Reproducibility (AV): ', ToString(reproducibility)));
+Print(Concat('Total Gage R&R: ', ToString(totalGageRR), '  Part Variation: ', ToString(partVariation)));
+
+// 1. Components of Variation (Bar Chart) -- % contribution of each source
+Chart('bar', Array('Repeatability', 'Reproducibility', 'Gage R&R', 'Part-to-Part'), percentContribution, 'Components of Variation (% Contribution)');
+
+// Per-operator subgroup means and ranges by part (used by charts 2, 3 and 6)
+var opMeansByOperator = Array();
+var opRangesByOperator = Array();
+for (var o = 0; o < numOperators; o = o + 1) {
+    var meansForOp = Array();
+    var rangesForOp = Array();
+    for (var p = 0; p < numParts; p = p + 1) {
+        var replicates = ArrayGet(ArrayGet(measurements, p), o);
+        ArrayPush(meansForOp, Mean(replicates));
+        ArrayPush(rangesForOp, Range(replicates));
+    }
+    ArrayPush(opMeansByOperator, meansForOp);
+    ArrayPush(opRangesByOperator, rangesForOp);
+}
+
+// 2. X-Bar Chart by Operator -- subgroup means per part, one series per operator
+Chart('line', partLabels, opMeansByOperator, 'X-Bar Chart by Operator');
+Print(Concat('X-Bar control limits -- center: ', ToString(xBarCenter), ', UCL: ', ToString(xBarUcl), ', LCL: ', ToString(xBarLcl)));
+
+// 3. R Chart (Range Chart) by Operator -- subgroup ranges per part, one series per operator
+Chart('line', partLabels, opRangesByOperator, 'R Chart by Operator');
+Print(Concat('R chart control limits -- center: ', ToString(rCenter), ', UCL: ', ToString(rUcl), ', LCL: ', ToString(rLcl)));
+
+// 4. Measurements by Part -- every individual reading, grouped by part
+var partPointLabels = Array();
+var partPointValues = Array();
+for (var p = 0; p < numParts; p = p + 1) {
+    for (var o = 0; o < numOperators; o = o + 1) {
+        var replicates = ArrayGet(ArrayGet(measurements, p), o);
+        for (var r = 0; r < ArrayLength(replicates); r = r + 1) {
+            ArrayPush(partPointLabels, Concat(ArrayGet(partLabels, p), ' / ', ArrayGet(operatorLabels, o)));
+            ArrayPush(partPointValues, ArrayGet(replicates, r));
+        }
+    }
+}
+Chart('scatter', partPointLabels, partPointValues, 'Measurements by Part');
+
+// 5. Measurements by Operator -- every individual reading, grouped by operator
+var opPointLabels = Array();
+var opPointValues = Array();
+for (var o = 0; o < numOperators; o = o + 1) {
+    for (var p = 0; p < numParts; p = p + 1) {
+        var replicates = ArrayGet(ArrayGet(measurements, p), o);
+        for (var r = 0; r < ArrayLength(replicates); r = r + 1) {
+            ArrayPush(opPointLabels, Concat(ArrayGet(operatorLabels, o), ' / ', ArrayGet(partLabels, p)));
+            ArrayPush(opPointValues, ArrayGet(replicates, r));
+        }
+    }
+}
+Chart('scatter', opPointLabels, opPointValues, 'Measurements by Operator');
+
+// 6. Operator x Part Interaction -- same subgroup means as the X-bar chart, without
+// control limits: parallel lines mean no interaction; crossing lines mean operators
+// rank parts differently
+Chart('line', partLabels, opMeansByOperator, 'Operator x Part Interaction');`
             }
         ]
     },
