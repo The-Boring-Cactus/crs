@@ -27,12 +27,6 @@ const model = ref([
             {
                 label: 'Datasets',
                 icon: markRaw(Table),
-                to: '/pages/dataset',
-                tooltip: 'Create/Edit Datasets'
-            },
-            {
-                label: 'New Datasets',
-                icon: markRaw(Table),
                 to: '/pages/myexcel',
                 tooltip: 'Create/Edit Datasets'
             },

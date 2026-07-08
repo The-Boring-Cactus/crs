@@ -24,12 +24,6 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
-            path: '/pages/dataset',
-            name: 'dataset',
-            component: () => import('@/views/pages/Dataset.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
             path: '/pages/myexcel',
             name: 'myexcel',
             component: () => import('@/views/pages/MyExcel.vue'),

@@ -506,29 +506,6 @@ public class WebSocketManager
                     }
                     break;
 
-                case "SaveDataset":
-                    if (parameters.ContainsKey("dataset"))
-                    {
-                        var dsObj = JObject.FromObject(parameters["dataset"]);
-                        DatabasePersistence.SaveEntity(uuid, "Datasets", dsObj);
-                    }
-                    break;
-
-                case "LoadDatasets":
-                {
-                    var pid = parameters.ContainsKey("projectId") ? parameters["projectId"]?.ToString() : null;
-                    response.Data = DatabasePersistence.LoadEntities(uuid, "Datasets", pid);
-                    break;
-                }
-
-                case "DeleteDataset":
-                    if (parameters.ContainsKey("id"))
-                    {
-                        var id = parameters["id"].ToString();
-                        DatabasePersistence.DeleteEntity(uuid, "Datasets", id);
-                    }
-                    break;
-
                 case "SaveExcel":
                     if (parameters.ContainsKey("excel"))
                     {

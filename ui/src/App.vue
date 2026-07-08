@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Home, Database, Table, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight, FileText, ChevronRight, ChevronDown, Pencil, Plus, Trash2, Sun, Moon, Palette, Check, Eye, EyeOff, X } from 'lucide-vue-next';
+import { BarChart, Home, Database, FileSpreadsheet, Code, FileCode2, LogOut, Search, Settings, Bell, AlignRight, FileText, ChevronRight, ChevronDown, Pencil, Plus, Trash2, Sun, Moon, Palette, Check, Eye, EyeOff, X } from 'lucide-vue-next';
 import { useLayout } from '@/layout/composables/layout';
 
 const router = useRouter();
@@ -185,10 +185,9 @@ const isActive = (path) => {
 
 const projectSubItems = [
     { icon: Database, key: 'databases', label: 'Databases', path: '/pages/databases' },
-    { icon: Table, key: 'datasets', label: 'Datasets', path: '/pages/dataset' },
     { icon: Code, key: 'sqleditor', label: 'SQL Queries', path: '/pages/sqleditor' },
     { icon: FileCode2, key: 'cseditor', label: 'Scripts', path: '/pages/cseditor' },
-    { icon: FileSpreadsheet, key: 'myexcel', label: 'Excel', path: '/pages/myexcel' },
+    { icon: FileSpreadsheet, key: 'myexcel', label: 'Datasets', path: '/pages/myexcel' },
     { icon: BarChart, key: 'dashboard', label: 'Dashboards', path: '/pages/dashboard' },
 ];
 

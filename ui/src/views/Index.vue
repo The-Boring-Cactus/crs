@@ -7,7 +7,7 @@ import { userStoreMe } from '@/store/userStore';
 import { getCurrentInstance } from 'vue';
 import {
     LayoutDashboard, FileCode2, Database, FileText, BarChart2, Clock, Plus, ArrowRight,
-    Table, FileSpreadsheet, Code, BarChart, FolderOpen, AlignLeft, MousePointerClick, X
+    FileSpreadsheet, Code, BarChart, FolderOpen, AlignLeft, MousePointerClick, X
 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,10 +37,9 @@ const greeting = computed(() => {
 
 const projectSubItems = [
     { icon: Database, key: 'databases', label: 'Databases', path: '/pages/databases' },
-    { icon: Table, key: 'datasets', label: 'Datasets', path: '/pages/dataset' },
     { icon: Code, key: 'sqleditor', label: 'SQL', path: '/pages/sqleditor' },
     { icon: FileCode2, key: 'cseditor', label: 'Scripts', path: '/pages/cseditor' },
-    { icon: FileSpreadsheet, key: 'myexcel', label: 'Excel', path: '/pages/myexcel' },
+    { icon: FileSpreadsheet, key: 'myexcel', label: 'Datasets', path: '/pages/myexcel' },
     { icon: BarChart, key: 'dashboard', label: 'Dashboards', path: '/pages/dashboard' },
 ];
 
@@ -150,7 +149,7 @@ function formatDate(ts) {
                         <AlignLeft class="w-5 h-5 text-blue-500" />
                         <p class="font-medium text-sm">Navigate with the sidebar</p>
                         <p class="text-xs text-muted-foreground leading-relaxed">
-                            Hover the left sidebar to expand it. Click a project to open its sub-menu: <strong>Databases, Datasets, SQL, Scripts, Excel,</strong> and <strong>Dashboards</strong>.
+                            Hover the left sidebar to expand it. Click a project to open its sub-menu: <strong>Databases, SQL, Scripts, Datasets,</strong> and <strong>Dashboards</strong>.
                         </p>
                     </div>
                     <div class="bg-muted/40 rounded-lg p-4 border flex flex-col gap-2">
