@@ -16,7 +16,23 @@ export const useExcelStore = defineStore({
         const params = projectStore.currentProjectId ? { projectId: projectStore.currentProjectId } : {};
         const result = await userStore.executeCommand('LoadExcels', params, socket);
         if (result && result.Data) {
-          this.excels = result.Data;
+          // LoadEntities returns raw DB rows: {Id, Name, Config, ...} where Config
+          // is the serialized JSON string of the actual payload ({id, name, columns,
+          // data, timestamp}). Unwrap it so consumers get a flat, usable shape.
+          this.excels = result.Data.map((row: any) => {
+            const configStr = row.config ?? row.Config;
+            let cfg: any = {};
+            if (configStr) {
+              try { cfg = typeof configStr === 'string' ? JSON.parse(configStr) : configStr; } catch { cfg = {}; }
+            }
+            return {
+              id: row.id || row.Id || cfg.id,
+              name: row.name || row.Name || cfg.name || 'Untitled Spreadsheet',
+              columns: cfg.columns || [],
+              data: cfg.data || [],
+              timestamp: cfg.timestamp
+            };
+          });
         }
       } catch (error) {
         console.error('Error loading spreadsheets:', error);

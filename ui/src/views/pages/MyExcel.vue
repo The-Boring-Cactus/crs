@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
 
@@ -1029,6 +1029,7 @@ onUnmounted(() => {
         <DialogContent class="sm:max-w-[500px]">
             <DialogHeader>
                 <DialogTitle>Import Data</DialogTitle>
+                <DialogDescription>Import from a CSV, Excel, or JSON file, or paste delimited data directly.</DialogDescription>
             </DialogHeader>
 
             <div class="import-content py-4">
@@ -1067,6 +1068,7 @@ onUnmounted(() => {
         <DialogContent class="sm:max-w-[400px]">
             <DialogHeader>
                 <DialogTitle>Export Data</DialogTitle>
+                <DialogDescription>Choose a file format to download the current spreadsheet.</DialogDescription>
             </DialogHeader>
 
             <div class="export-content py-4">
@@ -1090,6 +1092,7 @@ onUnmounted(() => {
         <DialogContent class="sm:max-w-[450px]">
             <DialogHeader>
                 <DialogTitle>Find & Replace</DialogTitle>
+                <DialogDescription>Search for a value across the sheet and optionally replace it.</DialogDescription>
             </DialogHeader>
 
             <div class="find-replace-content py-4">
@@ -1117,6 +1120,7 @@ onUnmounted(() => {
         <DialogContent class="sm:max-w-[400px]">
             <DialogHeader>
                 <DialogTitle>Sort Data</DialogTitle>
+                <DialogDescription>Sort all rows by the selected column.</DialogDescription>
             </DialogHeader>
 
             <div class="sort-content py-4">
@@ -1155,6 +1159,7 @@ onUnmounted(() => {
         <DialogContent class="sm:max-w-[400px]">
             <DialogHeader>
                 <DialogTitle>Filter Data</DialogTitle>
+                <DialogDescription>Filter visible rows based on column values.</DialogDescription>
             </DialogHeader>
 
             <div class="filter-content py-4">
@@ -1172,6 +1177,7 @@ onUnmounted(() => {
         <DialogContent class="sm:max-w-[425px]">
             <DialogHeader>
                 <DialogTitle>Load Spreadsheet from Server</DialogTitle>
+                <DialogDescription>Select a previously saved spreadsheet to load into the editor.</DialogDescription>
             </DialogHeader>
             <div class="flex flex-col gap-4 py-4 max-h-[300px] overflow-y-auto">
                 <div v-if="excelStore.excels.length === 0" class="text-center text-muted-foreground p-4">
