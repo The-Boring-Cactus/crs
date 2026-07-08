@@ -191,7 +191,7 @@ public class WebSocketManager
             if (string.IsNullOrEmpty(id)) continue;
 
             var host = c["host"]?.ToString() ?? c["Host"]?.ToString();
-            var db = c["database"]?.ToString() ?? c["DatabaseName"]?.ToString();
+            var db = c["databasename"]?.ToString() ?? c["DatabaseName"]?.ToString();
             var user = c["username"]?.ToString() ?? c["Username"]?.ToString();
             var pass = c["password"]?.ToString() ?? c["Password"]?.ToString();
             int.TryParse((c["port"]?.ToString() ?? c["Port"]?.ToString()), out int port);
