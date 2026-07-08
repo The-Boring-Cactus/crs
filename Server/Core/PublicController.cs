@@ -274,6 +274,7 @@ public class PublicController
         engine.LoadExternalDll("StringUtilities.dll");
         engine.LoadExternalDll("DataTableFunctions.dll");
         engine.LoadExternalDll("TimeSeriesFunctions.dll");
+        engine.LoadExternalDll("NonParametricFunctions.dll");
     }
 
     // Registers every database connection belonging to the dashboard owner,

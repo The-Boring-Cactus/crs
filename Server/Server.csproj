@@ -73,6 +73,7 @@
   <ProjectReference Include="..\FunctEngine\FunctEngine.csproj" />
   <ProjectReference Include="..\StringUtilities\StringUtilities.csproj" />
   <ProjectReference Include="..\TimeSeriesFunctions\TimeSeriesFunctions.csproj" />
+  <ProjectReference Include="..\NonParametricFunctions\NonParametricFunctions.csproj" />
 </ItemGroup>
 
 </Project>

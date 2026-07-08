@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp, Shuffle } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -1320,6 +1320,94 @@ var eigenvalues = ArrayGet(johansen, 0);
 var traceStats = ArrayGet(johansen, 1);
 Print(Concat('Johansen eigenvalues: ', ToString(ArrayGet(eigenvalues, 0)), ', ', ToString(ArrayGet(eigenvalues, 1))));
 Print(Concat('Johansen trace statistics: ', ToString(ArrayGet(traceStats, 0)), ', ', ToString(ArrayGet(traceStats, 1))));`
+            }
+        ]
+    },
+    {
+        name: 'Non-Parametric Tests', icon: markRaw(Shuffle),
+        snippets: [
+            {
+                name: 'Two-Sample Location Tests (Mann-Whitney & KS)',
+                description: 'Compare two independent samples without assuming normality',
+                code: `// Non-Parametric: Mann-Whitney U (rank-sum) and two-sample Kolmogorov-Smirnov
+var groupA = Array(23, 25, 21, 28, 30, 26, 24, 27);
+var groupB = Array(31, 35, 29, 38, 40, 33, 36, 34);
+
+var mw = NonParametricLibrary.MannWhitneyUTest(groupA, groupB);
+Print(Concat('Mann-Whitney U = ', ToString(ArrayGet(mw, 0)), ', z = ', ToString(ArrayGet(mw, 1)), ', p-value = ', ToString(ArrayGet(mw, 2))));
+
+var ks2 = NonParametricLibrary.TwoSampleKsTest(groupA, groupB);
+Print(Concat('KS D statistic = ', ToString(ArrayGet(ks2, 0)), ', p-value = ', ToString(ArrayGet(ks2, 1))));
+
+Chart('bar', Array('Group A', 'Group B'), Array(Mean(groupA), Mean(groupB)), 'Group Means');`
+            },
+            {
+                name: 'Paired Tests (Wilcoxon Signed-Rank & McNemar)',
+                description: 'Compare paired/matched observations -- continuous (Wilcoxon) or binary (McNemar)',
+                code: `// Non-Parametric: Wilcoxon signed-rank (paired continuous) and McNemar (paired binary)
+var before = Array(68, 72, 65, 70, 75, 69, 71, 74, 66, 73);
+var after = Array(65, 70, 66, 68, 71, 67, 69, 70, 64, 70);
+
+var wilcoxon = NonParametricLibrary.WilcoxonSignedRankTest(before, after);
+Print(Concat('Wilcoxon W = ', ToString(ArrayGet(wilcoxon, 0)), ', z = ', ToString(ArrayGet(wilcoxon, 1)), ', p-value = ', ToString(ArrayGet(wilcoxon, 2))));
+
+// McNemar: 2x2 table of paired Yes/No outcomes (e.g. before/after a treatment)
+var table = Array(Array(45, 15), Array(5, 35));
+var mcnemar = NonParametricLibrary.McNemarTest(table);
+Print(Concat('McNemar chi-squared = ', ToString(ArrayGet(mcnemar, 0)), ', p-value = ', ToString(ArrayGet(mcnemar, 1))));`
+            },
+            {
+                name: 'Multi-Sample Rank Tests (Kruskal-Wallis & Friedman)',
+                description: 'Non-parametric alternatives to one-way and repeated-measures ANOVA',
+                code: `// Non-Parametric: Kruskal-Wallis (independent groups) and Friedman (repeated measures)
+var diet1 = Array(4.2, 3.8, 4.5, 4.0, 3.9);
+var diet2 = Array(5.1, 4.8, 5.3, 5.0, 4.9);
+var diet3 = Array(3.5, 3.2, 3.7, 3.4, 3.6);
+var groups = Array(diet1, diet2, diet3);
+
+var kruskal = NonParametricLibrary.KruskalWallisTest(groups);
+Print(Concat('Kruskal-Wallis H = ', ToString(ArrayGet(kruskal, 0)), ', df = ', ToString(ArrayGet(kruskal, 1)), ', p-value = ', ToString(ArrayGet(kruskal, 2))));
+
+// Friedman: each row is a subject, each column a treatment
+var subjects = Array(
+    Array(8, 6, 7),
+    Array(9, 7, 8),
+    Array(7, 5, 6),
+    Array(8, 6, 6),
+    Array(9, 8, 7)
+);
+var friedman = NonParametricLibrary.FriedmanTest(subjects);
+Print(Concat('Friedman chi-squared = ', ToString(ArrayGet(friedman, 0)), ', df = ', ToString(ArrayGet(friedman, 1)), ', p-value = ', ToString(ArrayGet(friedman, 2))));`
+            },
+            {
+                name: 'Rank Correlation (Spearman & Kendall)',
+                description: 'Monotonic association between two variables, robust to outliers and non-linearity',
+                code: `// Non-Parametric: Spearman's rho and Kendall's tau
+var studyHours = Array(2, 4, 5, 7, 8, 10, 12, 14);
+var examScore = Array(55, 60, 68, 70, 78, 82, 88, 95);
+
+var spearman = NonParametricLibrary.SpearmanRankCorrelation(studyHours, examScore);
+Print(Concat('Spearman rho = ', ToString(ArrayGet(spearman, 0)), ', p-value = ', ToString(ArrayGet(spearman, 1))));
+
+var kendall = NonParametricLibrary.KendallTau(studyHours, examScore);
+Print(Concat('Kendall tau = ', ToString(ArrayGet(kendall, 0)), ', z = ', ToString(ArrayGet(kendall, 1)), ', p-value = ', ToString(ArrayGet(kendall, 2))));
+
+Chart('scatter', studyHours, examScore, 'Exam Score vs. Study Hours');`
+            },
+            {
+                name: 'Goodness-of-Fit (Chi-Square Independence & One-Sample KS)',
+                description: 'Test a contingency table for independence, or a sample against a Normal distribution',
+                code: `// Non-Parametric: chi-square test of independence, and one-sample KS against a Normal distribution
+var contingency = Array(
+    Array(30, 10),
+    Array(20, 40)
+);
+var chiSq = NonParametricLibrary.ChiSquareIndependenceTest(contingency);
+Print(Concat('Chi-square = ', ToString(ArrayGet(chiSq, 0)), ', df = ', ToString(ArrayGet(chiSq, 1)), ', p-value = ', ToString(ArrayGet(chiSq, 2))));
+
+var sample = Array(48.2, 51.5, 49.8, 50.1, 52.3, 47.9, 50.6, 49.2, 51.0, 50.4, 48.8, 51.8, 49.5, 50.9, 49.0);
+var ksTest = NonParametricLibrary.OneSampleKsTest(sample, 50, 1.2);
+Print(Concat('One-sample KS D = ', ToString(ArrayGet(ksTest, 0)), ', p-value = ', ToString(ArrayGet(ksTest, 1))));`
             }
         ]
     }
