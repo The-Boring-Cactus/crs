@@ -1,6 +1,6 @@
 <script setup>
 import { markRaw, ref, computed, nextTick, onMounted, onUnmounted, getCurrentInstance } from 'vue';
-import { Upload, Grid, Search, Filter, Pencil, RefreshCcw, Scissors, Plus, BarChart, PlusCircle, Eraser, Check, Copy, SortDesc, Download, File, Table, Trash2, FileSpreadsheet, CheckSquare, Save, SortAsc, Code, X } from 'lucide-vue-next';
+import { Upload, Grid, FolderOpen, Search, Filter, Pencil, RefreshCcw, Scissors, Plus, BarChart, PlusCircle, Eraser, Check, Copy, SortDesc, Download, File, Table, Trash2, FileSpreadsheet, CheckSquare, Save, SortAsc, Code, X } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import { useExcelStore } from '@/store/excelStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
 
 // State
-const sheetTitle = ref('MyExcel Spreadsheet');
+const sheetTitle = ref('Data Spreadsheet');
 const sheetData = ref([]);
 const columnHeaders = ref([]);
 const selectedCells = ref(new Set());
@@ -895,7 +895,7 @@ onUnmounted(() => {
 
         <div class="flex items-center gap-2">
             <Button variant="ghost" size="icon" @click="openLoadDialog" title="Load From Server">
-                <Download class="w-4 h-4" />
+                <FolderOpen class="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" @click="saveToServer" title="Save To Server">
                 <Save class="w-4 h-4" />
