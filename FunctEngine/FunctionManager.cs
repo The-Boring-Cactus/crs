@@ -162,6 +162,8 @@ namespace FunctEngine
             builtInFunctions["Chart"] = outputFunctions.EmitChart;
             builtInFunctions["StatReport"] = outputFunctions.EmitStatReport;
             builtInFunctions["Value"] = outputFunctions.EmitValue;
+            builtInFunctions["Markdown"] = outputFunctions.EmitMarkdown;
+            builtInFunctions["Formula"] = outputFunctions.EmitFormula;
         }
 
         private void RegisterDatabaseFunctions(DatabaseFunctions databaseFunctions)

@@ -50,6 +50,8 @@ import {
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import BaseChart from '@/components/BaseChart.vue';
+import MarkdownReport from '@/components/MarkdownReport.vue';
+import FormulaBlock from '@/components/FormulaBlock.vue';
 import { nextTick, ref, watch, computed, getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import { toast as sonnerToast } from 'vue-sonner';
 import { useDashboardStore } from '@/store/dashboardStore';
@@ -1837,6 +1839,12 @@ const handleWidgetOutput = (e) => {
         } else if (dataType === 'Value') {
             widget.outputType = 'value';
             widget.valueData = payload;
+        } else if (dataType === 'Markdown') {
+            widget.outputType = 'markdown';
+            widget.markdownData = payload;
+        } else if (dataType === 'Formula') {
+            widget.outputType = 'formula';
+            widget.formulaData = payload;
         }
     }
 
@@ -2862,7 +2870,7 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                     <!-- Empty state -->
                     <div v-if="!item.outputType" class="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 p-4">
                         <Terminal class="w-8 h-8 opacity-30" />
-                        <p class="text-xs text-center">Bind a FunctEngine script and click Run.<br/>Supports <code class="bg-muted px-1 rounded">Table()</code>, <code class="bg-muted px-1 rounded">Chart()</code>, <code class="bg-muted px-1 rounded">StatReport()</code>, <code class="bg-muted px-1 rounded">Value()</code></p>
+                        <p class="text-xs text-center">Bind a FunctEngine script and click Run.<br/>Supports <code class="bg-muted px-1 rounded">Table()</code>, <code class="bg-muted px-1 rounded">Chart()</code>, <code class="bg-muted px-1 rounded">StatReport()</code>, <code class="bg-muted px-1 rounded">Value()</code>, <code class="bg-muted px-1 rounded">Markdown()</code>, <code class="bg-muted px-1 rounded">Formula()</code></p>
                     </div>
 
                     <!-- Chart output -->
@@ -2921,6 +2929,17 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                             <span v-if="item.valueData.unit" class="text-base font-normal text-muted-foreground ml-1">{{ item.valueData.unit }}</span>
                         </div>
                         <div v-if="item.valueData.label" class="text-xs text-muted-foreground uppercase tracking-wider">{{ item.valueData.label }}</div>
+                    </div>
+
+                    <!-- Markdown output -->
+                    <div v-else-if="item.outputType === 'markdown' && item.markdownData" class="h-full overflow-auto p-2">
+                        <div v-if="item.markdownData.title" class="font-semibold text-sm mb-2 pb-2 border-b">{{ item.markdownData.title }}</div>
+                        <MarkdownReport :content="item.markdownData.content" />
+                    </div>
+
+                    <!-- Formula output -->
+                    <div v-else-if="item.outputType === 'formula' && item.formulaData" class="h-full flex items-center justify-center p-2 overflow-auto">
+                        <FormulaBlock :latex="item.formulaData.latex" :label="item.formulaData.label" />
                     </div>
                 </div>
             </div>

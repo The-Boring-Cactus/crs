@@ -113,6 +113,33 @@ namespace FunctEngine
             return null;
         }
 
+        // Markdown(content, title?)
+        // Renders formatted prose for building a report from a script's output.
+        // Content is standard Markdown; inline ($...$) and block ($$...$$) LaTeX
+        // are typeset with MathJax on the frontend, so formulas can be embedded
+        // directly in the prose without a separate Formula() call.
+        public object EmitMarkdown(object[] args)
+        {
+            if (args.Length == 0) return null;
+            var content = args[0]?.ToString() ?? "";
+            var title = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
+            engine.EmitOutput("Markdown", new { title, content });
+            return null;
+        }
+
+        // Formula(latex, label?)
+        // Renders a single LaTeX expression as a centered, prominent display
+        // formula (MathJax), for calling out one equation on its own rather than
+        // embedding it inline within Markdown() prose.
+        public object EmitFormula(object[] args)
+        {
+            if (args.Length == 0) return null;
+            var latex = args[0]?.ToString() ?? "";
+            var label = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
+            engine.EmitOutput("Formula", new { label, latex });
+            return null;
+        }
+
         private List<object> FormatStatDict(Dictionary<string, object> dict)
         {
             var sections = new List<object>();

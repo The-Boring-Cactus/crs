@@ -193,7 +193,9 @@ namespace FunctEngine
                         case '\\': sb.Append('\\'); break;
                         case '\'': sb.Append('\''); break;
                         case '"': sb.Append('"'); break;
-                        default: sb.Append(input[position]); break;
+                        // Unrecognized escape (e.g. LaTeX commands like \frac, \beta):
+                        // keep the backslash instead of silently dropping it.
+                        default: sb.Append('\\'); sb.Append(input[position]); break;
                     }
                 }
                 else

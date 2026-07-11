@@ -2,6 +2,8 @@
 import { ref, onMounted, onUnmounted, computed, nextTick, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import BaseChart from '@/components/BaseChart.vue';
+import MarkdownReport from '@/components/MarkdownReport.vue';
+import FormulaBlock from '@/components/FormulaBlock.vue';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import { BarChart2, LayoutDashboard, AlertCircle, RefreshCw, Loader2 } from 'lucide-vue-next';
@@ -107,6 +109,12 @@ function applyScriptOutput(item, dataType, payload) {
     } else if (dataType === 'Value') {
         item.outputType = 'value';
         item.valueData = payload;
+    } else if (dataType === 'Markdown') {
+        item.outputType = 'markdown';
+        item.markdownData = payload;
+    } else if (dataType === 'Formula') {
+        item.outputType = 'formula';
+        item.formulaData = payload;
     }
 }
 
@@ -627,6 +635,15 @@ onUnmounted(() => {
                                     <span v-if="item.valueData.unit" class="text-sm font-normal text-muted-foreground ml-1">{{ item.valueData.unit }}</span>
                                 </div>
                                 <div v-if="item.valueData.label" class="text-xs text-muted-foreground uppercase tracking-wider">{{ item.valueData.label }}</div>
+                            </div>
+                            <!-- Markdown output -->
+                            <div v-else-if="item.outputType === 'markdown' && item.markdownData" class="h-full overflow-auto p-2">
+                                <div v-if="item.markdownData.title" class="font-semibold text-sm mb-2 pb-2 border-b">{{ item.markdownData.title }}</div>
+                                <MarkdownReport :content="item.markdownData.content" />
+                            </div>
+                            <!-- Formula output -->
+                            <div v-else-if="item.outputType === 'formula' && item.formulaData" class="h-full flex items-center justify-center p-2 overflow-auto">
+                                <FormulaBlock :latex="item.formulaData.latex" :label="item.formulaData.label" />
                             </div>
                             <!-- No output stored -->
                             <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs">No output data</div>

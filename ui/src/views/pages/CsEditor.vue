@@ -4,6 +4,8 @@ import { getCurrentInstance } from 'vue';
 import { toast } from 'vue-sonner';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 import BaseChart from '@/components/BaseChart.vue';
+import MarkdownReport from '@/components/MarkdownReport.vue';
+import FormulaBlock from '@/components/FormulaBlock.vue';
 import { basicLight } from '@fsegurai/codemirror-theme-basic-light';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { useLayout } from '@/layout/composables/layout';
@@ -15,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp, Shuffle, Combine } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp, Shuffle, Combine, FileText } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -1649,6 +1651,68 @@ var right = DataTableLibrary.Right_Join(employees, departments, 'A.DeptId = B.De
 Table(DataTableLibrary.ToRows(right), 'Right Join -- all departments, employee blank if unmatched');`
             }
         ]
+    },
+    {
+        name: 'Reports', icon: markRaw(FileText),
+        snippets: [
+            {
+                name: 'Formatted Markdown Text',
+                description: 'Markdown(content, title?) -- headings, lists, tables, and inline LaTeX',
+                code: `// Reports: Markdown() renders standard formatted text -- headings, bold/italic,
+// lists, tables, blockquotes, and code -- and also typesets inline ($...$) and
+// block ($$...$$) LaTeX with MathJax, so formulas can live directly in the prose.
+Markdown(
+    '# Section Summary\\n\\n' +
+    'Revenue grew **12%** this quarter, driven primarily by *Region East*.\\n\\n' +
+    'The fitted trend model is $\\\\hat{y} = \\\\beta_0 + \\\\beta_1 x$, with residuals summarized below.\\n\\n' +
+    '| Region | Revenue |\\n| --- | --- |\\n| East | 120,000 |\\n| West | 98,500 |\\n\\n' +
+    '> Note: subscripts like $\\\\beta_0$ survive Markdown parsing intact.\\n\\n' +
+    '- Point one\\n- Point two with \`inline code\`',
+    'Executive Summary'
+);`
+            },
+            {
+                name: 'LaTeX Formulas (MathJax)',
+                description: 'Formula(latex, label?) -- a dedicated, centered display equation',
+                code: `// Reports: Formula() renders one LaTeX expression as a centered, prominent
+// display equation (MathJax) -- use this to call out a single formula rather
+// than embedding it inline within Markdown() prose.
+Formula('F = \\\\frac{MS_{between}}{MS_{within}}', 'ANOVA F-statistic');
+Formula('\\\\hat{y} = \\\\beta_0 + \\\\beta_1 x_1 + \\\\varepsilon', 'Simple linear regression model');
+Formula('\\\\bar{x} = \\\\frac{1}{n}\\\\sum_{i=1}^{n} x_i', 'Sample mean');`
+            },
+            {
+                name: 'Full Report (Markdown + Formula + Table + Chart)',
+                description: 'Combine every output function into one polished, readable report',
+                code: `// Reports: the main use case for Markdown()/Formula() -- combine them with
+// Table()/Chart() to build a complete, readable report from a single script.
+Markdown(
+    '# Quarterly Sales Report\\n\\n' +
+    'Revenue grew **12%** this quarter, driven primarily by the *East* region. ' +
+    'The chart and table below break down performance by month and region.',
+    'Executive Summary'
+);
+
+var months = Array('Jan', 'Feb', 'Mar', 'Apr', 'May');
+var revenue = Array(42000, 45000, 47500, 51000, 55000);
+Chart('line', months, revenue, 'Monthly Revenue');
+
+var rows = Array(
+    Array('East', 120000, '+15%'),
+    Array('West', 98000, '+8%'),
+    Array('North', 76000, '+11%')
+);
+Table(rows, 'Revenue by Region');
+
+Formula('F = \\\\frac{MS_{between}}{MS_{within}}', 'ANOVA F-statistic used to test regional differences');
+
+Markdown(
+    'Regional differences were tested with a one-way ANOVA. ' +
+    'With $F = 8.42$ and $p < 0.01$, the differences across regions are **statistically significant**.',
+    'Statistical Analysis'
+);`
+            }
+        ]
     }
 ];
 
@@ -1895,6 +1959,19 @@ onUnmounted(() => {
                             <div v-if="output.payload.label" class="text-xs text-muted-foreground">{{ output.payload.label }}</div>
                         </div>
                     </div>
+                </template>
+
+                <!-- Markdown output -->
+                <template v-else-if="output.type === 'Markdown'">
+                    <div class="border rounded p-4">
+                        <div v-if="output.payload.title" class="font-semibold text-sm mb-2 pb-2 border-b">{{ output.payload.title }}</div>
+                        <MarkdownReport :content="output.payload.content" />
+                    </div>
+                </template>
+
+                <!-- Formula output -->
+                <template v-else-if="output.type === 'Formula'">
+                    <FormulaBlock :latex="output.payload.latex" :label="output.payload.label" />
                 </template>
             </div>
         </div>
