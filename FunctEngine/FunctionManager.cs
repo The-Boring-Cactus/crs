@@ -174,6 +174,7 @@ namespace FunctEngine
             builtInFunctions["ExecuteScalar"] = databaseFunctions.ExecuteScalar;
             builtInFunctions["GetRowValue"] = databaseFunctions.GetRowValue;
             builtInFunctions["GetRowKeys"] = databaseFunctions.GetRowKeys;
+            builtInFunctions["GetColumn"] = databaseFunctions.GetColumn;
             builtInFunctions["BeginTransaction"] = databaseFunctions.BeginTransaction;
             builtInFunctions["CommitTransaction"] = databaseFunctions.CommitTransaction;
             builtInFunctions["RollbackTransaction"] = databaseFunctions.RollbackTransaction;

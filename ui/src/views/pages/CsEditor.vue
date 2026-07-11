@@ -595,6 +595,7 @@ const functionCategories = [
             { sig: 'ReadSpreadsheet(name)', desc: 'Load a saved Spreadsheet from the project by name — returns list of row dictionaries' },
             { sig: 'GetRowValue(row, key)', desc: 'Get a column value from a row dictionary' },
             { sig: 'GetRowKeys(row)', desc: 'Get all column names from a row' },
+            { sig: 'GetColumn(rows, key)', desc: 'Extract one column across every row into a flat array' },
             { sig: 'BeginTransaction()', desc: 'Begin a database transaction' },
             { sig: 'CommitTransaction()', desc: 'Commit the current transaction' },
             { sig: 'RollbackTransaction()', desc: 'Rollback the current transaction' },
@@ -872,6 +873,30 @@ var salesRows = ExecuteScript('My Saved SQL Script'); // runs a saved SQL script
 var importedRows = ReadDataset('My Dataset');         // loads a saved Dataset by name
 Table(salesRows, 'From Saved SQL Script');
 Table(importedRows, 'From Saved Dataset');`
+            },
+            {
+                name: 'Extract a Column as an Array (GetColumn)',
+                description: 'Pull one column out of a row-list (e.g. from ReadDataset) into a flat array',
+                code: `// Database: GetColumn(rows, columnName) turns one column of a row-list --
+// the same shape ExecuteQuery/ExecuteScript/ReadDataset/ReadSpreadsheet all
+// return -- into a flat array, ready for Sum()/Mean()/Chart()/etc.
+//
+// var rows = ReadDataset('My Dataset');
+// var columnA = GetColumn(rows, 'A');
+
+// Self-contained demo: build rows in that same shape (MakeRow is from the
+// DataTable Functions category) so this snippet runs standalone.
+var columns = Array('A', 'B');
+var rows = Array();
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array(10, 100)));
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array(20, 200)));
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array(30, 300)));
+
+var columnA = GetColumn(rows, 'A');
+Print(Concat('Column A: [', ArrayJoin(columnA, ', '), ']'));
+Print(Concat('Sum: ', ToString(Sum(columnA)), ', Mean: ', ToString(Mean(columnA))));
+
+Chart('bar', Array('Row 1', 'Row 2', 'Row 3'), columnA, 'Column A');`
             }
         ]
     },

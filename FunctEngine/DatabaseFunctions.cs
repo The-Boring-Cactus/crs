@@ -95,6 +95,26 @@ namespace FunctEngine
             return new List<object>();
         }
 
+        // Extracts one column's values across every row of a result set (e.g. from
+        // ExecuteQuery/ReadDataset/ReadSpreadsheet/ExecuteScript) into a flat array,
+        // so it can be fed to statistics/array/chart functions directly.
+        public object GetColumn(object[] args)
+        {
+            if (args.Length < 2) return new List<object>();
+            if (args[0] is List<object> rows)
+            {
+                string columnName = args[1]?.ToString() ?? "";
+                var column = new List<object>();
+                foreach (var rowObj in rows)
+                {
+                    if (rowObj is Dictionary<string, object> row)
+                        column.Add(row.TryGetValue(columnName, out var value) ? value : null);
+                }
+                return column;
+            }
+            return new List<object>();
+        }
+
         public object BeginTransaction(object[] args)
         {
             if (args.Length == 0) return false;
