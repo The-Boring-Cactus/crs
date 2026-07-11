@@ -67,8 +67,13 @@ namespace DoeFunctions
 
         // One-Way ANOVA Functions
 
-        [FunctEngineExport("OneWayAnova", "Realiza un análisis de varianza de una vía")]
-        public static (double fStatistic, double pValue, double ssWithin, double ssBetween) OneWayAnova(double[][] groups)
+        [FunctEngineExport("OneWayAnova", "Realiza un análisis de varianza de una vía; incluye la tabla F completa (SS, df, MS, F, p) para evaluar significancia")]
+        public static (
+            double fStatistic, double pValue,
+            double ssBetween, double ssWithin,
+            double dfBetween, double dfWithin,
+            double msBetween, double msWithin
+        ) OneWayAnova(double[][] groups)
         {
             if (groups.Length < 2)
                 throw new ArgumentException("Se requieren al menos 2 grupos");
@@ -105,22 +110,27 @@ namespace DoeFunctions
             // Estadístico F
             double fStatistic = msBetween / msWithin;
 
-            // Aproximación del p-value usando distribución F
-            double pValue = FDistributionCDF(fStatistic, dfBetween, dfWithin);
+            // p-value = P(F > fStatistic) = 1 - CDF(fStatistic)
+            double pValue = 1.0 - FDistributionCDF(fStatistic, dfBetween, dfWithin);
 
-            return (fStatistic, pValue, ssWithin, ssBetween);
+            return (fStatistic, pValue, ssBetween, ssWithin, dfBetween, dfWithin, msBetween, msWithin);
         }
 
         // Two-Way ANOVA Functions
 
-        [FunctEngineExport("TwoWayAnova", "Realiza un análisis de varianza de dos vías")]
-        public static (double fA, double fB, double fInteraction, double ssTotal) TwoWayAnova(
-            double[][] data, int[] factorA, int[] factorB)
+        [FunctEngineExport("TwoWayAnova", "Realiza un análisis de varianza de dos vías; incluye la tabla F completa (SS, df, MS, F, p) para A, B, interacción y error")]
+        public static (
+            double fA, double fB, double fInteraction,
+            double pValueA, double pValueB, double pValueInteraction,
+            double ssA, double ssB, double ssInteraction, double ssError, double ssTotal,
+            double dfA, double dfB, double dfInteraction, double dfError,
+            double msA, double msB, double msInteraction, double msError
+        ) TwoWayAnova(double[][] data, int[] factorA, int[] factorB)
         {
             if (data.Length == 0)
                 throw new ArgumentException("Se requieren datos");
 
-            int n = data.Length;
+            int totalN = data.Sum(d => d.Length);
             double grandMean = data.SelectMany(x => x).Average();
 
             // Calcular efectos principales y de interacción
@@ -134,7 +144,7 @@ namespace DoeFunctions
             double ssA = 0;
             foreach (var level in levelsA)
             {
-                var indices = Enumerable.Range(0, n).Where(i => factorA[i] == level).ToArray();
+                var indices = Enumerable.Range(0, data.Length).Where(i => factorA[i] == level).ToArray();
                 if (indices.Length > 0)
                 {
                     double mean = indices.SelectMany(i => data[i]).Average();
@@ -146,7 +156,7 @@ namespace DoeFunctions
             double ssB = 0;
             foreach (var level in levelsB)
             {
-                var indices = Enumerable.Range(0, n).Where(i => factorB[i] == level).ToArray();
+                var indices = Enumerable.Range(0, data.Length).Where(i => factorB[i] == level).ToArray();
                 if (indices.Length > 0)
                 {
                     double mean = indices.SelectMany(i => data[i]).Average();
@@ -154,32 +164,59 @@ namespace DoeFunctions
                 }
             }
 
-            // Suma de cuadrados de interacción (simplificada)
-            double ssInteraction = ssTotal - ssA - ssB;
+            // Suma de cuadrados de las celdas (combinaciones A x B) para separar
+            // la interacción del error: SS_Celdas = SS_A + SS_B + SS_Interacción
+            var cellGroups = Enumerable.Range(0, data.Length)
+                .GroupBy(i => (a: factorA[i], b: factorB[i]))
+                .ToArray();
+
+            double ssCells = 0;
+            foreach (var cell in cellGroups)
+            {
+                var indices = cell.ToArray();
+                double cellMean = indices.SelectMany(i => data[i]).Average();
+                int cellN = indices.Sum(i => data[i].Length);
+                ssCells += cellN * Math.Pow(cellMean - grandMean, 2);
+            }
+
+            double ssInteraction = ssCells - ssA - ssB;
+            double ssError = ssTotal - ssCells;
 
             // Grados de libertad
             int dfA = levelsA.Length - 1;
             int dfB = levelsB.Length - 1;
             int dfInteraction = dfA * dfB;
+            int dfError = Math.Max(1, totalN - cellGroups.Length);
 
             // Cuadrados medios
             double msA = ssA / dfA;
             double msB = ssB / dfB;
-            double msInteraction = ssInteraction / Math.Max(1, dfInteraction);
+            double msInteraction = dfInteraction > 0 ? ssInteraction / dfInteraction : 0;
+            double msError = ssError / dfError;
 
-            // Estadísticos F (usando MSE aproximado)
-            double mse = ssTotal / (n - 1);
-            double fA = msA / mse;
-            double fB = msB / mse;
-            double fInteraction = msInteraction / mse;
+            // Estadísticos F, usando el cuadrado medio del error como denominador
+            double fA = msError > 0 ? msA / msError : 0;
+            double fB = msError > 0 ? msB / msError : 0;
+            double fInteraction = msError > 0 && dfInteraction > 0 ? msInteraction / msError : 0;
 
-            return (fA, fB, fInteraction, ssTotal);
+            double pValueA = 1.0 - FDistributionCDF(fA, dfA, dfError);
+            double pValueB = 1.0 - FDistributionCDF(fB, dfB, dfError);
+            double pValueInteraction = dfInteraction > 0 ? 1.0 - FDistributionCDF(fInteraction, dfInteraction, dfError) : 1.0;
+
+            return (fA, fB, fInteraction, pValueA, pValueB, pValueInteraction,
+                    ssA, ssB, ssInteraction, ssError, ssTotal,
+                    dfA, dfB, dfInteraction, dfError,
+                    msA, msB, msInteraction, msError);
         }
 
         // MANOVA (Multivariate Analysis of Variance)
 
-        [FunctEngineExport("Manova", "Realiza un análisis de varianza multivariado")]
-        public static (double wilksLambda, double pillaiTrace) Manova(double[][][] groups)
+        [FunctEngineExport("Manova", "Realiza un análisis de varianza multivariado; incluye la F aproximada de Rao y su p-value para evaluar significancia")]
+        public static (
+            double wilksLambda, double pillaiTrace,
+            double fStatistic, double pValue,
+            double df1, double df2
+        ) Manova(double[][][] groups)
         {
             if (groups.Length < 2)
                 throw new ArgumentException("Se requieren al menos 2 grupos");
@@ -261,62 +298,138 @@ namespace DoeFunctions
             }
             catch { pillaiTrace = 1.0 - wilksLambda; }
 
-            return (wilksLambda, pillaiTrace);
+            // Aproximación F de Rao para Wilks' Lambda -- reduce a la F exacta
+            // cuando p <= 2 o dfH <= 2 (incluyendo el caso univariado, p = 1).
+            int dfH = k - 1;
+            int dfE = totalN - k;
+            var (fStatistic, pValue, df1, df2) = RaoFApproximation(wilksLambda, p, dfH, dfE);
+
+            return (wilksLambda, pillaiTrace, fStatistic, pValue, df1, df2);
+        }
+
+        // Aproximación F de Rao (Rao, 1951) para convertir Wilks' Lambda en un
+        // estadístico F con p-value aproximado. Es exacta cuando p <= 2 o dfH <= 2.
+        private static (double fStatistic, double pValue, double df1, double df2) RaoFApproximation(
+            double wilksLambda, int p, int dfH, int dfE)
+        {
+            if (p < 1 || dfH < 1)
+                throw new ArgumentException("Se requiere al menos una variable dependiente y un grado de libertad de hipótesis");
+
+            double denominator = p * p + dfH * dfH - 5;
+            double t = Math.Abs(denominator) > 1e-12
+                ? Math.Sqrt((p * p * dfH * dfH - 4.0) / denominator)
+                : 1.0;
+
+            double df1 = p * dfH;
+            double df2 = t * (dfE + dfH - (p + dfH + 1) / 2.0) - (p * dfH - 2) / 2.0;
+
+            double lambdaInvT = wilksLambda > 0 ? Math.Pow(wilksLambda, 1.0 / t) : 0.0;
+            double fStatistic = lambdaInvT > 1e-12
+                ? ((1.0 - lambdaInvT) / lambdaInvT) * (df2 / df1)
+                : double.PositiveInfinity;
+
+            double pValue = double.IsPositiveInfinity(fStatistic) ? 0.0 : 1.0 - FDistributionCDF(fStatistic, (int)Math.Round(df1), (int)Math.Round(df2));
+
+            return (fStatistic, pValue, df1, df2);
         }
 
         // GLM (Generalized Linear Model)
 
-        [FunctEngineExport("Glm", "Ajusta un modelo lineal generalizado")]
-        public static double[] Glm(double[][] xMatrix, double[] yValues, string family = "gaussian")
+        [FunctEngineExport("Glm", "Ajusta un modelo lineal generalizado; para la familia gaussiana incluye la F global del modelo y su p-value (no aplica a otras familias -- devuelve NaN)")]
+        public static (
+            double[] coefficients,
+            double fStatistic, double pValue,
+            double dfRegression, double dfResidual,
+            double rSquared
+        ) Glm(double[][] xMatrix, double[] yValues, string family = "gaussian")
         {
-            // Para familia gaussiana, GLM es equivalente a regresión lineal
+            double[] coefficients;
+
             if (family.ToLower() == "gaussian")
             {
-                return MultipleLinearRegression(xMatrix, yValues);
+                // Para familia gaussiana, GLM es equivalente a regresión lineal
+                coefficients = MultipleLinearRegression(xMatrix, yValues);
             }
-
-            // Para otras familias, usar algoritmo IRLS simplificado
-            int maxIterations = 25;
-            double tolerance = 1e-6;
-
-            double[] coefficients = MultipleLinearRegression(xMatrix, yValues);
-
-            for (int iter = 0; iter < maxIterations; iter++)
+            else
             {
-                double[] fitted = new double[yValues.Length];
-                for (int i = 0; i < yValues.Length; i++)
-                {
-                    fitted[i] = coefficients[0];
-                    for (int j = 0; j < xMatrix[i].Length; j++)
-                    {
-                        fitted[i] += coefficients[j + 1] * xMatrix[i][j];
-                    }
-                }
+                // Para otras familias, usar algoritmo IRLS simplificado
+                int maxIterations = 25;
+                double tolerance = 1e-6;
 
-                // Aplicar función de enlace según la familia
-                if (family.ToLower() == "binomial")
-                {
-                    for (int i = 0; i < fitted.Length; i++)
-                    {
-                        fitted[i] = 1.0 / (1.0 + Math.Exp(-fitted[i]));
-                    }
-                }
+                coefficients = MultipleLinearRegression(xMatrix, yValues);
 
-                // Verificar convergencia
-                bool converged = true;
-                for (int i = 0; i < yValues.Length; i++)
+                for (int iter = 0; iter < maxIterations; iter++)
                 {
-                    if (Math.Abs(fitted[i] - yValues[i]) > tolerance)
+                    double[] fitted = new double[yValues.Length];
+                    for (int i = 0; i < yValues.Length; i++)
                     {
-                        converged = false;
-                        break;
+                        fitted[i] = coefficients[0];
+                        for (int j = 0; j < xMatrix[i].Length; j++)
+                        {
+                            fitted[i] += coefficients[j + 1] * xMatrix[i][j];
+                        }
                     }
-                }
 
-                if (converged) break;
+                    // Aplicar función de enlace según la familia
+                    if (family.ToLower() == "binomial")
+                    {
+                        for (int i = 0; i < fitted.Length; i++)
+                        {
+                            fitted[i] = 1.0 / (1.0 + Math.Exp(-fitted[i]));
+                        }
+                    }
+
+                    // Verificar convergencia
+                    bool converged = true;
+                    for (int i = 0; i < yValues.Length; i++)
+                    {
+                        if (Math.Abs(fitted[i] - yValues[i]) > tolerance)
+                        {
+                            converged = false;
+                            break;
+                        }
+                    }
+
+                    if (converged) break;
+                }
             }
 
-            return coefficients;
+            // La prueba F global del modelo (SS_Regresión / SS_Residual) solo es
+            // apropiada para la familia gaussiana (OLS); otras familias requieren
+            // pruebas basadas en devianza, fuera de este alcance.
+            if (family.ToLower() != "gaussian")
+                return (coefficients, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
+
+            int n = yValues.Length;
+            int numPredictors = xMatrix[0].Length;
+
+            double[] fitted2 = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                fitted2[i] = coefficients[0];
+                for (int j = 0; j < xMatrix[i].Length; j++)
+                    fitted2[i] += coefficients[j + 1] * xMatrix[i][j];
+            }
+
+            double yMean = yValues.Average();
+            double ssTotal = yValues.Sum(y => Math.Pow(y - yMean, 2));
+            double ssResidual = yValues.Zip(fitted2, (y, f) => Math.Pow(y - f, 2)).Sum();
+            double ssRegression = ssTotal - ssResidual;
+
+            int dfRegression = numPredictors;
+            int dfResidual = n - numPredictors - 1;
+
+            double msRegression = ssRegression / dfRegression;
+            double msResidual = dfResidual > 0 ? ssResidual / dfResidual : 0;
+
+            double fStatistic = msResidual > 0 ? msRegression / msResidual : double.PositiveInfinity;
+            double pValue = dfResidual > 0
+                ? (double.IsPositiveInfinity(fStatistic) ? 0.0 : 1.0 - FDistributionCDF(fStatistic, dfRegression, dfResidual))
+                : double.NaN;
+
+            double rSquared = ssTotal > 0 ? ssRegression / ssTotal : 0;
+
+            return (coefficients, fStatistic, pValue, dfRegression, dfResidual, rSquared);
         }
 
         // Gage R&R Analysis

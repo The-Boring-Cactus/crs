@@ -979,26 +979,42 @@ Print(Concat('slope=', ToString(ArrayGet(simple, 0)), ' intercept=', ToString(Ar
 
 // Multiple regression: y from two predictors
 var predictors = Array(
-    Array(1, 50), Array(2, 55), Array(3, 65), Array(4, 70), Array(5, 80)
+    Array(1, 50), Array(2, 52), Array(3, 65), Array(4, 68), Array(5, 80), Array(6, 78), Array(7, 90), Array(8, 95)
 );
-var targets = Array(20, 24, 29, 33, 38);
+var targets = Array(21, 25, 30, 34, 39, 41, 47, 52);
 var coefficients = DoeLibrary.MultipleLinearRegression(predictors, targets);
 Print(Concat('Intercept: ', ToString(ArrayGet(coefficients, 0)), '  Coef 1: ', ToString(ArrayGet(coefficients, 1)), '  Coef 2: ', ToString(ArrayGet(coefficients, 2))));
 
-// Glm defaults to a Gaussian family, equivalent to MultipleLinearRegression
-var glmCoefficients = DoeLibrary.Glm(predictors, targets);
-Print(Concat('GLM intercept: ', ToString(ArrayGet(glmCoefficients, 0))));`
+// Glm defaults to a Gaussian family (equivalent to MultipleLinearRegression),
+// and also returns the model's overall F-test and R-squared -- fStatistic/pValue
+// are NaN for non-Gaussian families, where an F-test isn't statistically valid.
+var glm = DoeLibrary.Glm(predictors, targets);
+var glmCoefficients = ArrayGet(glm, 0);
+var glmF = ArrayGet(glm, 1);
+var glmP = ArrayGet(glm, 2);
+Print(Concat('GLM intercept: ', ToString(ArrayGet(glmCoefficients, 0))));
+Print(Concat('GLM model F=', ToString(glmF), ' p=', ToString(glmP), ' R2=', ToString(ArrayGet(glm, 5)), ' -- significant: ', ToString(glmP < 0.05)));`
             },
             {
-                name: 'Native ANOVA (One/Two-Way, MANOVA)',
-                description: 'Call the library\'s own ANOVA implementations directly',
-                code: `// DOE: run the built-in ANOVA implementations directly (see the Statistics
-// category's "One-Way ANOVA" snippet for how this is computed from scratch)
+                name: 'Native ANOVA & MANOVA (F-Tables & Significance)',
+                description: 'Call the library\'s own ANOVA/MANOVA implementations and display their full F-tables',
+                code: `// DOE: run the built-in ANOVA/MANOVA implementations directly and display
+// their full F-tables (SS, df, MS, F, p) to judge statistical significance.
+// (See the Statistics category's "One-Way ANOVA" snippet for how this is
+// computed from scratch.)
 var groupA = Array(20.1, 21.4, 19.8, 22.0, 20.6);
 var groupB = Array(23.5, 24.1, 22.9, 23.8, 24.6);
 var groupC = Array(19.2, 18.7, 20.1, 19.5, 18.9);
 var oneWay = DoeLibrary.OneWayAnova(Array(groupA, groupB, groupC));
-Print(Concat('One-Way ANOVA -- F=', ToString(ArrayGet(oneWay, 0)), ' p=', ToString(ArrayGet(oneWay, 1))));
+
+var oneWayF = ArrayGet(oneWay, 0);
+var oneWayP = ArrayGet(oneWay, 1);
+var oneWayTable = Array(
+    Array('Between Groups', ArrayGet(oneWay, 2), ArrayGet(oneWay, 4), ArrayGet(oneWay, 6), oneWayF, oneWayP, oneWayP < 0.05),
+    Array('Within Groups', ArrayGet(oneWay, 3), ArrayGet(oneWay, 5), ArrayGet(oneWay, 7), '', '', '')
+);
+Table(oneWayTable, 'One-Way ANOVA F-Table (Source, SS, df, MS, F, p, Significant)');
+Print(Concat('One-Way ANOVA -- F=', ToString(oneWayF), ' p=', ToString(oneWayP), ' significant=', ToString(oneWayP < 0.05)));
 
 // Two-Way ANOVA: 2 fertilizer levels x 2 soil levels, 3 replicates each
 var data = Array(
@@ -1010,13 +1026,39 @@ var data = Array(
 var factorA = Array(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1);
 var factorB = Array(0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1);
 var twoWay = DoeLibrary.TwoWayAnova(data, factorA, factorB);
-Print(Concat('Two-Way ANOVA -- F(A)=', ToString(ArrayGet(twoWay, 0)), ' F(B)=', ToString(ArrayGet(twoWay, 1)), ' F(interaction)=', ToString(ArrayGet(twoWay, 2))));
 
-// MANOVA: 2 groups, 3 observations each, 2 dependent variables per observation
+var fA = ArrayGet(twoWay, 0); var fB = ArrayGet(twoWay, 1); var fInt = ArrayGet(twoWay, 2);
+var pA = ArrayGet(twoWay, 3); var pB = ArrayGet(twoWay, 4); var pInt = ArrayGet(twoWay, 5);
+var twoWayTable = Array(
+    Array('Factor A', ArrayGet(twoWay, 6), ArrayGet(twoWay, 11), ArrayGet(twoWay, 15), fA, pA, pA < 0.05),
+    Array('Factor B', ArrayGet(twoWay, 7), ArrayGet(twoWay, 12), ArrayGet(twoWay, 16), fB, pB, pB < 0.05),
+    Array('A x B Interaction', ArrayGet(twoWay, 8), ArrayGet(twoWay, 13), ArrayGet(twoWay, 17), fInt, pInt, pInt < 0.05),
+    Array('Error', ArrayGet(twoWay, 9), ArrayGet(twoWay, 14), ArrayGet(twoWay, 18), '', '', ''),
+    Array('Total', ArrayGet(twoWay, 10), '', '', '', '', '')
+);
+Table(twoWayTable, 'Two-Way ANOVA F-Table (Source, SS, df, MS, F, p, Significant)');
+Print(Concat('Two-Way ANOVA -- F(A)=', ToString(fA), ' p(A)=', ToString(pA), '  F(B)=', ToString(fB), ' p(B)=', ToString(pB), '  F(AxB)=', ToString(fInt), ' p(AxB)=', ToString(pInt)));
+
+// MANOVA: 2 groups, 3 observations each, 2 dependent variables per observation.
+// Significance comes from Rao's F-approximation of Wilks' Lambda (exact when
+// there's 1 dependent variable or 2 groups, as in this example).
 var group1 = Array(Array(10.0, 5.0), Array(12.0, 6.0), Array(11.0, 5.5));
 var group2 = Array(Array(15.0, 8.0), Array(16.0, 8.5), Array(14.5, 7.8));
 var manova = DoeLibrary.Manova(Array(group1, group2));
-Print(Concat('MANOVA -- Wilks Lambda=', ToString(ArrayGet(manova, 0)), ' Pillai Trace=', ToString(ArrayGet(manova, 1))));`
+
+var manovaF = ArrayGet(manova, 2);
+var manovaP = ArrayGet(manova, 3);
+var manovaTable = Array(
+    Array('Wilks Lambda', ArrayGet(manova, 0)),
+    Array('Pillai Trace', ArrayGet(manova, 1)),
+    Array('F (Rao approx.)', manovaF),
+    Array('df1', ArrayGet(manova, 4)),
+    Array('df2', ArrayGet(manova, 5)),
+    Array('p-value', manovaP),
+    Array('Significant', manovaP < 0.05)
+);
+Table(manovaTable, 'MANOVA Summary');
+Print(Concat('MANOVA -- Wilks Lambda=', ToString(ArrayGet(manova, 0)), ' F=', ToString(manovaF), ' p=', ToString(manovaP), ' significant=', ToString(manovaP < 0.05)));`
             },
             {
                 name: 'Hypothesis Tests',
