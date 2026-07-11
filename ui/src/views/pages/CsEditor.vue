@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp, Shuffle, Combine, FileText } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp, Shuffle, Combine, FileText, Printer } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -54,6 +54,22 @@ const handleExecutionComplete = () => {
 
 const clearOutputs = () => {
     scriptOutputs.value = [];
+};
+
+// Exports the Script Output panel to PDF via the browser's native print
+// dialog (choose "Save as PDF" as the destination) rather than a client-side
+// PDF library -- this keeps charts/tables/MathJax formulas exactly as
+// rendered (vector text, live chart canvases) instead of rasterizing them.
+// The print CSS below is gated behind this body class so it never affects
+// printing anywhere else in the app.
+const printReportTitle = computed(() => currentScript.name || 'Script Output Report');
+const printReportDate = ref('');
+
+const exportOutputsToPdf = () => {
+    printReportDate.value = new Date().toLocaleString();
+    document.body.classList.add('printing-script-output');
+    window.addEventListener('afterprint', () => document.body.classList.remove('printing-script-output'), { once: true });
+    window.print();
 };
 
 // Chart output compatible format for BaseChart
@@ -1863,14 +1879,25 @@ onUnmounted(() => {
                     <h6 class="m-0 font-semibold">Script Output</h6>
                     <Badge variant="secondary">{{ scriptOutputs.length }} result{{ scriptOutputs.length > 1 ? 's' : '' }}</Badge>
                 </div>
-                <Button variant="ghost" size="icon" @click="clearOutputs" title="Clear outputs">
-                    <X class="w-4 h-4" />
-                </Button>
+                <div class="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" @click="exportOutputsToPdf" title="Export to PDF">
+                        <Printer class="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" @click="clearOutputs" title="Clear outputs">
+                        <X class="w-4 h-4" />
+                    </Button>
+                </div>
             </div>
 
-            <div v-for="output in scriptOutputs" :key="output.id" class="mb-6 last:mb-0">
-                <!-- Table output -->
-                <template v-if="output.type === 'Table'">
+            <div id="script-output-print-area">
+                <div class="print-only-header">
+                    <h1>{{ printReportTitle }}</h1>
+                    <p>Exported {{ printReportDate }}</p>
+                </div>
+
+                <div v-for="output in scriptOutputs" :key="output.id" class="mb-6 last:mb-0 print-avoid-break">
+                    <!-- Table output -->
+                    <template v-if="output.type === 'Table'">
                     <div class="flex items-center gap-2 mb-2">
                         <TableIcon class="w-4 h-4 text-muted-foreground" />
                         <span class="font-medium text-sm">{{ output.payload.title || 'Table' }}</span>
@@ -1973,6 +2000,7 @@ onUnmounted(() => {
                 <template v-else-if="output.type === 'Formula'">
                     <FormulaBlock :latex="output.payload.latex" :label="output.payload.label" />
                 </template>
+                </div>
             </div>
         </div>
 
@@ -2177,6 +2205,57 @@ onUnmounted(() => {
     }
     50% {
         opacity: 1;
+    }
+}
+
+// Print-only report header for "Export to PDF" -- hidden on screen, shown
+// only inside the gated print media query below.
+.print-only-header {
+    display: none;
+}
+
+// Gated behind body.printing-script-output, which exportOutputsToPdf() only
+// adds for the duration of window.print(), so this never affects printing
+// anywhere else in the app.
+@media print {
+    body.printing-script-output {
+        * {
+            visibility: hidden;
+        }
+
+        #script-output-print-area,
+        #script-output-print-area * {
+            visibility: visible;
+        }
+
+        #script-output-print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        .print-only-header {
+            display: block;
+            margin-bottom: 1.5rem;
+
+            h1 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin: 0 0 0.25rem;
+            }
+
+            p {
+                font-size: 0.85rem;
+                color: #666;
+                margin: 0;
+            }
+        }
+
+        .print-avoid-break {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
     }
 }
 </style>
