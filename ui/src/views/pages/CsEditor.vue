@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp, Shuffle } from 'lucide-vue-next';
+import { FileCode, Pencil, Loader2, Play, Save, FolderOpen, Plus, Undo, RefreshCw, Copy, Search, Code, Info, Square, Trash2, Download, Check, BarChart2, TableIcon, X, FlaskConical, BookOpen, Wand2, Hash, Braces, Sigma, Type, Database, ChevronDown, Calendar, TestTube, DollarSign, TrendingUp, Shuffle, Combine } from 'lucide-vue-next';
 
 import { userStoreMe } from '@/store/userStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -1570,6 +1570,83 @@ Print(Concat('Chi-square = ', ToString(ArrayGet(chiSq, 0)), ', df = ', ToString(
 var sample = Array(48.2, 51.5, 49.8, 50.1, 52.3, 47.9, 50.6, 49.2, 51.0, 50.4, 48.8, 51.8, 49.5, 50.9, 49.0);
 var ksTest = NonParametricLibrary.OneSampleKsTest(sample, 50, 1.2);
 Print(Concat('One-sample KS D = ', ToString(ArrayGet(ksTest, 0)), ', p-value = ', ToString(ArrayGet(ksTest, 1))));`
+            }
+        ]
+    },
+    {
+        name: 'DataTable Functions', icon: markRaw(Combine),
+        snippets: [
+            {
+                name: 'Build & Inspect a DataTable',
+                description: 'MakeRow, FromRows, and ToRows -- round-trip pseudocode rows through a DataTable',
+                code: `// DataTable: pseudocode has no dictionary/DataTable literal, so MakeRow builds
+// dictionary-shaped rows (the same shape ExecuteQuery/ReadDataset return), and
+// FromRows turns those into a real DataTable for DataTableLibrary to operate on.
+var columns = Array('Region', 'Amount');
+var rows = Array();
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array('East', 100)));
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array('West', 250)));
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array('East', 300)));
+var salesTable = DataTableLibrary.FromRows(rows);
+
+// ToRows converts back to plain rows so Table()/GetRowValue() can use them
+var backToRows = DataTableLibrary.ToRows(salesTable);
+Table(backToRows, 'Sales (round-tripped through DataTable)');
+Print(Concat('Rows after round-trip: ', ToString(ArrayLength(backToRows))));`
+            },
+            {
+                name: 'Aggregate a DataTable (Sum, Avg, Count)',
+                description: 'Aggregate a column with an optional DataTable.Select()-style filter condition',
+                code: `// DataTable: Sum/Avg/Count accept an optional filter condition using
+// DataTable.Select() syntax (e.g. "Region = 'East'")
+var columns = Array('Region', 'Amount');
+var rows = Array();
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array('East', 100)));
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array('West', 250)));
+ArrayPush(rows, DataTableLibrary.MakeRow(columns, Array('East', 300)));
+var salesTable = DataTableLibrary.FromRows(rows);
+
+var totalAll = DataTableLibrary.Sum(salesTable, 'Amount');
+var totalEast = DataTableLibrary.Sum(salesTable, 'Amount', "Region = 'East'");
+var avgAll = DataTableLibrary.Avg(salesTable, 'Amount');
+var countAll = DataTableLibrary.Count(salesTable, '');
+var countEast = DataTableLibrary.Count(salesTable, 'Region', "Region = 'East'");
+
+Print(Concat('Total (all): ', ToString(totalAll)));
+Print(Concat('Total (East only): ', ToString(totalEast)));
+Print(Concat('Average (all): ', ToString(avgAll)));
+Print(Concat('Row count (all): ', ToString(countAll), ', East rows: ', ToString(countEast)));`
+            },
+            {
+                name: 'Join Two DataTables (Inner, Left, Right)',
+                description: 'FromArrayRows builds tables directly from Array() data, then join them',
+                code: `// DataTable: FromArrayRows builds a table straight from column names + array
+// rows -- no MakeRow/dictionary step needed when you already have plain arrays.
+var empColumns = Array('EmpId', 'Name', 'DeptId');
+var empRows = Array(
+    Array(1, 'Alice', 10),
+    Array(2, 'Bob', 20),
+    Array(3, 'Carol', 99) // DeptId with no matching department
+);
+var employees = DataTableLibrary.FromArrayRows(empColumns, empRows);
+
+var deptColumns = Array('DeptId', 'DeptName');
+var deptRows = Array(
+    Array(10, 'Engineering'),
+    Array(20, 'Sales'),
+    Array(30, 'Marketing') // department with no matching employee
+);
+var departments = DataTableLibrary.FromArrayRows(deptColumns, deptRows);
+
+// Join conditions use "A.column = B.column" syntax (A = first table, B = second)
+var inner = DataTableLibrary.Inner_Join(employees, departments, 'A.DeptId = B.DeptId');
+Table(DataTableLibrary.ToRows(inner), 'Inner Join -- only matching rows');
+
+var left = DataTableLibrary.Left_Join(employees, departments, 'A.DeptId = B.DeptId');
+Table(DataTableLibrary.ToRows(left), 'Left Join -- all employees, department blank if unmatched');
+
+var right = DataTableLibrary.Right_Join(employees, departments, 'A.DeptId = B.DeptId');
+Table(DataTableLibrary.ToRows(right), 'Right Join -- all departments, employee blank if unmatched');`
             }
         ]
     }

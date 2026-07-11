@@ -1,5 +1,6 @@
 ﻿using FunctEngine;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -65,6 +66,100 @@ namespace DataTableFunctions
                 throw new ArgumentException($"La columna '{columnName}' no existe en la tabla");
 
             return filteredRows.Count(row => row[columnName] != DBNull.Value);
+        }
+
+        // ─── Bridges between pseudocode data and DataTable ─────────────────────
+        // A DataTable can't be built or unpacked directly from pseudocode (no
+        // dictionary/DataTable literal exists in the language), so these bridge
+        // functions round-trip through the same "list of column->value
+        // dictionaries" row shape already used by ExecuteQuery/ReadDataset/Table().
+
+        [FunctEngineExport("MakeRow", "Construye una fila tipo diccionario (columna->valor) a partir de una lista de nombres de columna y una lista de valores")]
+        public static Dictionary<string, object> MakeRow(object columns, object values)
+        {
+            var columnList = columns as List<object> ?? throw new ArgumentException("Se espera una lista de nombres de columna");
+            var valueList = values as List<object> ?? throw new ArgumentException("Se espera una lista de valores");
+
+            var row = new Dictionary<string, object>();
+            for (int i = 0; i < columnList.Count; i++)
+            {
+                var key = columnList[i]?.ToString() ?? $"Column{i + 1}";
+                row[key] = i < valueList.Count ? valueList[i] : null;
+            }
+            return row;
+        }
+
+        [FunctEngineExport("FromRows", "Crea un DataTable a partir de filas tipo diccionario (por ejemplo, el resultado de ExecuteQuery o MakeRow)")]
+        public static DataTable FromRows(object rows)
+        {
+            var rowList = rows as List<object> ?? throw new ArgumentException("Se espera una lista de filas (diccionarios)");
+            var table = new DataTable();
+            if (rowList.Count == 0)
+                return table;
+
+            var firstRow = rowList[0] as Dictionary<string, object>
+                ?? throw new ArgumentException("Cada fila debe ser un diccionario columna->valor");
+
+            foreach (var key in firstRow.Keys)
+                table.Columns.Add(key, firstRow[key]?.GetType() ?? typeof(object));
+
+            foreach (var rowObj in rowList)
+            {
+                var rowDict = rowObj as Dictionary<string, object>
+                    ?? throw new ArgumentException("Cada fila debe ser un diccionario columna->valor");
+
+                var newRow = table.NewRow();
+                foreach (var key in firstRow.Keys)
+                    newRow[key] = rowDict.TryGetValue(key, out var value) && value != null ? value : DBNull.Value;
+                table.Rows.Add(newRow);
+            }
+
+            return table;
+        }
+
+        [FunctEngineExport("FromArrayRows", "Crea un DataTable a partir de una lista de nombres de columna y filas tipo array (por ejemplo, datos construidos con Array())")]
+        public static DataTable FromArrayRows(object columns, object rows)
+        {
+            var columnList = columns as List<object> ?? throw new ArgumentException("Se espera una lista de nombres de columna");
+            var rowList = rows as List<object> ?? throw new ArgumentException("Se espera una lista de filas (arrays)");
+
+            var columnNames = columnList.Select(c => c?.ToString() ?? "").ToArray();
+            var firstRow = rowList.Count > 0 ? rowList[0] as List<object> : null;
+
+            var table = new DataTable();
+            for (int i = 0; i < columnNames.Length; i++)
+            {
+                var sampleValue = firstRow != null && i < firstRow.Count ? firstRow[i] : null;
+                table.Columns.Add(columnNames[i], sampleValue?.GetType() ?? typeof(object));
+            }
+
+            foreach (var rowObj in rowList)
+            {
+                var rowArray = rowObj as List<object> ?? throw new ArgumentException("Cada fila debe ser un array de valores");
+                var newRow = table.NewRow();
+                for (int i = 0; i < columnNames.Length && i < rowArray.Count; i++)
+                    newRow[i] = rowArray[i] ?? (object)DBNull.Value;
+                table.Rows.Add(newRow);
+            }
+
+            return table;
+        }
+
+        [FunctEngineExport("ToRows", "Convierte un DataTable de vuelta a filas tipo diccionario, utilizables con Table() y GetRowValue()")]
+        public static List<object> ToRows(DataTable table)
+        {
+            if (table == null)
+                throw new ArgumentNullException(nameof(table));
+
+            var rows = new List<object>();
+            foreach (DataRow row in table.Rows)
+            {
+                var dict = new Dictionary<string, object>();
+                foreach (DataColumn col in table.Columns)
+                    dict[col.ColumnName] = row[col] == DBNull.Value ? null : row[col];
+                rows.Add(dict);
+            }
+            return rows;
         }
 
         // Métodos privados auxiliares
