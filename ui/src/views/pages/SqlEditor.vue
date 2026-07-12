@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import BaseChart from '@/components/BaseChart.vue';
+import BokehChart from '@/components/BokehChart.vue';
+import { buildBokehJson } from '@/helpers/bokehUtils';
 import {
     Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, RefreshCw,
     Copy, Search, Download, ChevronLeft, ChevronRight, Info, Trash2,
@@ -91,8 +93,13 @@ const vizConfig = reactive({
     pivotRowField: '',
     pivotColField: '',
     pivotValueField: '',
-    pivotAggregation: 'sum'
+    pivotAggregation: 'sum',
+    engine: 'echarts' // 'echarts' | 'bokeh'
 });
+
+// Chart types BokehChart can render (waterfall has no Bokeh equivalent here)
+const BOKEH_SUPPORTED_TYPES = ['line', 'bar', 'bar-h', 'area', 'pie', 'scatter'];
+const isBokehSupportedVizType = computed(() => BOKEH_SUPPORTED_TYPES.includes(vizType.value));
 
 const TABULAR_TYPES = [
     { type: 'table',  label: 'Table',   icon: Table2 },
@@ -147,6 +154,7 @@ const resetVizConfig = () => {
     vizConfig.pivotColField = '';
     vizConfig.pivotValueField = '';
     vizConfig.pivotAggregation = 'sum';
+    vizConfig.engine = 'echarts';
 };
 
 const applyVizFromScript = (script) => {
@@ -163,6 +171,7 @@ const applyVizFromScript = (script) => {
         vizConfig.pivotColField = viz.pivotColField || '';
         vizConfig.pivotValueField = viz.pivotValueField || '';
         vizConfig.pivotAggregation = viz.pivotAggregation || 'sum';
+        vizConfig.engine = viz.engine || 'echarts';
     } catch { vizType.value = 'table'; }
 };
 
@@ -440,7 +449,8 @@ const buildVisualizationPayload = () => JSON.stringify({
     pivotRowField: vizConfig.pivotRowField,
     pivotColField: vizConfig.pivotColField,
     pivotValueField: vizConfig.pivotValueField,
-    pivotAggregation: vizConfig.pivotAggregation
+    pivotAggregation: vizConfig.pivotAggregation,
+    engine: vizConfig.engine
 });
 
 const saveScript = async () => {
@@ -827,6 +837,20 @@ watch(() => projectStore.currentProjectId, () => {
                         {{ col.header }}
                     </button>
                 </div>
+
+                <div v-if="isBokehSupportedVizType" class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-muted-foreground">Engine:</span>
+                    <div class="flex items-center gap-0.5 border rounded-md p-0.5">
+                        <button
+                            @click="vizConfig.engine = 'echarts'"
+                            :class="['px-2 py-0.5 rounded text-xs transition-colors', vizConfig.engine === 'echarts' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted']"
+                        >ECharts</button>
+                        <button
+                            @click="vizConfig.engine = 'bokeh'"
+                            :class="['px-2 py-0.5 rounded text-xs transition-colors', vizConfig.engine === 'bokeh' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted']"
+                        >Bokeh</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Pivot config panel -->
@@ -925,8 +949,15 @@ watch(() => projectStore.currentProjectId, () => {
             <!-- CHART view -->
             <div v-else-if="queryResults.length > 0 && isChartVizType" class="flex-1 border rounded-md bg-card flex items-center justify-center" style="min-height: 380px;">
                 <div class="w-full h-full" style="height: 380px;">
+                    <BokehChart
+                        v-if="chartData && vizConfig.engine === 'bokeh' && isBokehSupportedVizType"
+                        :bokeh-json="buildBokehJson({ type: chartVizType, labels: chartData.labels, datasets: chartData.datasets })"
+                        :show-header="false"
+                        :show-footer="false"
+                        height="380px"
+                    />
                     <BaseChart
-                        v-if="chartData"
+                        v-else-if="chartData"
                         :type="chartVizType"
                         :data="chartData"
                         :show-header="false"

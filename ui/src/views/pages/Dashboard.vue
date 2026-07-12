@@ -45,13 +45,16 @@ import {
     Terminal,
     BarChart2 as BarChart2Icon,
     Braces,
-    Link
+    Link,
+    Waves
 } from 'lucide-vue-next';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import BaseChart from '@/components/BaseChart.vue';
+import BokehChart from '@/components/BokehChart.vue';
 import MarkdownReport from '@/components/MarkdownReport.vue';
 import FormulaBlock from '@/components/FormulaBlock.vue';
+import { buildBokehJson } from '@/helpers/bokehUtils';
 import { nextTick, ref, watch, computed, getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { toast as sonnerToast } from 'vue-sonner';
@@ -340,6 +343,12 @@ const chartTypeMap = {
     AreaChart: 'area',
     MixedChart: 'mixed'
 };
+
+// Chart types BokehChart can render (radar/polarArea/bubble/mixed have no Bokeh equivalent here)
+const BOKEH_SUPPORTED_TYPES = ['line', 'bar', 'bar-h', 'area', 'pie', 'doughnut', 'scatter'];
+function isBokehSupported(chartType) {
+    return BOKEH_SUPPORTED_TYPES.includes(chartTypeMap[chartType] || chartType);
+}
 
 // Generate sample data for different chart types
 function generateChartData(chartType) {
@@ -2293,6 +2302,9 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         </Button>
                     </div>
                     <div class="chart-controls flex gap-1">
+                        <Button v-if="isBokehSupported(item.type)" variant="ghost" size="icon" class="h-7 w-7" :class="item.renderEngine === 'bokeh' ? 'text-primary' : ''" @click="item.renderEngine = item.renderEngine === 'bokeh' ? 'echarts' : 'bokeh'" :title="item.renderEngine === 'bokeh' ? 'Using Bokeh (click for ECharts)' : 'Using ECharts (click for Bokeh)'">
+                            <Waves class="w-3 h-3 text-xs" />
+                        </Button>
                         <Button v-if="item.statReportData" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Stat Report">
                             <FileText class="w-3 h-3 text-xs" />
                         </Button>
@@ -2308,7 +2320,15 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                     </div>
                 </div>
 
+                <BokehChart
+                    v-if="item.renderEngine === 'bokeh' && isBokehSupported(item.type)"
+                    :bokeh-json="buildBokehJson({ type: getChartType(item.type), labels: item.chartData?.labels, datasets: item.chartData?.datasets, title: item.title })"
+                    :height="getChartHeight(item.h)"
+                    :show-header="false"
+                    :show-footer="false"
+                />
                 <BaseChart
+                    v-else
                     :type="getChartType(item.type)"
                     :data="item.chartData"
                     :height="getChartHeight(item.h)"
@@ -2794,8 +2814,16 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 
                     <!-- Chart view (line, bar, bar-h, area, pie, scatter, waterfall) -->
                     <div v-else class="h-full flex items-center justify-center">
+                        <BokehChart
+                            v-if="getSqlWidgetChartData(item) && getSqlWidgetViz(item).engine === 'bokeh' && isBokehSupported(getSqlWidgetViz(item).type)"
+                            :bokeh-json="buildBokehJson({ type: getSqlWidgetViz(item).type || 'bar', labels: getSqlWidgetChartData(item).labels, datasets: getSqlWidgetChartData(item).datasets })"
+                            :height="getChartHeight(item.h - 1)"
+                            :show-header="false"
+                            :show-footer="false"
+                            class="w-full"
+                        />
                         <BaseChart
-                            v-if="getSqlWidgetChartData(item)"
+                            v-else-if="getSqlWidgetChartData(item)"
                             :type="getSqlWidgetViz(item).type || 'bar'"
                             :data="getSqlWidgetChartData(item)"
                             :height="getChartHeight(item.h - 1)"
@@ -2862,6 +2890,9 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <Button variant="ghost" size="icon" class="h-6 w-6 text-destructive" @click="item.editing = false"><X class="w-3 h-3" /></Button>
                     </div>
                     <div class="funct-controls flex gap-1">
+                        <Button v-if="item.outputType === 'chart' && isBokehSupported(item.chartType)" variant="ghost" size="icon" class="h-7 w-7" :class="item.renderEngine === 'bokeh' ? 'text-primary' : ''" @click="item.renderEngine = item.renderEngine === 'bokeh' ? 'echarts' : 'bokeh'" :title="item.renderEngine === 'bokeh' ? 'Using Bokeh (click for ECharts)' : 'Using ECharts (click for Bokeh)'">
+                            <Waves class="w-3 h-3" />
+                        </Button>
                         <Button v-if="item.outputType === 'statreport'" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Full Report">
                             <FileText class="w-3 h-3" />
                         </Button>
@@ -2886,8 +2917,16 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 
                     <!-- Chart output -->
                     <div v-else-if="item.outputType === 'chart'" class="h-full">
+                        <BokehChart
+                            v-if="item.chartData && item.renderEngine === 'bokeh' && isBokehSupported(item.chartType)"
+                            :bokeh-json="buildBokehJson({ type: item.chartType || 'bar', labels: item.chartData.labels, datasets: item.chartData.datasets })"
+                            :height="getChartHeight(item.h - 1)"
+                            :show-header="false"
+                            :show-footer="false"
+                            class="w-full"
+                        />
                         <BaseChart
-                            v-if="item.chartData"
+                            v-else-if="item.chartData"
                             :type="item.chartType || 'bar'"
                             :data="item.chartData"
                             :height="getChartHeight(item.h - 1)"

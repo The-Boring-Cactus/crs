@@ -2,8 +2,10 @@
 import { ref, onMounted, onUnmounted, computed, nextTick, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import BaseChart from '@/components/BaseChart.vue';
+import BokehChart from '@/components/BokehChart.vue';
 import MarkdownReport from '@/components/MarkdownReport.vue';
 import FormulaBlock from '@/components/FormulaBlock.vue';
+import { buildBokehJson } from '@/helpers/bokehUtils';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
 import { BarChart2, LayoutDashboard, AlertCircle, RefreshCw, Loader2 } from 'lucide-vue-next';
@@ -262,6 +264,18 @@ const chartTypeFor = (type) => ({
     RadarChart: 'radar', ScatterChart: 'scatter', BubbleChart: 'bubble'
 })[type] || 'bar';
 
+// Chart types BokehChart can render (radar/polarArea/bubble/mixed have no Bokeh equivalent here).
+// Accepts either a Dashboard widget type ('LineChart') or a raw chart type ('line').
+const DASHBOARD_CHART_TYPE_MAP = {
+    LineChart: 'line', BarChart: 'bar', AreaChart: 'area',
+    PieChart: 'pie', DoughnutChart: 'doughnut', PolarAreaChart: 'polarArea',
+    RadarChart: 'radar', ScatterChart: 'scatter', BubbleChart: 'bubble'
+};
+const BOKEH_SUPPORTED_TYPES = ['line', 'bar', 'bar-h', 'area', 'pie', 'doughnut', 'scatter'];
+function isBokehSupported(chartType) {
+    return BOKEH_SUPPORTED_TYPES.includes(DASHBOARD_CHART_TYPE_MAP[chartType] || chartType);
+}
+
 // ── SQL widget helpers (mirrors Dashboard.vue — read-only, uses stored queryResults) ──
 
 function getSqlWidgetViz(item) {
@@ -464,7 +478,15 @@ onUnmounted(() => {
                     <div v-else-if="isChartType(item.type)" class="chart-container flex flex-col h-full border rounded-md p-2 bg-card">
                         <div class="font-medium text-sm mb-1">{{ item.title }}</div>
                         <div class="flex-1 min-h-0">
+                            <BokehChart
+                                v-if="item.renderEngine === 'bokeh' && isBokehSupported(item.type)"
+                                :bokeh-json="buildBokehJson({ type: chartTypeFor(item.type), labels: item.chartData?.labels, datasets: item.chartData?.datasets, title: item.title })"
+                                :show-header="false"
+                                :show-footer="false"
+                                height="100%"
+                            />
                             <BaseChart
+                                v-else
                                 :type="chartTypeFor(item.type)"
                                 :data="item.chartData"
                                 :title="item.title"
@@ -548,8 +570,16 @@ onUnmounted(() => {
 
                             <!-- Chart view -->
                             <div v-else class="h-full flex items-center justify-center">
+                                <BokehChart
+                                    v-if="getSqlWidgetChartData(item) && getSqlWidgetViz(item).engine === 'bokeh' && isBokehSupported(getSqlWidgetViz(item).type)"
+                                    :bokeh-json="buildBokehJson({ type: getSqlWidgetViz(item).type || 'bar', labels: getSqlWidgetChartData(item).labels, datasets: getSqlWidgetChartData(item).datasets })"
+                                    :show-header="false"
+                                    :show-footer="false"
+                                    height="100%"
+                                    class="w-full"
+                                />
                                 <BaseChart
-                                    v-if="getSqlWidgetChartData(item)"
+                                    v-else-if="getSqlWidgetChartData(item)"
                                     :type="getSqlWidgetViz(item).type || 'bar'"
                                     :data="getSqlWidgetChartData(item)"
                                     :show-header="false"
@@ -588,7 +618,16 @@ onUnmounted(() => {
                         <div class="flex-1 overflow-auto min-h-0">
                             <!-- Chart output -->
                             <div v-if="item.outputType === 'chart' && item.chartData" class="h-full">
+                                <BokehChart
+                                    v-if="item.renderEngine === 'bokeh' && isBokehSupported(item.chartType)"
+                                    :bokeh-json="buildBokehJson({ type: item.chartType || 'bar', labels: item.chartData.labels, datasets: item.chartData.datasets })"
+                                    :show-header="false"
+                                    :show-footer="false"
+                                    height="100%"
+                                    class="w-full"
+                                />
                                 <BaseChart
+                                    v-else
                                     :type="item.chartType || 'bar'"
                                     :data="item.chartData"
                                     :show-header="false"

@@ -4,8 +4,10 @@ import { getCurrentInstance } from 'vue';
 import { toast } from 'vue-sonner';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 import BaseChart from '@/components/BaseChart.vue';
+import BokehChart from '@/components/BokehChart.vue';
 import MarkdownReport from '@/components/MarkdownReport.vue';
 import FormulaBlock from '@/components/FormulaBlock.vue';
+import { buildBokehJson } from '@/helpers/bokehUtils';
 import { basicLight } from '@fsegurai/codemirror-theme-basic-light';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { useLayout } from '@/layout/composables/layout';
@@ -77,6 +79,20 @@ const chartTypeMap = {
     bar: 'bar', line: 'line', pie: 'pie', doughnut: 'doughnut',
     area: 'area', radar: 'radar', scatter: 'scatter', bubble: 'bubble'
 };
+
+// Chart types BokehChart can render (radar/bubble have no Bokeh equivalent here)
+const BOKEH_SUPPORTED_TYPES = ['bar', 'bar-h', 'line', 'pie', 'doughnut', 'area', 'scatter'];
+function isBokehSupported(chartType) {
+    return BOKEH_SUPPORTED_TYPES.includes(chartTypeMap[chartType] || chartType);
+}
+function bokehJsonFor(output) {
+    return buildBokehJson({
+        type: chartTypeMap[output.payload.chartType] || 'bar',
+        labels: output.payload.labels,
+        datasets: output.payload.datasets,
+        title: output.payload.title
+    });
+}
 
 // Editor state
 const code = ref(`// Welcome to Script Editor`);
@@ -1931,9 +1947,27 @@ onUnmounted(() => {
                         <BarChart2 class="w-4 h-4 text-muted-foreground" />
                         <span class="font-medium text-sm">{{ output.payload.title || 'Chart' }}</span>
                         <Badge variant="outline" class="text-xs capitalize">{{ output.payload.chartType }}</Badge>
+                        <div v-if="isBokehSupported(output.payload.chartType)" class="flex items-center gap-0.5 ml-auto border rounded-md p-0.5">
+                            <button
+                                @click="output.renderEngine = 'echarts'"
+                                :class="['px-2 py-0.5 rounded text-xs transition-colors', (output.renderEngine || 'echarts') === 'echarts' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted']"
+                            >ECharts</button>
+                            <button
+                                @click="output.renderEngine = 'bokeh'"
+                                :class="['px-2 py-0.5 rounded text-xs transition-colors', output.renderEngine === 'bokeh' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted']"
+                            >Bokeh</button>
+                        </div>
                     </div>
                     <div class="h-64">
+                        <BokehChart
+                            v-if="output.renderEngine === 'bokeh' && isBokehSupported(output.payload.chartType)"
+                            :bokeh-json="bokehJsonFor(output)"
+                            :show-header="false"
+                            :show-footer="false"
+                            height="100%"
+                        />
                         <BaseChart
+                            v-else
                             :type="chartTypeMap[output.payload.chartType] || 'bar'"
                             :data="{ labels: output.payload.labels, datasets: output.payload.datasets }"
                             :title="output.payload.title"
