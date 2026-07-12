@@ -53,6 +53,7 @@ import BaseChart from '@/components/BaseChart.vue';
 import MarkdownReport from '@/components/MarkdownReport.vue';
 import FormulaBlock from '@/components/FormulaBlock.vue';
 import { nextTick, ref, watch, computed, getCurrentInstance, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { toast as sonnerToast } from 'vue-sonner';
 import { useDashboardStore } from '@/store/dashboardStore';
 
@@ -102,6 +103,7 @@ const showLoadDialog = ref(false);
 
 const dashboardStore = useDashboardStore();
 const { proxy } = getCurrentInstance();
+const route = useRoute();
 
 // SQL widget picker
 const showSqlPickerDialog = ref(false);
@@ -1596,6 +1598,28 @@ async function loadFromServer(dash) {
     }
 }
 
+// Loads the dashboard referenced by ?id=... in the route (e.g. from the
+// Welcome screen's "Recent Dashboards" list), which links here without
+// going through the in-page Load dialog.
+async function loadDashboardFromRoute() {
+    const id = route.query.id;
+    if (!id) return;
+
+    await dashboardStore.loadDashboards(proxy.$socket);
+    const dash = dashboardStore.dashboards.find((d) => (d.id || d.Id) === id);
+
+    if (dash) {
+        await loadFromServer(dash);
+    } else {
+        toast.add({
+            severity: 'error',
+            summary: 'Dashboard Not Found',
+            detail: 'The requested dashboard could not be loaded.',
+            life: 3000
+        });
+    }
+}
+
 function loadDashboardLayout() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -1859,6 +1883,7 @@ onMounted(() => {
     window.addEventListener('socket-output', handleWidgetOutput);
     window.addEventListener('socket-execution-complete', handleWidgetExecutionComplete);
     variableStore.loadDefinitions(proxy.$socket);
+    loadDashboardFromRoute();
 });
 
 onUnmounted(() => {
