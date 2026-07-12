@@ -71,8 +71,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -87,7 +86,6 @@ const userStore = userStoreMe();
 const projectStore = useProjectStore();
 const variableStore = useVariableStore();
 
-const visibleCompo = ref(false);
 const editingTitle = ref(false);
 const titleInputRef = ref(null);
 
@@ -680,9 +678,6 @@ const addcomponent = async (type) => {
         renderComponent.value = false;
         await nextTick();
         renderComponent.value = true;
-
-        // Close drawer after adding component
-        visibleCompo.value = false;
 
         toast.add({
             severity: 'success',
@@ -1952,7 +1947,6 @@ async function addSqlWidget() {
     layout.value.componentes.push(newComponent);
     showSqlPickerDialog.value = false;
     selectedSqlScript.value = null;
-    visibleCompo.value = false;
     await refreshSqlWidget(newComponent);
 }
 
@@ -2138,7 +2132,6 @@ function confirmCsPickerSelection() {
     layout.value.componentes.push(newComponent);
     showCsPickerDialog.value = false;
     selectedCsScript.value = null;
-    visibleCompo.value = false;
     startAutoRefresh(newComponent);
     runWidgetScript(newComponent);
 }
@@ -2173,53 +2166,8 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 </script>
 
 <template>
-    <Sheet v-model:open="visibleCompo">
-        <SheetContent class="w-[320px] sm:w-[540px]">
-            <SheetHeader>
-                <SheetTitle>Dashboard Elements</SheetTitle>
-                <SheetDescription> Drag and drop components to rearrange them on your dashboard </SheetDescription>
-            </SheetHeader>
-            <div class="component-menu-container mt-4">
-                <Accordion type="single" class="w-full" collapsible>
-                    <AccordionItem v-for="(menuGroup, index) in componentMenuItems" :key="index" :value="`item-${index}`">
-                        <AccordionTrigger>
-                            <div class="flex items-center gap-2">
-                                <component :is="menuGroup.icon" class="w-4 h-4"></component>
-                                <span>{{ menuGroup.label }}</span>
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <div class="flex flex-col gap-2">
-                                <div v-for="item in menuGroup.items" :key="item.label">
-                                    <Button variant="ghost" class="w-full justify-start text-left" @click="item.command && item.command()">
-                                        <div class="flex items-center gap-2 w-full">
-                                            <component :is="item.icon" class="w-4 h-4"></component>
-                                            <span>{{ item.label }}</span>
-                                            <Badge v-if="item.badge" class="ml-auto" variant="secondary">{{ item.badge }}</Badge>
-                                        </div>
-                                    </Button>
-                                    <!-- Handle nested items if needed for charts -->
-                                    <div v-if="item.items" class="pl-4 mt-2 flex flex-col gap-1 border-l ml-2">
-                                        <Button v-for="subItem in item.items" :key="subItem.label" variant="ghost" size="sm" class="w-full justify-start text-left text-sm" @click="subItem.command && subItem.command()">
-                                            <div class="flex items-center gap-2 w-full">
-                                                <component :is="subItem.icon" class="w-4 h-4"></component>
-                                                <span>{{ subItem.label }}</span>
-                                                <Badge v-if="subItem.badge" class="ml-auto text-[10px]" variant="secondary">{{ subItem.badge }}</Badge>
-                                            </div>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </div>
-        </SheetContent>
-    </Sheet>
-
-    <div class="flex items-center justify-between p-2 border-b mb-4">
+    <div class="flex items-center justify-between p-2 border-b mb-3">
         <div class="flex items-center gap-2">
-            <Button variant="outline" size="sm" @click="visibleCompo = true"> <Plus class="w-4 h-4 mr-2" /> Add Elements </Button>
             <Button variant="ghost" size="sm" class="gap-1" @click="saveToServer" title="Save to server">
                 <Save class="w-4 h-4" /><span class="hidden sm:inline">Save</span>
             </Button>
@@ -2246,6 +2194,44 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                 Share
             </Button>
         </div>
+    </div>
+
+    <!-- Elements Toolbar: add dashboard widgets, organized by category -->
+    <div class="flex items-center gap-1.5 mb-4 bg-muted/30 p-2 border rounded-md flex-wrap">
+        <span class="text-xs font-medium text-muted-foreground px-1">Add:</span>
+        <DropdownMenu v-for="menuGroup in componentMenuItems" :key="menuGroup.label">
+            <DropdownMenuTrigger as-child>
+                <Button variant="outline" size="sm" class="gap-1.5 h-8">
+                    <component :is="menuGroup.icon" class="w-3.5 h-3.5" />
+                    {{ menuGroup.label }}
+                    <ChevronDown class="w-3 h-3 opacity-60" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" class="w-72">
+                <DropdownMenuLabel>{{ menuGroup.label }}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <template v-for="item in menuGroup.items" :key="item.label">
+                    <DropdownMenuSub v-if="item.items">
+                        <DropdownMenuSubTrigger class="gap-2">
+                            <component :is="item.icon" class="w-4 h-4"></component>
+                            <span>{{ item.label }}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuItem v-for="subItem in item.items" :key="subItem.label" class="gap-2" @click="subItem.command && subItem.command()">
+                                <component :is="subItem.icon" class="w-4 h-4"></component>
+                                <span>{{ subItem.label }}</span>
+                                <Badge v-if="subItem.badge" class="ml-auto text-[10px]" variant="secondary">{{ subItem.badge }}</Badge>
+                            </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuItem v-else class="gap-2" @click="item.command && item.command()">
+                        <component :is="item.icon" class="w-4 h-4"></component>
+                        <span>{{ item.label }}</span>
+                        <Badge v-if="item.badge" class="ml-auto text-[10px]" variant="secondary">{{ item.badge }}</Badge>
+                    </DropdownMenuItem>
+                </template>
+            </DropdownMenuContent>
+        </DropdownMenu>
     </div>
     <grid-layout v-model:layout="layout.componentes" :col-num="15" :row-height="40" :auto-size="true" is-draggable is-resizable vertical-compact use-css-transforms v-if="renderComponent">
         <grid-item v-for="item in layout.componentes" :static="item.static" :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i" :key="item.i" class="grid-item-container">
