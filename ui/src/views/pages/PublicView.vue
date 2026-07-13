@@ -8,7 +8,7 @@ import FormulaBlock from '@/components/FormulaBlock.vue';
 import { buildBokehJson } from '@/helpers/bokehUtils';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
-import { BarChart2, LayoutDashboard, AlertCircle, RefreshCw, Loader2 } from 'lucide-vue-next';
+import { BarChart2, LayoutDashboard, AlertCircle, RefreshCw, Loader2, ChevronDown, ChevronRight } from 'lucide-vue-next';
 import { useVariableStore } from '@/store/variableStore';
 
 const route = useRoute();
@@ -355,6 +355,30 @@ function getSqlWidgetPivotData(item) {
     };
 }
 
+// Tree Table helpers (mirrors Dashboard.vue's expand/collapse behavior)
+function toggleTreeNode(item, node) {
+    if (!item.expandedKeys) item.expandedKeys = {};
+    if (item.expandedKeys[node.key]) delete item.expandedKeys[node.key];
+    else item.expandedKeys[node.key] = true;
+}
+function isNodeExpanded(item, node) { return !!item.expandedKeys?.[node.key]; }
+
+// Flattens item.treeData into a display-ready list of { node, level } pairs,
+// recursing into a node's children only while it's present in expandedKeys.
+function getVisibleTreeNodes(item) {
+    const result = [];
+    function walk(nodes, level) {
+        for (const node of nodes) {
+            result.push({ node, level });
+            if (node.children?.length > 0 && item.expandedKeys?.[node.key]) {
+                walk(node.children, level + 1);
+            }
+        }
+    }
+    walk(item.treeData || [], 0);
+    return result;
+}
+
 onMounted(async () => {
     const token = route.params.shareToken;
     try {
@@ -512,6 +536,44 @@ onUnmounted(() => {
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Image (src stored at save time, e.g. as a base64 data URL) -->
+                    <div v-else-if="item.type === 'Image'" class="flex flex-col h-full border rounded-md p-2 bg-card">
+                        <div class="font-medium text-sm mb-2">{{ item.title }}</div>
+                        <div class="flex-1 flex items-center justify-center overflow-hidden bg-muted/20 rounded">
+                            <img :src="item.src" :alt="item.alt" class="object-contain max-h-full max-w-full" :class="{ 'w-full h-full object-cover': !item.preview }" />
+                        </div>
+                    </div>
+
+                    <!-- Tree Table (treeData stored at save time) -->
+                    <div v-else-if="item.type === 'TreeTable'" class="h-full border rounded-md overflow-auto bg-card p-2 flex flex-col">
+                        <div class="font-medium text-sm mb-2">{{ item.title || 'Tree Table' }}</div>
+                        <div class="flex-1 overflow-auto">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr>
+                                        <th v-for="col in item.columns" :key="col.field" class="text-left px-3 py-2 bg-muted font-medium">{{ col.header }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="entry in getVisibleTreeNodes(item)" :key="entry.node.key" class="border-t">
+                                        <td v-for="col in item.columns" :key="col.field" class="px-3 py-2">
+                                            <div class="flex items-center gap-2" :style="{ paddingLeft: col.expander ? `${entry.level * 1.5}rem` : '0' }">
+                                                <button v-if="col.expander && entry.node.children && entry.node.children.length > 0" class="p-0.5 shrink-0" @click="toggleTreeNode(item, entry.node)">
+                                                    <component :is="isNodeExpanded(item, entry.node) ? ChevronDown : ChevronRight" class="w-3 h-3" />
+                                                </button>
+                                                <span v-else-if="col.expander" class="w-4 inline-block shrink-0"></span>
+                                                <span>{{ entry.node.data[col.field] }}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!item.treeData || item.treeData.length === 0">
+                                        <td :colspan="item.columns.length" class="text-center py-4 text-muted-foreground">No data available</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- SqlWidget: displays stored queryResults with the configured visualization -->

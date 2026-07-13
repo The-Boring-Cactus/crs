@@ -15,20 +15,18 @@ import {
     Network,
     Eraser,
     LineChart,
-    Check,
     Image,
     Target,
     Type,
     Download,
     Minus,
-    Table,
+    Table as TableIcon,
     Trash2,
     ChevronDown,
     CircleDot,
     RefreshCw,
     Circle,
     ZoomIn,
-    CheckSquare,
     ChevronRight,
     Save,
     X,
@@ -79,7 +77,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { userStoreMe } from '@/store/userStore';
@@ -147,14 +145,8 @@ const componentMenuItems = ref([
                 badge: 'Basic'
             },
             {
-                label: 'Excel Editor',
-                icon: markRaw(Table),
-                command: () => addcomponent('ExcelEditor'),
-                badge: 'Table'
-            },
-            {
                 label: 'Data Table',
-                icon: markRaw(Table),
+                icon: markRaw(TableIcon),
                 command: () => addcomponent('DataTable'),
                 badge: 'Data'
             },
@@ -169,12 +161,6 @@ const componentMenuItems = ref([
                 icon: markRaw(Image),
                 command: () => addcomponent('Image'),
                 badge: 'Media'
-            },
-            {
-                label: 'Toggle Button',
-                icon: markRaw(CheckSquare),
-                command: () => addcomponent('ToggleButton'),
-                badge: 'Input'
             },
             {
                 label: 'Select Dropdown',
@@ -514,22 +500,6 @@ const addcomponent = async (type) => {
             type: 'Text',
             value: 'Click to edit'
         };
-    } else if (type === 'ExcelEditor') {
-        newComponent = {
-            x: 1,
-            y: 0,
-            w: 8,
-            h: 8,
-            i: nextComponentId(),
-            static: false,
-            type: 'ExcelEditor',
-            title: 'Excel Editor',
-            tableData: generateSampleTableData(),
-            fields: generateSampleFields(),
-            filterRow: true,
-            noFooter: false,
-            readonly: false
-        };
     } else if (type === 'DataTable') {
         newComponent = {
             x: 1,
@@ -558,7 +528,9 @@ const addcomponent = async (type) => {
             title: 'Tree Table',
             treeData: generateTreeData(),
             columns: generateTreeTableColumns(),
-            expandedKeys: {}
+            expandedKeys: {},
+            scriptCode: '',
+            refreshInterval: 0
         };
     } else if (type === 'Image') {
         newComponent = {
@@ -575,22 +547,6 @@ const addcomponent = async (type) => {
             preview: true,
             width: '100%',
             height: 'auto'
-        };
-    } else if (type === 'ToggleButton') {
-        newComponent = {
-            x: 1,
-            y: 0,
-            w: 3,
-            h: 3,
-            i: nextComponentId(),
-            static: false,
-            type: 'ToggleButton',
-            title: 'Toggle Button',
-            checked: false,
-            onLabel: 'ON',
-            offLabel: 'OFF',
-            onIcon: markRaw(Check),
-            offIcon: markRaw(X)
         };
     } else if (type === 'Select') {
         newComponent = {
@@ -721,11 +677,9 @@ function getDefaultChartTitle(type) {
         AreaChart: 'Area Chart',
         MixedChart: 'Mixed Chart',
         Text: 'Text Element',
-        ExcelEditor: 'Excel Editor',
         DataTable: 'Data Table',
         TreeTable: 'Tree Table',
         Image: 'Image',
-        ToggleButton: 'Toggle Button',
         Select: 'Select Dropdown',
         InputText: 'Input Text',
         Variable: 'Variable / KPI',
@@ -735,100 +689,9 @@ function getDefaultChartTitle(type) {
     return titles[type] || type;
 }
 
-// Excel Editor helper functions
-function generateSampleFields() {
-    return [
-        {
-            name: 'id',
-            label: 'ID',
-            type: 'number',
-            width: '80px',
-            readonly: true,
-            keyField: true
-        },
-        {
-            name: 'name',
-            label: 'Name',
-            type: 'string',
-            width: '150px',
-            autocomplete: true
-        },
-        {
-            name: 'email',
-            label: 'Email',
-            type: 'string',
-            width: '200px'
-        },
-        {
-            name: 'department',
-            label: 'Department',
-            type: 'select',
-            width: '140px',
-            options: [
-                { value: 'IT', text: 'Information Technology' },
-                { value: 'HR', text: 'Human Resources' },
-                { value: 'FIN', text: 'Finance' },
-                { value: 'MKT', text: 'Marketing' },
-                { value: 'OPS', text: 'Operations' }
-            ]
-        },
-        {
-            name: 'salary',
-            label: 'Salary',
-            type: 'number',
-            width: '120px',
-            toText: (value) =>
-                new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                }).format(value)
-        },
-        {
-            name: 'joinDate',
-            label: 'Join Date',
-            type: 'date',
-            width: '130px'
-        },
-        {
-            name: 'active',
-            label: 'Active',
-            type: 'checkYN',
-            width: '80px'
-        },
-        {
-            name: 'notes',
-            label: 'Notes',
-            type: 'string',
-            width: '200px'
-        }
-    ];
-}
-
-function generateSampleTableData() {
-    const departments = ['IT', 'HR', 'FIN', 'MKT', 'OPS'];
-    const names = ['John Smith', 'Jane Doe', 'Mike Johnson', 'Sarah Wilson', 'David Brown', 'Lisa Davis', 'Robert Miller', 'Emily Garcia', 'Michael Rodriguez', 'Jennifer Martinez'];
-
-    return Array.from({ length: 10 }, (_, index) => ({
-        $id: index + 1,
-        id: index + 1,
-        name: names[index] || `Employee ${index + 1}`,
-        email: `${names[index]?.toLowerCase().replace(' ', '.') || `employee${index + 1}`}@company.com`,
-        department: departments[Math.floor(Math.random() * departments.length)],
-        salary: Math.floor(Math.random() * 100000) + 40000,
-        joinDate: new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
-        active: Math.random() > 0.2 ? 'Y' : 'N',
-        notes: Math.random() > 0.5 ? 'Good performance' : ''
-    }));
-}
-
 function getChartHeight(gridHeight) {
     // Convert grid height to pixel height (each grid unit is approximately 40px + margin)
     return `${gridHeight * 40 - 60}px`;
-}
-
-function getExcelHeight(gridHeight) {
-    // Convert grid height to pixel height for Excel editor (accounting for header)
-    return `${gridHeight * 40 - 80}px`;
 }
 
 function refreshChartData(item) {
@@ -876,150 +739,6 @@ function onChartClick(event) {
         summary: 'Chart Interaction',
         detail: `Clicked on ${event.label || 'chart element'}`,
         life: 2000
-    });
-}
-
-// Excel Editor Functions
-function addExcelRow(item) {
-    const newId = Math.max(...item.tableData.map((row) => row.id || 0)) + 1;
-    const newRow = {
-        $id: newId,
-        id: newId,
-        name: '',
-        email: '',
-        department: 'IT',
-        salary: 50000,
-        joinDate: new Date().toISOString().split('T')[0],
-        active: 'Y',
-        notes: ''
-    };
-    item.tableData.push(newRow);
-
-    toast.add({
-        severity: 'success',
-        summary: 'Row Added',
-        detail: 'New row has been added to the table',
-        life: 2000
-    });
-}
-
-function exportExcelData(item) {
-    try {
-        // Export as CSV for better Excel compatibility
-        const csv = convertToCSV(item.tableData);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${item.title || 'excel-data'}-${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
-
-        toast.add({
-            severity: 'success',
-            summary: 'Data Exported',
-            detail: 'Data has been exported to CSV format',
-            life: 3000
-        });
-    } catch (error) {
-        // Fallback to JSON export if CSV conversion fails
-        const data = JSON.stringify(item.tableData, null, 2);
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${item.title || 'excel-data'}-${new Date().toISOString().split('T')[0]}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-
-        toast.add({
-            severity: 'success',
-            summary: 'Data Exported',
-            detail: 'Data has been exported as JSON format',
-            life: 3000
-        });
-    }
-}
-
-function importExcelData(item) {
-    // Create hidden file input
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json,.csv';
-    fileInput.style.display = 'none';
-
-    fileInput.onchange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const fileContent = e.target.result;
-                    let importedData;
-
-                    if (file.name.toLowerCase().endsWith('.csv')) {
-                        // Parse CSV file
-                        importedData = parseCSV(fileContent);
-                    } else {
-                        // Parse JSON file
-                        importedData = JSON.parse(fileContent);
-                    }
-
-                    if (Array.isArray(importedData) && importedData.length > 0) {
-                        // Ensure each row has required properties and generate IDs if missing
-                        const processedData = importedData.map((row, index) => ({
-                            $id: row.$id || row.id || index + 1,
-                            id: row.id || index + 1,
-                            ...row
-                        }));
-
-                        item.tableData = processedData;
-                        toast.add({
-                            severity: 'success',
-                            summary: 'Data Imported',
-                            detail: `Successfully imported ${processedData.length} rows`,
-                            life: 3000
-                        });
-                    } else {
-                        throw new Error('Invalid data format or empty file');
-                    }
-                } catch (error) {
-                    toast.add({
-                        severity: 'error',
-                        summary: 'Import Failed',
-                        detail: 'Invalid file format. Please upload a valid CSV or JSON file.',
-                        life: 5000
-                    });
-                }
-            };
-            reader.readAsText(file);
-        }
-        document.body.removeChild(fileInput);
-    };
-
-    document.body.appendChild(fileInput);
-    fileInput.click();
-}
-
-function resetExcelData(item) {
-    item.tableData = generateSampleTableData();
-    toast.add({
-        severity: 'info',
-        summary: 'Data Reset',
-        detail: 'Excel data has been reset to sample data',
-        life: 2000
-    });
-}
-
-function onExcelCellEditComplete(event) {
-    const { data, newValue, field } = event;
-    data[field] = newValue;
-
-    toast.add({
-        severity: 'success',
-        summary: 'Cell Updated',
-        detail: `Updated ${field}`,
-        life: 1000
     });
 }
 
@@ -1124,38 +843,33 @@ function convertToCSV(data) {
     return [headers, ...rows].join('\n');
 }
 
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) return [];
+// Converts flat Table() output rows into TreeTable's nested {key, data, children}
+// shape, using "id"/"parentId" fields on each row to establish parent/child
+// links (rows without a matching parentId become root nodes).
+function buildTreeFromRows(rows, dataFields) {
+    const byId = new Map();
+    rows.forEach((row) => {
+        const data = {};
+        dataFields.forEach((f) => { data[f] = row[f]; });
+        byId.set(String(row.id), { key: String(row.id), data, children: [] });
+    });
 
-    const headers = lines[0].split(',').map((header) => header.trim().replace(/"/g, ''));
-    const data = [];
+    const roots = [];
+    rows.forEach((row) => {
+        const node = byId.get(String(row.id));
+        const parentId = row.parentId;
+        const parent = parentId !== undefined && parentId !== null && parentId !== '' ? byId.get(String(parentId)) : null;
+        if (parent) parent.children.push(node);
+        else roots.push(node);
+    });
 
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map((value) => value.trim().replace(/"/g, ''));
-        const row = {};
-
-        headers.forEach((header, index) => {
-            let value = values[index] || '';
-
-            // Try to convert numeric values
-            if (!isNaN(value) && value !== '') {
-                value = Number(value);
-            }
-
-            // Convert boolean-like values
-            if (value === 'true') value = true;
-            if (value === 'false') value = false;
-            if (value === 'Y') value = 'Y';
-            if (value === 'N') value = 'N';
-
-            row[header] = value;
-        });
-
-        data.push(row);
-    }
-
-    return data;
+    // Match generateTreeData()'s convention: leaf nodes have no children key.
+    const strip = (node) => {
+        if (node.children.length === 0) delete node.children;
+        else node.children.forEach(strip);
+    };
+    roots.forEach(strip);
+    return roots;
 }
 
 // TreeTable helper functions
@@ -1325,14 +1039,34 @@ function refreshImage(item) {
     });
 }
 
-// ToggleButton helper functions
-function onToggleChange(item, event) {
-    toast.add({
-        severity: 'info',
-        summary: 'Toggle Changed',
-        detail: `Toggle is now ${event.value ? 'ON' : 'OFF'}`,
-        life: 2000
-    });
+// Opens a file picker, reads the chosen image as a base64 data URL, and
+// stores it directly on the widget so it's saved with the rest of the
+// dashboard JSON (no separate asset storage/upload endpoint needed).
+function selectImageFile(item) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+
+    fileInput.onchange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                item.src = e.target.result;
+                item.alt = file.name;
+                toast.add({ severity: 'success', summary: 'Image Selected', detail: file.name, life: 2000 });
+            };
+            reader.onerror = () => {
+                toast.add({ severity: 'error', summary: 'Read Failed', detail: 'Could not read the selected image file.', life: 3000 });
+            };
+            reader.readAsDataURL(file);
+        }
+        document.body.removeChild(fileInput);
+    };
+
+    document.body.appendChild(fileInput);
+    fileInput.click();
 }
 
 // Select widget helpers
@@ -1706,10 +1440,9 @@ function exportDashboard() {
                 version: '1.0',
                 componentCount: layout.value.componentes.length,
                 chartCount: layout.value.componentes.filter((c) => isChartType(c.type)).length,
-                excelCount: layout.value.componentes.filter((c) => c.type === 'ExcelEditor').length,
                 dataTableCount: layout.value.componentes.filter((c) => c.type === 'DataTable').length,
                 treeTableCount: layout.value.componentes.filter((c) => c.type === 'TreeTable').length,
-                inputCount: layout.value.componentes.filter((c) => ['ToggleButton', 'Select', 'InputText'].includes(c.type)).length,
+                inputCount: layout.value.componentes.filter((c) => ['Select', 'InputText'].includes(c.type)).length,
                 imageCount: layout.value.componentes.filter((c) => c.type === 'Image').length
             }
         };
@@ -1845,6 +1578,12 @@ const handleWidgetOutput = (e) => {
     } else if (dataType === 'Table' && widget.type === 'DataTable') {
         widget.columns = (payload.columns || []).map(col => ({ field: col, header: col }));
         widget.tableData = payload.rows || [];
+    } else if (dataType === 'Table' && widget.type === 'TreeTable') {
+        // "id"/"parentId" columns establish the tree; everything else is displayed data.
+        const dataFields = (payload.columns || []).filter((c) => c !== 'id' && c !== 'parentId');
+        widget.columns = dataFields.map((f, i) => ({ field: f, header: f, expander: i === 0 }));
+        widget.treeData = buildTreeFromRows(payload.rows || [], dataFields);
+        widget.expandedKeys = {};
     } else if (dataType === 'StatReport' && widget.type !== 'FunctOutput') {
         widget.statReportData = payload;
         showStatReportDialog.value = true;
@@ -1938,8 +1677,45 @@ async function runWidgetScript(item) {
     }
 }
 
+// Sample Chart() calls per chart type, shown as a starting point when a
+// chart widget's script is bound for the first time.
+const CHART_SCRIPT_EXAMPLES = {
+    bar: `Chart("bar", Array("Jan", "Feb", "Mar", "Apr"), Array(12, 19, 7, 15), "Monthly Sales");`,
+    line: `Chart("line", Array("Jan", "Feb", "Mar", "Apr"), Array(5, 9, 4, 12), "Trend");`,
+    area: `Chart("area", Array("Jan", "Feb", "Mar", "Apr"), Array(3, 8, 5, 10), "Cumulative Usage");`,
+    pie: `Chart("pie", Array("Red", "Green", "Blue"), Array(30, 45, 25), "Color Split");`,
+    doughnut: `Chart("doughnut", Array("Desktop", "Mobile", "Tablet"), Array(55, 35, 10), "Traffic Source");`,
+    scatter: `Chart("scatter", Array("1", "2", "3", "4"), Array(2, 7, 3, 9), "Correlation");`,
+    bubble: `Chart("bubble", Array("A", "B", "C"), Array(4, 8, 6), "Bubble Sizes");`,
+    radar: `Chart("radar", Array("Speed", "Power", "Range", "Comfort"), Array(70, 85, 60, 90), "Vehicle Profile");`,
+    polarArea: `Chart("polarArea", Array("N", "E", "S", "W"), Array(20, 35, 15, 30), "Wind Direction");`,
+    mixed: `Chart("bar", Array("Jan", "Feb", "Mar"), Array(10, 20, 15), "Revenue");`
+};
+
+// Sample Table() call demonstrating the "id"/"parentId" convention TreeTable's
+// script binding expects (see buildTreeFromRows / handleWidgetOutput above).
+const TREETABLE_SCRIPT_EXAMPLE = `// Each row needs an "id" and a "parentId" ("" = root node).
+var columns = Array("id", "parentId", "name", "size");
+var rows = Array(
+    DataTableLibrary.MakeRow(columns, Array("1", "", "Engineering", "120")),
+    DataTableLibrary.MakeRow(columns, Array("2", "1", "Backend", "45")),
+    DataTableLibrary.MakeRow(columns, Array("3", "1", "Frontend", "38")),
+    DataTableLibrary.MakeRow(columns, Array("4", "2", "Platform Team", "12"))
+);
+Table(rows, "Org Chart");`;
+
+function exampleScriptFor(item) {
+    if (item.type === 'TreeTable') return TREETABLE_SCRIPT_EXAMPLE;
+    if (isChartType(item.type)) return CHART_SCRIPT_EXAMPLES[getChartType(item.type)] || CHART_SCRIPT_EXAMPLES.bar;
+    return '';
+}
+
 function openWidgetScriptEditor(item) {
     editingScriptWidget.value = item;
+    if (!item.scriptCode) {
+        const example = exampleScriptFor(item);
+        if (example) item.scriptCode = example;
+    }
     widgetScriptDialog.value = true;
 }
 
@@ -2197,6 +1973,24 @@ function toggleTreeNode(item, node) {
 }
 
 function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
+
+// Flattens item.treeData into a display-ready list of { node, level } pairs,
+// recursing into a node's children only while it's present in expandedKeys.
+// Table rows are rendered from this flat list instead of iterating treeData
+// directly, so expanding a node actually reveals its children.
+function getVisibleTreeNodes(item) {
+    const result = [];
+    function walk(nodes, level) {
+        for (const node of nodes) {
+            result.push({ node, level });
+            if (node.children?.length > 0 && item.expandedKeys?.[node.key]) {
+                walk(node.children, level + 1);
+            }
+        }
+    }
+    walk(item.treeData || [], 0);
+    return result;
+}
 </script>
 
 <template>
@@ -2270,7 +2064,10 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
     <grid-layout v-model:layout="layout.componentes" :col-num="15" :row-height="40" :auto-size="true" is-draggable is-resizable vertical-compact use-css-transforms v-if="renderComponent">
         <grid-item v-for="item in layout.componentes" :static="item.static" :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i" :key="item.i" class="grid-item-container">
             <!-- Text Component -->
-            <div v-if="item.type === 'Text'" class="w-full h-full flex items-center justify-center">
+            <div v-if="item.type === 'Text'" class="relative group w-full h-full flex items-center justify-center">
+                <Button variant="ghost" size="icon" class="absolute top-1 right-1 h-6 w-6 text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity z-10" @click="removeComponent(item.i)" title="Remove">
+                    <Trash2 class="w-3 h-3 text-xs" />
+                </Button>
                 <div
                     v-if="!item.editing"
                     class="cursor-pointer p-2 w-full text-center hover:bg-muted/50 rounded"
@@ -2441,6 +2238,12 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="collapseAllTreeNodes(item)" title="Collapse All">
                             <Minus class="w-3 h-3 text-xs" />
                         </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script bound'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
+                            <RefreshCw class="w-3 h-3 text-xs" />
+                        </Button>
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="openWidgetScriptEditor(item)" title="Bind Script">
+                            <Code class="w-3 h-3 text-xs" />
+                        </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
                             <Trash2 class="w-3 h-3 text-xs" />
                         </Button>
@@ -2457,15 +2260,14 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <!-- Flattened Tree Rendering Implementation Strategy (Requires logic updates) -->
-                            <TableRow v-for="(node, index) in item.treeData" :key="node.key || index" class="hover:bg-muted/30 transition-colors">
-                                <TableCell v-for="(col, colIndex) in item.columns" :key="col.field">
-                                    <div class="flex items-center gap-2" :style="{ paddingLeft: col.expander ? `${(node.level || 0) * 1.5}rem` : '0' }">
-                                        <Button v-if="col.expander && node.children && node.children.length > 0" variant="ghost" size="icon" class="h-5 w-5 p-0" @click="toggleTreeNode(item, node)">
-                                            <component :is="isNodeExpanded(item, node) ? ChevronDown : ChevronRight" class="w-3 h-3 text-[10px]" />
+                            <TableRow v-for="entry in getVisibleTreeNodes(item)" :key="entry.node.key" class="hover:bg-muted/30 transition-colors">
+                                <TableCell v-for="col in item.columns" :key="col.field">
+                                    <div class="flex items-center gap-2" :style="{ paddingLeft: col.expander ? `${entry.level * 1.5}rem` : '0' }">
+                                        <Button v-if="col.expander && entry.node.children && entry.node.children.length > 0" variant="ghost" size="icon" class="h-5 w-5 p-0" @click="toggleTreeNode(item, entry.node)">
+                                            <component :is="isNodeExpanded(item, entry.node) ? ChevronDown : ChevronRight" class="w-3 h-3 text-[10px]" />
                                         </Button>
                                         <span v-else-if="col.expander" class="w-5 inline-block"></span>
-                                        <span>{{ node.data[col.field] }}</span>
+                                        <span>{{ entry.node.data[col.field] }}</span>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -2490,10 +2292,13 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                         </Button>
                     </div>
                     <div class="image-controls flex gap-1">
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="selectImageFile(item)" title="Select Image">
+                            <Upload class="w-3 h-3 text-xs" />
+                        </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="item.preview = !item.preview" :title="item.preview ? 'Disable Preview' : 'Enable Preview'">
                             <ZoomIn class="w-3 h-3 text-xs" />
                         </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="refreshImage(item)" title="Refresh Image">
+                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="refreshImage(item)" title="Refresh Sample Image">
                             <RefreshCw class="w-3 h-3 text-xs" />
                         </Button>
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
@@ -2504,43 +2309,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 
                 <div class="image-content flex-1 flex items-center justify-center overflow-hidden bg-muted/20 rounded">
                     <img :src="item.src" :alt="item.alt" class="object-contain max-h-full max-w-full" :class="{ 'cursor-zoom-in': item.preview, 'w-full h-full object-cover': !item.preview }" />
-                </div>
-            </div>
-
-            <!-- ToggleButton Component -->
-            <div v-else-if="item.type === 'ToggleButton'" class="toggle-container flex flex-col h-full border rounded-md p-2 bg-card">
-                <div class="toggle-header flex justify-between items-center mb-2">
-                    <div v-if="!item.editing" class="cursor-pointer hover:underline font-medium text-sm" @click="item.editing = true">
-                        {{ item.title || 'Toggle Button' }}
-                    </div>
-                    <div v-else class="flex items-center gap-1">
-                        <Input v-model="item.title" class="h-7 text-sm" @keyup.enter="item.editing = false" />
-                        <Button variant="ghost" size="icon" class="h-6 w-6 text-destructive" @click="item.editing = false">
-                            <X class="w-3 h-3 text-xs" />
-                        </Button>
-                    </div>
-                    <div class="toggle-controls">
-                        <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
-                            <Trash2 class="w-3 h-3 text-xs" />
-                        </Button>
-                    </div>
-                </div>
-
-                <div class="toggle-content flex-1 flex flex-col items-center justify-center gap-4">
-                    <div class="flex items-center space-x-2">
-                        <Switch
-                            :id="`switch-${item.i}`"
-                            :checked="item.checked"
-                            @update:checked="
-                                (val) => {
-                                    item.checked = val;
-                                    onToggleChange(item, val);
-                                }
-                            "
-                        />
-                        <Label :for="`switch-${item.i}`">{{ item.checked ? item.onLabel || 'ON' : item.offLabel || 'OFF' }}</Label>
-                    </div>
-                    <div class="toggle-status text-sm text-muted-foreground">Status: {{ item.checked ? 'ON' : 'OFF' }}</div>
                 </div>
             </div>
 
@@ -2639,117 +2407,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
             </div>
 
             <!-- Excel Editor Component -->
-            <div v-else-if="item.type === 'ExcelEditor'" class="excel-container flex flex-col h-full border rounded-md p-2 bg-card">
-                <div class="excel-header flex justify-between items-center mb-2">
-                    <div v-if="!item.editing" class="cursor-pointer hover:underline font-medium text-sm" @click="item.editing = true">
-                        {{ item.title || 'Excel Editor' }}
-                    </div>
-                    <div v-else class="flex items-center gap-1">
-                        <Input v-model="item.title" class="h-7 text-sm" @keyup.enter="item.editing = false" />
-                        <Button variant="ghost" size="icon" class="h-6 w-6 text-destructive" @click="item.editing = false">
-                            <X class="w-3 h-3 text-xs" />
-                        </Button>
-                    </div>
-                    <div class="excel-controls flex gap-1 items-center">
-                        <Button variant="ghost" size="icon" class="h-7 w-7 text-green-600 hover:text-green-700" @click="addExcelRow(item)" title="Add Row">
-                            <Plus class="w-3 h-3 text-xs" />
-                        </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="exportExcelData(item)" title="Export Data">
-                            <Download class="w-3 h-3 text-xs" />
-                        </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="importExcelData(item)" title="Import Data">
-                            <Upload class="w-3 h-3 text-xs" />
-                        </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="resetExcelData(item)" title="Reset Data">
-                            <RefreshCw class="w-3 h-3 text-xs" />
-                        </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10" @click="removeComponent(item.i)" title="Remove">
-                            <Trash2 class="w-3 h-3 text-xs" />
-                        </Button>
-                    </div>
-                </div>
-
-                <div class="overflow-auto border rounded-md flex-1 custom-scroll" :style="{ maxHeight: getExcelHeight(item.h) }">
-                    <Table>
-                        <TableHeader class="sticky top-0 bg-secondary/80 backdrop-blur-sm z-10">
-                            <TableRow>
-                                <TableHead v-for="field in item.fields" :key="field.name" class="font-semibold text-xs min-w-[120px]">
-                                    {{ field.label }}
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="(data, index) in item.tableData" :key="data.id || index" class="hover:bg-muted/30 transition-colors">
-                                <TableCell v-for="field in item.fields" :key="field.name" class="p-1">
-                                    <template v-if="!field.readonly">
-                                        <Input
-                                            v-if="field.type === 'string'"
-                                            v-model="data[field.name]"
-                                            @keydown.enter="$event.target.blur()"
-                                            class="h-8 text-xs"
-                                            @blur="onExcelCellEditComplete({ data, field: field.name, newValue: data[field.name] })"
-                                        />
-                                        <Input
-                                            v-else-if="field.type === 'number'"
-                                            type="number"
-                                            v-model="data[field.name]"
-                                            @keydown.enter="$event.target.blur()"
-                                            class="h-8 text-xs"
-                                            @blur="onExcelCellEditComplete({ data, field: field.name, newValue: data[field.name] })"
-                                        />
-                                        <Input v-else-if="field.type === 'date'" type="date" v-model="data[field.name]" class="h-8 text-xs w-full block" @blur="onExcelCellEditComplete({ data, field: field.name, newValue: data[field.name] })" />
-                                        <select
-                                            v-else-if="field.type === 'select'"
-                                            v-model="data[field.name]"
-                                            class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
-                                            @change="onExcelCellEditComplete({ data, field: field.name, newValue: data[field.name] })"
-                                        >
-                                            <option v-for="opt in field.options" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
-                                        </select>
-                                        <div v-else-if="field.type === 'checkYN'" class="flex items-center justify-center h-full">
-                                            <Checkbox
-                                                :checked="data[field.name] === 'Y' || data[field.name] === true"
-                                                @update:checked="
-                                                    (val) => {
-                                                        data[field.name] = val ? 'Y' : 'N';
-                                                        onExcelCellEditComplete({ data, field: field.name, newValue: data[field.name] });
-                                                    }
-                                                "
-                                            />
-                                        </div>
-                                        <Input v-else v-model="data[field.name]" @keydown.enter="$event.target.blur()" class="h-8 text-xs" @blur="onExcelCellEditComplete({ data, field: field.name, newValue: data[field.name] })" />
-                                    </template>
-                                    <template v-else>
-                                        <div class="px-2 py-1 text-sm">
-                                            <span v-if="field.type === 'checkYN'">
-                                                {{ data[field.name] === 'Y' || data[field.name] === true ? 'Yes' : 'No' }}
-                                            </span>
-                                            <span v-else-if="field.toText">
-                                                {{ field.toText(data[field.name]) }}
-                                            </span>
-                                            <span v-else>
-                                                {{ data[field.name] }}
-                                            </span>
-                                        </div>
-                                    </template>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-if="!item.tableData || item.tableData.length === 0">
-                                <TableCell :colspan="item.fields.length" class="text-center py-4 text-muted-foreground">No data available</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
-                <!-- Pagination Placeholder -->
-                <div class="flex items-center justify-between px-2 py-1 border-t text-xs text-muted-foreground bg-background">
-                    <div>Showing {{ item.tableData?.length || 0 }} entries</div>
-                    <div class="flex gap-1">
-                        <Button variant="outline" size="icon" class="h-6 w-6"><ChevronLeft class="w-3 h-3 text-[10px]" /></Button>
-                        <Button variant="outline" size="icon" class="h-6 w-6"><ChevronRight class="w-3 h-3 text-[10px]" /></Button>
-                    </div>
-                </div>
-            </div>
-
             <!-- SqlWidget: execute a saved SQL query and display with configured visualization -->
             <div v-else-if="item.type === 'SqlWidget'" class="sql-widget-container flex flex-col h-full border rounded-md p-2 bg-card">
                 <div class="flex justify-between items-center mb-2 min-h-[2rem]">
@@ -3081,7 +2738,12 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
                 <DialogTitle>Bind Script to Widget: {{ editingScriptWidget?.title || editingScriptWidget?.type }}</DialogTitle>
             </DialogHeader>
             <div class="py-2 text-sm text-muted-foreground mb-2">
-                Write a script using <code class="bg-muted px-1 rounded">Table(data, "title")</code>, <code class="bg-muted px-1 rounded">Chart("bar", labels, values, "title")</code>, or <code class="bg-muted px-1 rounded">StatReport("title", sections)</code>.
+                <template v-if="editingScriptWidget?.type === 'TreeTable'">
+                    Write a script that calls <code class="bg-muted px-1 rounded">Table(rows, "title")</code> with rows containing an <code class="bg-muted px-1 rounded">id</code> and <code class="bg-muted px-1 rounded">parentId</code> column — a sample is pre-filled below.
+                </template>
+                <template v-else>
+                    Write a script using <code class="bg-muted px-1 rounded">Table(data, "title")</code>, <code class="bg-muted px-1 rounded">Chart("bar", labels, values, "title")</code>, or <code class="bg-muted px-1 rounded">StatReport("title", sections)</code>.
+                </template>
             </div>
             <div v-if="editingScriptWidget">
                 <Textarea
@@ -3500,24 +3162,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
     border-radius: 8px;
 }
 
-.excel-editor .vue-excel-editor,
-.excel-editor .systable {
-    background: var(--p-surface-900);
-    color: var(--p-text-color);
-}
-
-.excel-editor .systable th {
-    background: var(--p-surface-700);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-border);
-}
-
-.excel-editor .systable td {
-    background: var(--p-surface-800);
-    color: var(--p-text-color);
-    border-color: var(--p-surface-border);
-}
-
 .custom-datatable,
 .custom-treetable {
     background: var(--p-surface-800);
@@ -3716,111 +3360,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 
     .menu-item-label {
         font-size: 1rem;
-    }
-}
-
-/* Excel Editor specific styles */
-.excel-container {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 0.75rem;
-    box-sizing: border-box;
-}
-
-.excel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    min-height: 2rem;
-    flex-shrink: 0;
-}
-
-.excel-header h5 {
-    color: var(--text-color);
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0;
-    cursor: pointer;
-}
-
-.excel-controls {
-    display: flex;
-    gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.excel-container:hover .excel-controls {
-    opacity: 1;
-}
-
-.excel-controls .p-button {
-    min-width: auto;
-    padding: 0.25rem;
-}
-
-.excel-editor {
-    flex: 1;
-    min-height: 0;
-    border: 1px solid var(--surface-border);
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-/* Override Vue Excel Editor styles for theme integration */
-.excel-editor .vue-excel-editor {
-    background: var(--surface-card);
-    color: var(--text-color);
-}
-
-.excel-editor .systable {
-    background: var(--surface-card);
-    color: var(--text-color);
-}
-
-.excel-editor .systable th {
-    background: var(--surface-section);
-    color: var(--text-color);
-    border-color: var(--surface-border);
-}
-
-.excel-editor .systable td {
-    border-color: var(--surface-border);
-    color: var(--text-color);
-}
-
-.excel-editor .systable tr:hover {
-    background: var(--surface-hover);
-}
-
-.excel-editor .systable tr.select {
-    background: var(--primary-color) !important;
-    color: var(--primary-color-text) !important;
-}
-
-/* Responsive adjustments for Excel Editor */
-@media (max-width: 768px) {
-    .excel-container {
-        padding: 0.5rem;
-    }
-
-    .excel-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-
-    .excel-controls {
-        opacity: 1;
-        align-self: flex-end;
-        flex-wrap: wrap;
-    }
-
-    .excel-controls .p-button {
-        padding: 0.5rem;
     }
 }
 
@@ -4038,68 +3577,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
     box-shadow: var(--shadow-2);
 }
 
-/* ToggleButton specific styles */
-.toggle-container {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 0.75rem;
-    box-sizing: border-box;
-}
-
-.toggle-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    min-height: 2rem;
-    flex-shrink: 0;
-}
-
-.toggle-header h5 {
-    color: var(--text-color);
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0;
-    cursor: pointer;
-}
-
-.toggle-controls {
-    display: flex;
-    gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.toggle-container:hover .toggle-controls {
-    opacity: 1;
-}
-
-.toggle-controls .p-button {
-    min-width: auto;
-    padding: 0.25rem;
-}
-
-.toggle-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.custom-toggle {
-    font-size: 1.1rem;
-}
-
-.toggle-status {
-    color: var(--text-color-secondary);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
 /* Select specific styles */
 .select-container {
     height: 100%;
@@ -4259,7 +3736,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 
     .treetable-header,
     .image-header,
-    .toggle-header,
     .select-header,
     .input-header {
         flex-direction: column;
@@ -4269,7 +3745,6 @@ function isNodeExpanded(item, node) { return !!item.expandedKeys[node.key]; }
 
     .treetable-controls,
     .image-controls,
-    .toggle-controls,
     .select-controls,
     .input-controls {
         opacity: 1;
