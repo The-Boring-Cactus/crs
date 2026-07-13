@@ -1225,16 +1225,16 @@ watch(() => projectStore.currentProjectId, () => {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--secondary, #f1f5f9);
+    background: hsl(var(--secondary));
 }
 
 .excel-corner-cell {
     width: 50px;
     min-width: 50px;
     height: 32px;
-    border-right: 1px solid var(--border, #e2e8f0);
-    border-bottom: 1px solid var(--border, #e2e8f0);
-    background: var(--secondary, #f1f5f9);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--secondary));
 }
 
 .excel-column-header {
@@ -1245,16 +1245,16 @@ watch(() => projectStore.currentProjectId, () => {
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    border-right: 1px solid var(--border, #e2e8f0);
-    border-bottom: 1px solid var(--border, #e2e8f0);
-    background: var(--secondary, #f1f5f9);
-    color: var(--foreground, #0f172a);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--secondary));
+    color: hsl(var(--foreground));
     font-size: 0.85rem;
     user-select: none;
 }
 
 .excel-row { display: flex; }
-.excel-row:hover .excel-cell { background: var(--muted, #f8fafc); }
+.excel-row:hover .excel-cell { background: hsl(var(--muted)); }
 
 .excel-row-header {
     width: 50px;
@@ -1265,10 +1265,10 @@ watch(() => projectStore.currentProjectId, () => {
     justify-content: center;
     font-size: 0.8rem;
     font-weight: 600;
-    border-right: 1px solid var(--border, #e2e8f0);
-    border-bottom: 1px solid var(--border, #e2e8f0);
-    background: var(--secondary, #f1f5f9);
-    color: var(--muted-foreground, #64748b);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--secondary));
+    color: hsl(var(--muted-foreground));
     user-select: none;
 }
 
@@ -1276,8 +1276,8 @@ watch(() => projectStore.currentProjectId, () => {
     min-width: 150px;
     flex: 1;
     height: 30px;
-    border-right: 1px solid var(--border, #e2e8f0);
-    border-bottom: 1px solid var(--border, #e2e8f0);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
     padding: 0;
     display: flex;
     align-items: center;

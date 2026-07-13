@@ -1216,7 +1216,7 @@ onUnmounted(() => {
     align-items: center;
     padding: 0.5rem 0.75rem;
     background: var(--card);
-    border: 1px solid var(--border);
+    border: 1px solid hsl(var(--border));
     border-radius: 6px;
     min-height: 40px;
 }
@@ -1237,7 +1237,7 @@ onUnmounted(() => {
 .excel-grid-wrapper {
     flex: 1;
     overflow: auto;
-    border: 2px solid var(--border);
+    border: 2px solid hsl(var(--border));
     border-radius: 8px;
     background: var(--background);
     color: var(--foreground);
@@ -1256,8 +1256,8 @@ onUnmounted(() => {
     width: 50px;
     min-width: 50px;
     height: 30px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
     background: var(--secondary);
 }
 
@@ -1269,8 +1269,8 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
     background: var(--muted);
     color: var(--foreground);
     font-size: 0.85rem;
@@ -1299,8 +1299,8 @@ onUnmounted(() => {
     justify-content: center;
     font-size: 0.8rem;
     font-weight: 600;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
     background: var(--muted);
     color: var(--muted-foreground);
     user-select: none;
@@ -1315,8 +1315,8 @@ onUnmounted(() => {
     min-width: 100px;
     width: 100px;
     height: 28px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
     padding: 0;
     cursor: cell;
     position: relative;

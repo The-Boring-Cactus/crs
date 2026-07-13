@@ -28,8 +28,6 @@ backend, talking to whichever relational database you point it at.
 - **Share dashboards publicly.** Generate a public share link that renders a read-only,
   unauthenticated view of a dashboard — including live SQL/script widgets and
   variable-driven filters.
-- **Manage users and connections.** Multi-user accounts (JWT-based auth) and reusable,
-  optionally shared database connections.
 
 ## How it's built
 
