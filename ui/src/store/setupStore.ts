@@ -6,7 +6,10 @@ export const useSetupStore = defineStore("setup", () => {
   const isLoading = ref(false);
   const error = ref(null);
 
-  const API_BASE = "http://localhost:9876/api/setup";
+  // Empty VITE_API_URL (the production default) makes this a same-origin
+  // relative path, so it works regardless of which host port the container
+  // is published on — see ui/.env vs ui/.env.production.
+  const API_BASE = `${import.meta.env.VITE_API_URL}/api/setup`;
 
   async function checkStatus() {
     isLoading.value = true;

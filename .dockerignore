@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+ui/node_modules/
+ui/dist/
+.git/
+.idea/
+.claude/
+*.user
+*.DotSettings.user
+docker-compose.override.yml
