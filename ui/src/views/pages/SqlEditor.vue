@@ -21,10 +21,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import BaseChart from '@/components/BaseChart.vue';
 import BokehChart from '@/components/BokehChart.vue';
+import ExportMenu from '@/components/ExportMenu.vue';
 import { buildBokehJson } from '@/helpers/bokehUtils';
 import {
     Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, RefreshCw,
-    Copy, Search, Download, ChevronLeft, ChevronRight, Info, Trash2,
+    Copy, Search, ChevronLeft, ChevronRight, Info, Trash2,
     Table2, LayoutList, TrendingUp, BarChart2, BarChart3, AreaChart, PieChart,
     ScatterChart, BarChart4, Settings2, Braces
 } from 'lucide-vue-next';
@@ -306,6 +307,21 @@ const pivotData = computed(() => {
     return { columns: colValues, rows };
 });
 
+// Rows/columns to hand to ExportMenu -- mirrors whichever tabular view (table
+// or pivot) is currently on screen.
+const exportTableData = computed(() => {
+    if (vizType.value === 'pivot' && pivotData.value) {
+        const columns = [
+            { field: '__row', header: vizConfig.pivotRowField },
+            ...pivotData.value.columns.map(c => ({ field: c, header: c })),
+            { field: '__total__', header: 'Total' }
+        ];
+        const rows = pivotData.value.rows.map(row => ({ __row: row.label, ...row.values }));
+        return { rows, columns };
+    }
+    return { rows: queryResults.value, columns: queryColumns.value };
+});
+
 // Script management
 const currentScript = reactive({
     id: null,
@@ -558,30 +574,6 @@ const formatCellValue = (value) => {
     return value;
 };
 
-const exportResults = () => {
-    if (queryResults.value.length === 0) return;
-    const csv = [
-        queryColumns.value.map(col => col.header).join(','),
-        ...queryResults.value.map(row =>
-            queryColumns.value.map(col => {
-                const value = row[col.field];
-                if (value === null || value === undefined) return '';
-                if (typeof value === 'string' && value.includes(',')) return `"${value.replace(/"/g, '""')}"`;
-                return value;
-            }).join(',')
-        )
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `query-results-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-    toast('Export Complete', { description: 'Query results exported to CSV file' });
-};
-
 const saveVariableDef = async () => {
     if (!newVar.name.trim()) return;
     await variableStore.saveDefinition({ ...newVar }, proxy.$socket);
@@ -753,9 +745,7 @@ watch(() => projectStore.currentProjectId, () => {
                 <h6 class="text-sm font-semibold">Query Results</h6>
                 <div class="flex items-center gap-2">
                     <Badge v-if="queryResults.length > 0" variant="secondary">{{ queryResults.length }} rows</Badge>
-                    <Button variant="outline" size="sm" @click="exportResults" :disabled="queryResults.length === 0" class="gap-2">
-                        <Download class="w-4 h-4" />Export
-                    </Button>
+                    <ExportMenu :rows="exportTableData.rows" :columns="exportTableData.columns" filename="query-results" sheet-name="Query Results" />
                 </div>
             </div>
 

@@ -51,6 +51,7 @@ import GridItem from '@/components/draggable/GridItem.vue';
 import BaseChart from '@/components/BaseChart.vue';
 import BokehChart from '@/components/BokehChart.vue';
 import MarkdownReport from '@/components/MarkdownReport.vue';
+import ExportMenu from '@/components/ExportMenu.vue';
 import FormulaBlock from '@/components/FormulaBlock.vue';
 import { buildBokehJson } from '@/helpers/bokehUtils';
 import { nextTick, ref, watch, computed, getCurrentInstance, onMounted, onUnmounted } from 'vue';
@@ -810,37 +811,6 @@ function addDataTableRow(item) {
         detail: 'New customer has been added to the table',
         life: 2000
     });
-}
-
-function exportDataTable(item) {
-    const csv = convertToCSV(item.tableData);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${item.title || 'datatable'}-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-
-    toast.add({
-        severity: 'success',
-        summary: 'Data Exported',
-        detail: 'Data has been exported to CSV',
-        life: 3000
-    });
-}
-
-function convertToCSV(data) {
-    if (!data || data.length === 0) return '';
-
-    const headers = Object.keys(data[0]).join(',');
-    const rows = data.map((row) =>
-        Object.values(row)
-            .map((value) => (typeof value === 'string' && value.includes(',') ? `"${value}"` : value))
-            .join(',')
-    );
-
-    return [headers, ...rows].join('\n');
 }
 
 // Converts flat Table() output rows into TreeTable's nested {key, data, children}
@@ -1991,6 +1961,28 @@ function getVisibleTreeNodes(item) {
     walk(item.treeData || [], 0);
     return result;
 }
+
+// Flattens the currently-visible (expanded) tree rows into plain objects for export.
+function getTreeExportRows(item) {
+    return getVisibleTreeNodes(item).map(entry => entry.node.data);
+}
+
+// Rows/columns to hand to ExportMenu for a SqlWidget -- mirrors whichever
+// tabular view (table or pivot) is currently configured for the widget.
+function getSqlWidgetExportData(item) {
+    const viz = getSqlWidgetViz(item);
+    if (viz.type === 'pivot') {
+        const pivot = getSqlWidgetPivotData(item);
+        if (!pivot) return { rows: [], columns: [] };
+        const columns = [
+            { field: '__row', header: viz.pivotRowField || 'Row' },
+            ...pivot.columns.map(c => ({ field: c, header: c }))
+        ];
+        const rows = pivot.rows.map(row => ({ __row: row.label, ...row.values }));
+        return { rows, columns };
+    }
+    return { rows: item.queryResults || [], columns: item.queryColumns || [] };
+}
 </script>
 
 <template>
@@ -2155,9 +2147,7 @@ function getVisibleTreeNodes(item) {
                         <Button variant="ghost" size="icon" class="h-7 w-7 text-green-600 hover:text-green-700" @click="addDataTableRow(item)" title="Add Row">
                             <Plus class="w-3 h-3 text-xs" />
                         </Button>
-                        <Button variant="ghost" size="icon" class="h-7 w-7" @click="exportDataTable(item)" title="Export CSV">
-                            <Download class="w-3 h-3 text-xs" />
-                        </Button>
+                        <ExportMenu :rows="item.tableData" :columns="item.columns" :filename="item.title || 'datatable'" icon-only variant="ghost" size="icon-sm" />
                         <Button v-if="item.statReportData" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Stat Report">
                             <FileText class="w-3 h-3 text-xs" />
                         </Button>
@@ -2238,6 +2228,7 @@ function getVisibleTreeNodes(item) {
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="collapseAllTreeNodes(item)" title="Collapse All">
                             <Minus class="w-3 h-3 text-xs" />
                         </Button>
+                        <ExportMenu :rows="getTreeExportRows(item)" :columns="item.columns" :filename="item.title || 'treetable'" icon-only variant="ghost" size="icon-sm" />
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptCode ? 'Run Script' : 'No script bound'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
                             <RefreshCw class="w-3 h-3 text-xs" />
                         </Button>
@@ -2419,6 +2410,13 @@ function getVisibleTreeNodes(item) {
                     </div>
                     <div class="sql-widget-controls flex gap-1 shrink-0">
                         <span v-if="item.loading" class="text-xs text-muted-foreground mr-1 self-center">Running…</span>
+                        <ExportMenu
+                            v-if="['table', 'pivot'].includes(getSqlWidgetViz(item).type)"
+                            :rows="getSqlWidgetExportData(item).rows"
+                            :columns="getSqlWidgetExportData(item).columns"
+                            :filename="item.title || item.sqlScriptName || 'sql-widget'"
+                            icon-only variant="ghost" size="icon-sm"
+                        />
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="refreshSqlWidget(item)" title="Run Query">
                             <RefreshCw class="w-3 h-3" :class="item.loading ? 'animate-spin' : ''" />
                         </Button>
@@ -2553,6 +2551,7 @@ function getVisibleTreeNodes(item) {
                         <Button v-if="item.outputType === 'statreport'" variant="ghost" size="icon" class="h-7 w-7 text-violet-500" @click="viewWidgetStatReport(item)" title="View Full Report">
                             <FileText class="w-3 h-3" />
                         </Button>
+                        <ExportMenu v-if="item.outputType === 'table'" :rows="item.tableData" :columns="item.tableColumns" :filename="item.title || 'script-output'" icon-only variant="ghost" size="icon-sm" />
                         <Button variant="ghost" size="icon" class="h-7 w-7" @click="runWidgetScript(item)" :title="item.scriptId ? 'Run Script' : 'No script — select one first'" :class="widgetExecutingId === item.i ? 'animate-spin text-primary' : ''">
                             <RefreshCw class="w-3 h-3" />
                         </Button>
