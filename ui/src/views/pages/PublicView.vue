@@ -8,6 +8,7 @@ import FormulaBlock from '@/components/FormulaBlock.vue';
 import { buildBokehJson } from '@/helpers/bokehUtils';
 import GridLayout from '@/components/draggable/GridLayout.vue';
 import GridItem from '@/components/draggable/GridItem.vue';
+import ExportMenu from '@/components/ExportMenu.vue';
 import { BarChart2, LayoutDashboard, AlertCircle, RefreshCw, Loader2, ChevronDown, ChevronRight } from 'lucide-vue-next';
 import { useVariableStore } from '@/store/variableStore';
 
@@ -379,6 +380,28 @@ function getVisibleTreeNodes(item) {
     return result;
 }
 
+// Flattens the currently-visible (expanded) tree rows into plain objects for export.
+function getTreeExportRows(item) {
+    return getVisibleTreeNodes(item).map(entry => entry.node.data);
+}
+
+// Rows/columns to hand to ExportMenu for a SqlWidget -- mirrors whichever
+// tabular view (table or pivot) is currently configured for the widget.
+function getSqlWidgetExportData(item) {
+    const viz = getSqlWidgetViz(item);
+    if (viz.type === 'pivot') {
+        const pivot = getSqlWidgetPivotData(item);
+        if (!pivot) return { rows: [], columns: [] };
+        const columns = [
+            { field: '__row', header: viz.pivotRowField || 'Row' },
+            ...pivot.columns.map(c => ({ field: c, header: c }))
+        ];
+        const rows = pivot.rows.map(row => ({ __row: row.label, ...row.values }));
+        return { rows, columns };
+    }
+    return { rows: item.queryResults || [], columns: item.queryColumns || [] };
+}
+
 onMounted(async () => {
     const token = route.params.shareToken;
     try {
@@ -523,7 +546,10 @@ onUnmounted(() => {
 
                     <!-- DataTable (tableData stored at save time) -->
                     <div v-else-if="item.type === 'DataTable'" class="h-full border rounded-md overflow-auto bg-card">
-                        <div class="p-2 font-medium text-sm border-b">{{ item.title }}</div>
+                        <div class="p-2 font-medium text-sm border-b flex items-center justify-between gap-2">
+                            <span class="truncate">{{ item.title }}</span>
+                            <ExportMenu :rows="item.tableData" :columns="item.columns" :filename="item.title || 'datatable'" icon-only variant="ghost" size="icon-sm" />
+                        </div>
                         <table class="w-full text-xs">
                             <thead>
                                 <tr>
@@ -548,7 +574,10 @@ onUnmounted(() => {
 
                     <!-- Tree Table (treeData stored at save time) -->
                     <div v-else-if="item.type === 'TreeTable'" class="h-full border rounded-md overflow-auto bg-card p-2 flex flex-col">
-                        <div class="font-medium text-sm mb-2">{{ item.title || 'Tree Table' }}</div>
+                        <div class="font-medium text-sm mb-2 flex items-center justify-between gap-2">
+                            <span class="truncate">{{ item.title || 'Tree Table' }}</span>
+                            <ExportMenu :rows="getTreeExportRows(item)" :columns="item.columns" :filename="item.title || 'treetable'" icon-only variant="ghost" size="icon-sm" />
+                        </div>
                         <div class="flex-1 overflow-auto">
                             <table class="w-full text-xs">
                                 <thead>
@@ -582,16 +611,25 @@ onUnmounted(() => {
                         <div v-if="item.refreshing" class="absolute inset-0 bg-background/60 flex items-center justify-center z-10 rounded-md">
                             <Loader2 class="w-6 h-6 animate-spin text-primary" />
                         </div>
-                        <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center justify-between mb-2 gap-2">
                             <div class="font-medium text-sm truncate">{{ item.title || item.sqlScriptName || 'SQL Query' }}</div>
-                            <button
-                                v-if="item.sqlCode && item.sqlCode.match(/\{\{/)"
-                                class="text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
-                                title="Refresh with current variable values"
-                                @click="refreshPublicWidget(item)"
-                            >
-                                <RefreshCw class="w-3.5 h-3.5" />
-                            </button>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <ExportMenu
+                                    v-if="['table', 'pivot'].includes(getSqlWidgetViz(item).type)"
+                                    :rows="getSqlWidgetExportData(item).rows"
+                                    :columns="getSqlWidgetExportData(item).columns"
+                                    :filename="item.title || item.sqlScriptName || 'sql-widget'"
+                                    icon-only variant="ghost" size="icon-sm"
+                                />
+                                <button
+                                    v-if="item.sqlCode && item.sqlCode.match(/\{\{/)"
+                                    class="text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
+                                    title="Refresh with current variable values"
+                                    @click="refreshPublicWidget(item)"
+                                >
+                                    <RefreshCw class="w-3.5 h-3.5" />
+                                </button>
+                            </div>
                         </div>
                         <div class="flex-1 overflow-auto min-h-0">
                             <!-- Table view -->
@@ -676,7 +714,10 @@ onUnmounted(() => {
                         <div v-if="item.refreshing" class="absolute inset-0 bg-background/60 flex items-center justify-center z-10 rounded-md">
                             <Loader2 class="w-6 h-6 animate-spin text-primary" />
                         </div>
-                        <div class="font-medium text-sm mb-2">{{ item.title || 'Script Output' }}</div>
+                        <div class="font-medium text-sm mb-2 flex items-center justify-between gap-2">
+                            <span class="truncate">{{ item.title || 'Script Output' }}</span>
+                            <ExportMenu v-if="item.outputType === 'table'" :rows="item.tableData" :columns="item.tableColumns" :filename="item.title || 'script-output'" icon-only variant="ghost" size="icon-sm" />
+                        </div>
                         <div class="flex-1 overflow-auto min-h-0">
                             <!-- Chart output -->
                             <div v-if="item.outputType === 'chart' && item.chartData" class="h-full">
