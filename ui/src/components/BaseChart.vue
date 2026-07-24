@@ -3,12 +3,12 @@ import { computed, ref } from 'vue';
 import VChart from 'vue-echarts';
 // Import core from echarts to avoid full bundle if we want, but since this generic chart handles everything, import all is fine or necessary
 import * as echarts from 'echarts/core';
-import { LineChart, BarChart, PieChart, ScatterChart, RadarChart } from 'echarts/charts';
-import { TitleComponent, TooltipComponent, GridComponent, DatasetComponent, TransformComponent, LegendComponent, RadarComponent } from 'echarts/components';
+import { LineChart, BarChart, PieChart, ScatterChart, RadarChart, HeatmapChart, FunnelChart, GaugeChart } from 'echarts/charts';
+import { TitleComponent, TooltipComponent, GridComponent, DatasetComponent, TransformComponent, LegendComponent, RadarComponent, VisualMapComponent } from 'echarts/components';
 import { LabelLayout, UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 
-echarts.use([LineChart, BarChart, PieChart, ScatterChart, RadarChart, TitleComponent, TooltipComponent, GridComponent, DatasetComponent, TransformComponent, LegendComponent, RadarComponent, LabelLayout, UniversalTransition, CanvasRenderer]);
+echarts.use([LineChart, BarChart, PieChart, ScatterChart, RadarChart, HeatmapChart, FunnelChart, GaugeChart, TitleComponent, TooltipComponent, GridComponent, DatasetComponent, TransformComponent, LegendComponent, RadarComponent, VisualMapComponent, LabelLayout, UniversalTransition, CanvasRenderer]);
 
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ const props = defineProps({
     type: {
         type: String,
         required: true,
-        validator: (value) => ['line', 'bar', 'bar-h', 'pie', 'doughnut', 'polarArea', 'radar', 'scatter', 'bubble', 'area', 'mixed', 'waterfall'].includes(value)
+        validator: (value) => ['line', 'bar', 'bar-h', 'pie', 'doughnut', 'polarArea', 'radar', 'scatter', 'bubble', 'area', 'mixed', 'waterfall', 'heatmap', 'funnel', 'gauge'].includes(value)
     },
     data: {
         type: Object,
@@ -213,6 +213,87 @@ const chartOptions = computed(() => {
         return options;
     }
 
+    // Funnel: label/value pairs from the first dataset, like a pie chart
+    if (type === 'funnel' && datasets.length > 0) {
+        const ds = datasets[0];
+        const color = ds.backgroundColor || activePalette;
+        options.tooltip.trigger = 'item';
+        options.legend.show = props.showLegend && labels.length > 0;
+        options.series = [{
+            name: ds.label || 'Value',
+            type: 'funnel',
+            left: '10%',
+            width: '80%',
+            top: props.title ? '15%' : '5%',
+            bottom: props.showLegend ? '15%' : '5%',
+            sort: 'descending',
+            gap: 2,
+            label: { show: true, position: 'inside', color: '#fff' },
+            itemStyle: { borderColor: isDark ? '#18181b' : '#ffffff', borderWidth: 1 },
+            data: ds.data.map((val, i) => ({
+                value: Number(val) || 0,
+                name: labels[i] || `Category ${i + 1}`,
+                itemStyle: { color: Array.isArray(color) ? color[i % color.length] : activePalette[i % activePalette.length] }
+            }))
+        }];
+        return options;
+    }
+
+    // Gauge: a single KPI reading -- the sum of the first dataset's values, so
+    // it works whether the query already aggregates to one row or returns many.
+    if (type === 'gauge') {
+        const ds = datasets[0];
+        const value = (ds?.data || []).reduce((sum, v) => sum + (Number(v) || 0), 0);
+        const max = props.options?.gaugeMax ?? Math.max(10, Math.ceil((value * 1.2) / 10) * 10);
+        options.tooltip = undefined;
+        options.legend.show = false;
+        options.series = [{
+            type: 'gauge',
+            min: 0,
+            max,
+            radius: '90%',
+            progress: { show: true, width: 14 },
+            axisLine: { lineStyle: { width: 14 } },
+            axisLabel: { color: textColor, fontSize: 10 },
+            pointer: { show: true },
+            detail: { valueAnimation: true, color: textColor, fontSize: 24, offsetCenter: [0, '70%'] },
+            data: [{ value, name: ds?.label || props.title || '' }]
+        }];
+        return options;
+    }
+
+    // Heatmap: expects props.data = { labels (x categories), yLabels (y categories),
+    // datasets: [{ data: [[xLabel, yLabel, value], ...] }] } -- see pivotToHeatmapData().
+    if (type === 'heatmap') {
+        const yLabels = (props.data?.yLabels || []).map(String);
+        const cells = datasets[0]?.data || [];
+        const values = cells.map(c => Number(c[2]) || 0);
+        const min = values.length ? Math.min(...values) : 0;
+        const max = values.length ? Math.max(...values) : 1;
+
+        options.xAxis = { type: 'category', data: labels, splitArea: { show: true }, ...commonAxisOptions };
+        options.yAxis = { type: 'category', data: yLabels, splitArea: { show: true }, ...commonAxisOptions };
+        options.grid = { left: '3%', right: '4%', bottom: '15%', top: props.title ? '15%' : '5%', containLabel: true };
+        options.tooltip.trigger = 'item';
+        options.legend.show = false;
+        options.visualMap = {
+            min, max,
+            calculable: true,
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 0,
+            textStyle: { color: textColor },
+            inRange: { color: isDark ? ['#1e3a8a', '#60a5fa', '#fde047'] : ['#e0f2fe', '#0369a1'] }
+        };
+        options.series = [{
+            type: 'heatmap',
+            data: cells.map(c => [labels.indexOf(String(c[0])), yLabels.indexOf(String(c[1])), c[2]]),
+            label: { show: true, color: textColor },
+            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.4)' } }
+        }];
+        return options;
+    }
+
     datasets.forEach((ds, idx) => {
         let dsType = ds.type || type;
         const color = ds.backgroundColor || activePalette[idx % activePalette.length];
@@ -327,7 +408,10 @@ function getChartTypeName(type) {
         bubble: 'Bubble Chart',
         area: 'Area Chart',
         mixed: 'Mixed Chart',
-        waterfall: 'Waterfall Chart'
+        waterfall: 'Waterfall Chart',
+        heatmap: 'Heatmap',
+        funnel: 'Funnel Chart',
+        gauge: 'Gauge Chart'
     };
     return names[type] || type;
 }
@@ -343,7 +427,10 @@ function getChartDescription(type) {
         scatter: 'Shows correlation between two variables',
         bubble: 'Displays three dimensions of data',
         area: 'Line chart with filled area underneath',
-        mixed: 'Combines different chart types'
+        mixed: 'Combines different chart types',
+        heatmap: 'Shows value intensity across two categorical dimensions',
+        funnel: 'Visualizes stages of a process narrowing down',
+        gauge: 'Shows a single KPI value against a range'
     };
     return descriptions[type] || 'Chart visualization';
 }

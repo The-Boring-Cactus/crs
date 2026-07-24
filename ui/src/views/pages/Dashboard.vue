@@ -1851,6 +1851,25 @@ function getSqlWidgetPivotData(item) {
     };
 }
 
+// Reshapes pivot data (same row/column/value/aggregation config as the Pivot
+// view) into the {labels, yLabels, datasets} shape BaseChart's heatmap type expects.
+function getSqlWidgetHeatmapData(item) {
+    const pivot = getSqlWidgetPivotData(item);
+    if (!pivot) return null;
+    const cells = [];
+    pivot.rows.forEach(row => {
+        pivot.columns.forEach(col => {
+            const v = row.values[col];
+            if (v !== null && v !== undefined) cells.push([col, row.label, v]);
+        });
+    });
+    return {
+        labels: pivot.columns,
+        yLabels: pivot.rows.map(r => r.label),
+        datasets: [{ data: cells }]
+    };
+}
+
 // ── CS Script Widget helpers ───────────────────────────────────────────────
 // `existingItem` is set when re-binding an already-placed FunctOutput widget
 // to a (possibly different) saved script; left undefined when adding a new
@@ -1989,10 +2008,11 @@ function getTreeExportRows(item) {
 }
 
 // Rows/columns to hand to ExportMenu for a SqlWidget -- mirrors whichever
-// tabular view (table or pivot) is currently configured for the widget.
+// tabular view (table, pivot, or heatmap -- which shares the pivot shape) is
+// currently configured for the widget.
 function getSqlWidgetExportData(item) {
     const viz = getSqlWidgetViz(item);
-    if (viz.type === 'pivot') {
+    if (viz.type === 'pivot' || viz.type === 'heatmap') {
         const pivot = getSqlWidgetPivotData(item);
         if (!pivot) return { rows: [], columns: [] };
         const columns = [
@@ -2432,7 +2452,7 @@ function getSqlWidgetExportData(item) {
                     <div class="sql-widget-controls flex gap-1 shrink-0">
                         <span v-if="item.loading" class="text-xs text-muted-foreground mr-1 self-center">Running…</span>
                         <ExportMenu
-                            v-if="['table', 'pivot'].includes(getSqlWidgetViz(item).type)"
+                            v-if="['table', 'pivot', 'heatmap'].includes(getSqlWidgetViz(item).type)"
                             :rows="getSqlWidgetExportData(item).rows"
                             :columns="getSqlWidgetExportData(item).columns"
                             :filename="item.title || item.sqlScriptName || 'sql-widget'"
@@ -2488,7 +2508,23 @@ function getSqlWidgetExportData(item) {
                         </div>
                     </div>
 
-                    <!-- Chart view (line, bar, bar-h, area, pie, scatter, waterfall) -->
+                    <!-- Heatmap view -->
+                    <div v-else-if="getSqlWidgetViz(item).type === 'heatmap'" class="h-full overflow-auto border rounded-md bg-background">
+                        <BaseChart
+                            v-if="getSqlWidgetHeatmapData(item)"
+                            type="heatmap"
+                            :data="getSqlWidgetHeatmapData(item)"
+                            :height="getChartHeight(item.h - 1)"
+                            :show-header="false"
+                            :show-footer="false"
+                            class="w-full"
+                        />
+                        <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
+                            Configure pivot fields in the SQL Editor script first
+                        </div>
+                    </div>
+
+                    <!-- Chart view (line, bar, bar-h, area, pie, doughnut, polarArea, radar, scatter, funnel, gauge, waterfall) -->
                     <div
                         v-else class="h-full flex items-center justify-center"
                         :class="{ 'cursor-pointer': getSqlWidgetViz(item).clickFilterVariable }"
