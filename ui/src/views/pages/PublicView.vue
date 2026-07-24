@@ -182,6 +182,15 @@ function onVariableChange(varName, value) {
     refreshAllDataWidgets();
 }
 
+// Cross-filtering: a click on a bar/slice in a SqlWidget's chart sets that
+// widget's configured click-filter variable, refreshing every other widget
+// bound to it (mirrors onVariableChange, used by Select/InputText widgets).
+function handleSqlWidgetChartClick(item, event) {
+    const varName = getSqlWidgetViz(item).clickFilterVariable;
+    if (!varName) return;
+    onVariableChange(varName, event.label ?? '');
+}
+
 // Fetches first-column values from a SQL query via the public endpoint so
 // SQL-sourced Select widgets work without exposing the owner's credentials.
 async function loadPublicSelectOptions(item, token) {
@@ -356,6 +365,25 @@ function getSqlWidgetPivotData(item) {
     };
 }
 
+// Reshapes pivot data (same row/column/value/aggregation config as the Pivot
+// view) into the {labels, yLabels, datasets} shape BaseChart's heatmap type expects.
+function getSqlWidgetHeatmapData(item) {
+    const pivot = getSqlWidgetPivotData(item);
+    if (!pivot) return null;
+    const cells = [];
+    pivot.rows.forEach(row => {
+        pivot.columns.forEach(col => {
+            const v = row.values[col];
+            if (v !== null && v !== undefined) cells.push([col, row.label, v]);
+        });
+    });
+    return {
+        labels: pivot.columns,
+        yLabels: pivot.rows.map(r => r.label),
+        datasets: [{ data: cells }]
+    };
+}
+
 // Tree Table helpers (mirrors Dashboard.vue's expand/collapse behavior)
 function toggleTreeNode(item, node) {
     if (!item.expandedKeys) item.expandedKeys = {};
@@ -389,7 +417,7 @@ function getTreeExportRows(item) {
 // tabular view (table or pivot) is currently configured for the widget.
 function getSqlWidgetExportData(item) {
     const viz = getSqlWidgetViz(item);
-    if (viz.type === 'pivot') {
+    if (viz.type === 'pivot' || viz.type === 'heatmap') {
         const pivot = getSqlWidgetPivotData(item);
         if (!pivot) return { rows: [], columns: [] };
         const columns = [
@@ -615,7 +643,7 @@ onUnmounted(() => {
                             <div class="font-medium text-sm truncate">{{ item.title || item.sqlScriptName || 'SQL Query' }}</div>
                             <div class="flex items-center gap-1 shrink-0">
                                 <ExportMenu
-                                    v-if="['table', 'pivot'].includes(getSqlWidgetViz(item).type)"
+                                    v-if="['table', 'pivot', 'heatmap'].includes(getSqlWidgetViz(item).type)"
                                     :rows="getSqlWidgetExportData(item).rows"
                                     :columns="getSqlWidgetExportData(item).columns"
                                     :filename="item.title || item.sqlScriptName || 'sql-widget'"
@@ -668,8 +696,26 @@ onUnmounted(() => {
                                 <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs p-4">No pivot data</div>
                             </div>
 
+                            <!-- Heatmap view -->
+                            <div v-else-if="getSqlWidgetViz(item).type === 'heatmap'" class="h-full overflow-auto border rounded-md bg-background">
+                                <BaseChart
+                                    v-if="getSqlWidgetHeatmapData(item)"
+                                    type="heatmap"
+                                    :data="getSqlWidgetHeatmapData(item)"
+                                    :show-header="false"
+                                    :show-footer="false"
+                                    height="100%"
+                                    class="w-full"
+                                />
+                                <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs p-4">No pivot data</div>
+                            </div>
+
                             <!-- Chart view -->
-                            <div v-else class="h-full flex items-center justify-center">
+                            <div
+                                v-else class="h-full flex items-center justify-center"
+                                :class="{ 'cursor-pointer': getSqlWidgetViz(item).clickFilterVariable }"
+                                :title="getSqlWidgetViz(item).clickFilterVariable ? `Click a bar/slice to filter widgets using {{${getSqlWidgetViz(item).clickFilterVariable}}}` : ''"
+                            >
                                 <BokehChart
                                     v-if="getSqlWidgetChartData(item) && getSqlWidgetViz(item).engine === 'bokeh' && isBokehSupported(getSqlWidgetViz(item).type)"
                                     :bokeh-json="buildBokehJson({ type: getSqlWidgetViz(item).type || 'bar', labels: getSqlWidgetChartData(item).labels, datasets: getSqlWidgetChartData(item).datasets })"
@@ -688,6 +734,7 @@ onUnmounted(() => {
                                     :show-legend="true"
                                     height="100%"
                                     class="w-full"
+                                    @chart-clicked="handleSqlWidgetChartClick(item, $event)"
                                 />
                                 <div v-else class="text-muted-foreground text-xs text-center p-4">No chart data</div>
                             </div>

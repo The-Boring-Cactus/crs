@@ -27,7 +27,8 @@ import {
     Database, Loader2, Play, Save, File, Pencil, FolderOpen, Plus, Undo, RefreshCw,
     Copy, Search, ChevronLeft, ChevronRight, Info, Trash2,
     Table2, LayoutList, TrendingUp, BarChart2, BarChart3, AreaChart, PieChart,
-    ScatterChart, BarChart4, Settings2, Braces
+    ScatterChart, BarChart4, Settings2, Braces,
+    Donut, Disc3, Radar, Funnel, Gauge, Grid3x3
 } from 'lucide-vue-next';
 import { useVariableStore } from '@/store/variableStore';
 
@@ -95,7 +96,15 @@ const vizConfig = reactive({
     pivotColField: '',
     pivotValueField: '',
     pivotAggregation: 'sum',
-    engine: 'echarts' // 'echarts' | 'bokeh'
+    engine: 'echarts', // 'echarts' | 'bokeh'
+    clickFilterVariable: '' // variable set by clicking a bar/slice in this chart (cross-filtering)
+});
+
+// Select requires a non-empty value, so "no variable chosen" is represented
+// as the sentinel '__none__' in the UI and translated to '' in vizConfig.
+const clickFilterVariableModel = computed({
+    get: () => vizConfig.clickFilterVariable || '__none__',
+    set: (v) => { vizConfig.clickFilterVariable = v === '__none__' ? '' : v; }
 });
 
 // Chart types BokehChart can render (waterfall has no Bokeh equivalent here)
@@ -103,8 +112,9 @@ const BOKEH_SUPPORTED_TYPES = ['line', 'bar', 'bar-h', 'area', 'pie', 'scatter']
 const isBokehSupportedVizType = computed(() => BOKEH_SUPPORTED_TYPES.includes(vizType.value));
 
 const TABULAR_TYPES = [
-    { type: 'table',  label: 'Table',   icon: Table2 },
-    { type: 'pivot',  label: 'Pivot',   icon: LayoutList },
+    { type: 'table',   label: 'Table',   icon: Table2 },
+    { type: 'pivot',   label: 'Pivot',   icon: LayoutList },
+    { type: 'heatmap', label: 'Heatmap', icon: Grid3x3 },
 ];
 
 const CHART_TYPES = [
@@ -113,12 +123,17 @@ const CHART_TYPES = [
     { type: 'bar-h',     label: 'H. Bar',     icon: BarChart3 },
     { type: 'area',      label: 'Area',       icon: AreaChart },
     { type: 'pie',       label: 'Pie',        icon: PieChart },
+    { type: 'doughnut',  label: 'Doughnut',   icon: Donut },
+    { type: 'polarArea', label: 'Polar Area', icon: Disc3 },
+    { type: 'radar',     label: 'Radar',      icon: Radar },
     { type: 'scatter',   label: 'Scatter',    icon: ScatterChart },
+    { type: 'funnel',    label: 'Funnel',     icon: Funnel },
+    { type: 'gauge',     label: 'Gauge',      icon: Gauge },
     { type: 'waterfall', label: 'Waterfall',  icon: BarChart4 },
 ];
 
 const isChartVizType = computed(() =>
-    ['line', 'bar', 'bar-h', 'area', 'pie', 'scatter', 'waterfall'].includes(vizType.value)
+    ['line', 'bar', 'bar-h', 'area', 'pie', 'doughnut', 'polarArea', 'radar', 'scatter', 'funnel', 'gauge', 'waterfall'].includes(vizType.value)
 );
 
 const chartVizType = computed(() => vizType.value); // already matches BaseChart types
@@ -156,6 +171,7 @@ const resetVizConfig = () => {
     vizConfig.pivotValueField = '';
     vizConfig.pivotAggregation = 'sum';
     vizConfig.engine = 'echarts';
+    vizConfig.clickFilterVariable = '';
 };
 
 const applyVizFromScript = (script) => {
@@ -173,6 +189,7 @@ const applyVizFromScript = (script) => {
         vizConfig.pivotValueField = viz.pivotValueField || '';
         vizConfig.pivotAggregation = viz.pivotAggregation || 'sum';
         vizConfig.engine = viz.engine || 'echarts';
+        vizConfig.clickFilterVariable = viz.clickFilterVariable || '';
     } catch { vizType.value = 'table'; }
 };
 
@@ -306,6 +323,26 @@ const pivotData = computed(() => {
 
     return { columns: colValues, rows };
 });
+
+// Reshapes pivot data (row/column/value/aggregation, same config as the Pivot
+// view) into the {labels, yLabels, datasets} shape BaseChart's heatmap type expects.
+function pivotToHeatmapData(pivot) {
+    if (!pivot) return null;
+    const cells = [];
+    pivot.rows.forEach(row => {
+        pivot.columns.forEach(col => {
+            const v = row.values[col];
+            if (v !== null && v !== undefined && col !== '__total__') cells.push([col, row.label, v]);
+        });
+    });
+    return {
+        labels: pivot.columns,
+        yLabels: pivot.rows.map(r => r.label),
+        datasets: [{ data: cells }]
+    };
+}
+
+const heatmapData = computed(() => pivotToHeatmapData(pivotData.value));
 
 // Rows/columns to hand to ExportMenu -- mirrors whichever tabular view (table
 // or pivot) is currently on screen.
@@ -466,7 +503,8 @@ const buildVisualizationPayload = () => JSON.stringify({
     pivotColField: vizConfig.pivotColField,
     pivotValueField: vizConfig.pivotValueField,
     pivotAggregation: vizConfig.pivotAggregation,
-    engine: vizConfig.engine
+    engine: vizConfig.engine,
+    clickFilterVariable: vizConfig.clickFilterVariable
 });
 
 const saveScript = async () => {
@@ -841,10 +879,21 @@ watch(() => projectStore.currentProjectId, () => {
                         >Bokeh</button>
                     </div>
                 </div>
+
+                <div v-if="vizConfig.engine === 'echarts'" class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-muted-foreground" title="Clicking a bar/slice in this chart sets the chosen variable, refreshing other widgets that use it">Click filter:</span>
+                    <Select v-model="clickFilterVariableModel">
+                        <SelectTrigger class="h-7 w-[140px] text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="__none__">None</SelectItem>
+                            <SelectItem v-for="def in variableStore.definitions" :key="def.name" :value="def.name">{{ def.label || def.name }}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
 
-            <!-- Pivot config panel -->
-            <div v-else-if="queryResults.length > 0 && vizType === 'pivot'"
+            <!-- Pivot config panel (shared by Pivot table and Heatmap -- same row/column/value/aggregation shape) -->
+            <div v-else-if="queryResults.length > 0 && ['pivot', 'heatmap'].includes(vizType)"
                  class="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2 bg-muted/40 rounded-md border mb-3 text-sm">
                 <div class="flex items-center gap-2">
                     <Settings2 class="w-3.5 h-3.5 text-muted-foreground" />
@@ -933,6 +982,24 @@ watch(() => projectStore.currentProjectId, () => {
                 </div>
                 <div v-else class="text-center text-muted-foreground p-8">
                     Select Row, Column and Value fields above to generate the pivot table.
+                </div>
+            </div>
+
+            <!-- HEATMAP view -->
+            <div v-else-if="queryResults.length > 0 && vizType === 'heatmap'" class="flex-1 border rounded-md bg-card flex items-center justify-center" style="min-height: 380px;">
+                <div class="w-full h-full" style="height: 380px;">
+                    <BaseChart
+                        v-if="heatmapData"
+                        type="heatmap"
+                        :data="heatmapData"
+                        :show-header="false"
+                        :show-footer="false"
+                        :show-controls="false"
+                        height="380px"
+                    />
+                    <div v-else class="text-center text-muted-foreground p-8">
+                        Select Row, Column and Value fields above to generate the heatmap.
+                    </div>
                 </div>
             </div>
 

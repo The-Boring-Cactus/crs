@@ -1757,6 +1757,27 @@ function getSqlWidgetViz(item) {
     catch { return { type: 'table' }; }
 }
 
+// Cross-filtering: re-runs every SqlWidget whose SQL references {{varName}}
+// so they pick up the value just set by a chart click elsewhere on the dashboard.
+function refreshWidgetsBoundToVariable(varName) {
+    const pattern = new RegExp(`\\{\\{${varName}\\}\\}`);
+    for (const widget of layout.value.componentes) {
+        if (widget.type === 'SqlWidget' && widget.sqlCode && pattern.test(widget.sqlCode)) {
+            refreshSqlWidget(widget);
+        }
+    }
+}
+
+// Handles a click on a bar/slice inside a SqlWidget's chart view: sets the
+// widget's configured click-filter variable to the clicked category, then
+// refreshes any other SqlWidget whose SQL uses that variable.
+function handleSqlWidgetChartClick(item, event) {
+    const varName = getSqlWidgetViz(item).clickFilterVariable;
+    if (!varName) return;
+    variableStore.setValue(varName, event.label ?? '');
+    refreshWidgetsBoundToVariable(varName);
+}
+
 function getSqlWidgetChartData(item) {
     const viz = getSqlWidgetViz(item);
     const rows = item.queryResults || [];
@@ -1827,6 +1848,25 @@ function getSqlWidgetPivotData(item) {
             }
             return { label: rowVal, values };
         })
+    };
+}
+
+// Reshapes pivot data (same row/column/value/aggregation config as the Pivot
+// view) into the {labels, yLabels, datasets} shape BaseChart's heatmap type expects.
+function getSqlWidgetHeatmapData(item) {
+    const pivot = getSqlWidgetPivotData(item);
+    if (!pivot) return null;
+    const cells = [];
+    pivot.rows.forEach(row => {
+        pivot.columns.forEach(col => {
+            const v = row.values[col];
+            if (v !== null && v !== undefined) cells.push([col, row.label, v]);
+        });
+    });
+    return {
+        labels: pivot.columns,
+        yLabels: pivot.rows.map(r => r.label),
+        datasets: [{ data: cells }]
     };
 }
 
@@ -1968,10 +2008,11 @@ function getTreeExportRows(item) {
 }
 
 // Rows/columns to hand to ExportMenu for a SqlWidget -- mirrors whichever
-// tabular view (table or pivot) is currently configured for the widget.
+// tabular view (table, pivot, or heatmap -- which shares the pivot shape) is
+// currently configured for the widget.
 function getSqlWidgetExportData(item) {
     const viz = getSqlWidgetViz(item);
-    if (viz.type === 'pivot') {
+    if (viz.type === 'pivot' || viz.type === 'heatmap') {
         const pivot = getSqlWidgetPivotData(item);
         if (!pivot) return { rows: [], columns: [] };
         const columns = [
@@ -2411,7 +2452,7 @@ function getSqlWidgetExportData(item) {
                     <div class="sql-widget-controls flex gap-1 shrink-0">
                         <span v-if="item.loading" class="text-xs text-muted-foreground mr-1 self-center">Running…</span>
                         <ExportMenu
-                            v-if="['table', 'pivot'].includes(getSqlWidgetViz(item).type)"
+                            v-if="['table', 'pivot', 'heatmap'].includes(getSqlWidgetViz(item).type)"
                             :rows="getSqlWidgetExportData(item).rows"
                             :columns="getSqlWidgetExportData(item).columns"
                             :filename="item.title || item.sqlScriptName || 'sql-widget'"
@@ -2467,8 +2508,28 @@ function getSqlWidgetExportData(item) {
                         </div>
                     </div>
 
-                    <!-- Chart view (line, bar, bar-h, area, pie, scatter, waterfall) -->
-                    <div v-else class="h-full flex items-center justify-center">
+                    <!-- Heatmap view -->
+                    <div v-else-if="getSqlWidgetViz(item).type === 'heatmap'" class="h-full overflow-auto border rounded-md bg-background">
+                        <BaseChart
+                            v-if="getSqlWidgetHeatmapData(item)"
+                            type="heatmap"
+                            :data="getSqlWidgetHeatmapData(item)"
+                            :height="getChartHeight(item.h - 1)"
+                            :show-header="false"
+                            :show-footer="false"
+                            class="w-full"
+                        />
+                        <div v-else class="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
+                            Configure pivot fields in the SQL Editor script first
+                        </div>
+                    </div>
+
+                    <!-- Chart view (line, bar, bar-h, area, pie, doughnut, polarArea, radar, scatter, funnel, gauge, waterfall) -->
+                    <div
+                        v-else class="h-full flex items-center justify-center"
+                        :class="{ 'cursor-pointer': getSqlWidgetViz(item).clickFilterVariable }"
+                        :title="getSqlWidgetViz(item).clickFilterVariable ? `Click a bar/slice to filter widgets using {{${getSqlWidgetViz(item).clickFilterVariable}}}` : ''"
+                    >
                         <BokehChart
                             v-if="getSqlWidgetChartData(item) && getSqlWidgetViz(item).engine === 'bokeh' && isBokehSupported(getSqlWidgetViz(item).type)"
                             :bokeh-json="buildBokehJson({ type: getSqlWidgetViz(item).type || 'bar', labels: getSqlWidgetChartData(item).labels, datasets: getSqlWidgetChartData(item).datasets })"
@@ -2487,6 +2548,7 @@ function getSqlWidgetExportData(item) {
                             :show-controls="false"
                             :show-legend="true"
                             class="w-full"
+                            @chart-clicked="handleSqlWidgetChartClick(item, $event)"
                         />
                         <div v-else class="text-muted-foreground text-xs text-center p-4">
                             <BarChart2Icon class="w-6 h-6 mx-auto mb-1 opacity-40" />
