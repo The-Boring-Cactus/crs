@@ -182,6 +182,15 @@ function onVariableChange(varName, value) {
     refreshAllDataWidgets();
 }
 
+// Cross-filtering: a click on a bar/slice in a SqlWidget's chart sets that
+// widget's configured click-filter variable, refreshing every other widget
+// bound to it (mirrors onVariableChange, used by Select/InputText widgets).
+function handleSqlWidgetChartClick(item, event) {
+    const varName = getSqlWidgetViz(item).clickFilterVariable;
+    if (!varName) return;
+    onVariableChange(varName, event.label ?? '');
+}
+
 // Fetches first-column values from a SQL query via the public endpoint so
 // SQL-sourced Select widgets work without exposing the owner's credentials.
 async function loadPublicSelectOptions(item, token) {
@@ -669,7 +678,11 @@ onUnmounted(() => {
                             </div>
 
                             <!-- Chart view -->
-                            <div v-else class="h-full flex items-center justify-center">
+                            <div
+                                v-else class="h-full flex items-center justify-center"
+                                :class="{ 'cursor-pointer': getSqlWidgetViz(item).clickFilterVariable }"
+                                :title="getSqlWidgetViz(item).clickFilterVariable ? `Click a bar/slice to filter widgets using {{${getSqlWidgetViz(item).clickFilterVariable}}}` : ''"
+                            >
                                 <BokehChart
                                     v-if="getSqlWidgetChartData(item) && getSqlWidgetViz(item).engine === 'bokeh' && isBokehSupported(getSqlWidgetViz(item).type)"
                                     :bokeh-json="buildBokehJson({ type: getSqlWidgetViz(item).type || 'bar', labels: getSqlWidgetChartData(item).labels, datasets: getSqlWidgetChartData(item).datasets })"
@@ -688,6 +701,7 @@ onUnmounted(() => {
                                     :show-legend="true"
                                     height="100%"
                                     class="w-full"
+                                    @chart-clicked="handleSqlWidgetChartClick(item, $event)"
                                 />
                                 <div v-else class="text-muted-foreground text-xs text-center p-4">No chart data</div>
                             </div>

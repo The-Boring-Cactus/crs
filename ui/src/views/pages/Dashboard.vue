@@ -1757,6 +1757,27 @@ function getSqlWidgetViz(item) {
     catch { return { type: 'table' }; }
 }
 
+// Cross-filtering: re-runs every SqlWidget whose SQL references {{varName}}
+// so they pick up the value just set by a chart click elsewhere on the dashboard.
+function refreshWidgetsBoundToVariable(varName) {
+    const pattern = new RegExp(`\\{\\{${varName}\\}\\}`);
+    for (const widget of layout.value.componentes) {
+        if (widget.type === 'SqlWidget' && widget.sqlCode && pattern.test(widget.sqlCode)) {
+            refreshSqlWidget(widget);
+        }
+    }
+}
+
+// Handles a click on a bar/slice inside a SqlWidget's chart view: sets the
+// widget's configured click-filter variable to the clicked category, then
+// refreshes any other SqlWidget whose SQL uses that variable.
+function handleSqlWidgetChartClick(item, event) {
+    const varName = getSqlWidgetViz(item).clickFilterVariable;
+    if (!varName) return;
+    variableStore.setValue(varName, event.label ?? '');
+    refreshWidgetsBoundToVariable(varName);
+}
+
 function getSqlWidgetChartData(item) {
     const viz = getSqlWidgetViz(item);
     const rows = item.queryResults || [];
@@ -2468,7 +2489,11 @@ function getSqlWidgetExportData(item) {
                     </div>
 
                     <!-- Chart view (line, bar, bar-h, area, pie, scatter, waterfall) -->
-                    <div v-else class="h-full flex items-center justify-center">
+                    <div
+                        v-else class="h-full flex items-center justify-center"
+                        :class="{ 'cursor-pointer': getSqlWidgetViz(item).clickFilterVariable }"
+                        :title="getSqlWidgetViz(item).clickFilterVariable ? `Click a bar/slice to filter widgets using {{${getSqlWidgetViz(item).clickFilterVariable}}}` : ''"
+                    >
                         <BokehChart
                             v-if="getSqlWidgetChartData(item) && getSqlWidgetViz(item).engine === 'bokeh' && isBokehSupported(getSqlWidgetViz(item).type)"
                             :bokeh-json="buildBokehJson({ type: getSqlWidgetViz(item).type || 'bar', labels: getSqlWidgetChartData(item).labels, datasets: getSqlWidgetChartData(item).datasets })"
@@ -2487,6 +2512,7 @@ function getSqlWidgetExportData(item) {
                             :show-controls="false"
                             :show-legend="true"
                             class="w-full"
+                            @chart-clicked="handleSqlWidgetChartClick(item, $event)"
                         />
                         <div v-else class="text-muted-foreground text-xs text-center p-4">
                             <BarChart2Icon class="w-6 h-6 mx-auto mb-1 opacity-40" />

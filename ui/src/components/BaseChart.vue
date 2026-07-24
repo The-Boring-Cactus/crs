@@ -352,6 +352,17 @@ function onChartReady() {
     emit('chart-created');
 }
 
+// Normalizes an ECharts click event (bar/line/area/scatter category click or
+// pie/doughnut slice click) into a plain payload for cross-filtering consumers.
+function handleChartClick(params) {
+    emit('chart-clicked', {
+        label: params?.name ?? '',
+        value: params?.value,
+        seriesName: params?.seriesName,
+        dataIndex: params?.dataIndex
+    });
+}
+
 defineExpose({
     chartInstance: () => chartRef.value,
     addRandomData,
@@ -388,7 +399,7 @@ defineExpose({
         </CardHeader>
         <CardContent class="flex-grow flex items-center justify-center p-4">
             <div class="w-full relative" :style="{ height: cssHeight }">
-                <v-chart ref="chartRef" class="w-full h-full min-h-[200px]" :option="chartOptions" :autoresize="true" @ready="onChartReady" />
+                <v-chart ref="chartRef" class="w-full h-full min-h-[200px]" :option="chartOptions" :autoresize="true" @ready="onChartReady" @click="handleChartClick" />
             </div>
         </CardContent>
         <CardFooter v-if="showFooter" class="pt-4 border-t flex justify-between text-sm text-muted-foreground">

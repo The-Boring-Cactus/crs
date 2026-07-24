@@ -95,7 +95,15 @@ const vizConfig = reactive({
     pivotColField: '',
     pivotValueField: '',
     pivotAggregation: 'sum',
-    engine: 'echarts' // 'echarts' | 'bokeh'
+    engine: 'echarts', // 'echarts' | 'bokeh'
+    clickFilterVariable: '' // variable set by clicking a bar/slice in this chart (cross-filtering)
+});
+
+// Select requires a non-empty value, so "no variable chosen" is represented
+// as the sentinel '__none__' in the UI and translated to '' in vizConfig.
+const clickFilterVariableModel = computed({
+    get: () => vizConfig.clickFilterVariable || '__none__',
+    set: (v) => { vizConfig.clickFilterVariable = v === '__none__' ? '' : v; }
 });
 
 // Chart types BokehChart can render (waterfall has no Bokeh equivalent here)
@@ -156,6 +164,7 @@ const resetVizConfig = () => {
     vizConfig.pivotValueField = '';
     vizConfig.pivotAggregation = 'sum';
     vizConfig.engine = 'echarts';
+    vizConfig.clickFilterVariable = '';
 };
 
 const applyVizFromScript = (script) => {
@@ -173,6 +182,7 @@ const applyVizFromScript = (script) => {
         vizConfig.pivotValueField = viz.pivotValueField || '';
         vizConfig.pivotAggregation = viz.pivotAggregation || 'sum';
         vizConfig.engine = viz.engine || 'echarts';
+        vizConfig.clickFilterVariable = viz.clickFilterVariable || '';
     } catch { vizType.value = 'table'; }
 };
 
@@ -466,7 +476,8 @@ const buildVisualizationPayload = () => JSON.stringify({
     pivotColField: vizConfig.pivotColField,
     pivotValueField: vizConfig.pivotValueField,
     pivotAggregation: vizConfig.pivotAggregation,
-    engine: vizConfig.engine
+    engine: vizConfig.engine,
+    clickFilterVariable: vizConfig.clickFilterVariable
 });
 
 const saveScript = async () => {
@@ -840,6 +851,17 @@ watch(() => projectStore.currentProjectId, () => {
                             :class="['px-2 py-0.5 rounded text-xs transition-colors', vizConfig.engine === 'bokeh' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted']"
                         >Bokeh</button>
                     </div>
+                </div>
+
+                <div v-if="vizConfig.engine === 'echarts'" class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-muted-foreground" title="Clicking a bar/slice in this chart sets the chosen variable, refreshing other widgets that use it">Click filter:</span>
+                    <Select v-model="clickFilterVariableModel">
+                        <SelectTrigger class="h-7 w-[140px] text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="__none__">None</SelectItem>
+                            <SelectItem v-for="def in variableStore.definitions" :key="def.name" :value="def.name">{{ def.label || def.name }}</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
