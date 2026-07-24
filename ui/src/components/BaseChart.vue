@@ -96,6 +96,60 @@ const palettes = {
     amber: ['#f59e0b', '#fbbf24', '#fcd34d', '#fde68a', '#d97706', '#92400e', '#b45309']
 };
 
+// Distinct, vivid hues for charts that differentiate many categories (pie,
+// doughnut, polar area) -- shades of one accent color read as near-identical
+// slices, unlike a single-series bar/line where that shading looks intentional.
+const CATEGORICAL_PALETTE = ['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#06b6d4', '#a855f7', '#ec4899', '#84cc16', '#3b82f6', '#f97316'];
+
+// ── Visual-richness helpers ─────────────────────────────────────────────────
+// Everything below turns flat, single-color series into the softly-gradiented,
+// rounded, gently-shadowed look used across the app's chart types.
+
+function hexToRgba(hex, alpha = 1) {
+    if (typeof hex !== 'string' || !hex.startsWith('#')) return hex;
+    const h = hex.length === 4 ? hex.slice(1).split('').map(c => c + c).join('') : hex.slice(1);
+    const n = parseInt(h, 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Top-to-bottom fill for bars: vivid at the top, fading slightly by the base.
+function barGradient(color) {
+    return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: hexToRgba(color, 0.95) },
+        { offset: 1, color: hexToRgba(color, 0.55) }
+    ]);
+}
+
+// Left-to-right fill for horizontal bars.
+function barGradientH(color) {
+    return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+        { offset: 0, color: hexToRgba(color, 0.55) },
+        { offset: 1, color: hexToRgba(color, 0.95) }
+    ]);
+}
+
+// Soft area fill under a line: solid-ish near the line, fully transparent by the axis.
+function areaGradient(color) {
+    return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: hexToRgba(color, 0.45) },
+        { offset: 1, color: hexToRgba(color, 0.02) }
+    ]);
+}
+
+// Radial fill for pie/doughnut/polar-area slices and scatter/bubble points --
+// a bright core fading to the base color gives a soft glassy depth.
+function radialGradient(color) {
+    return new echarts.graphic.RadialGradient(0.4, 0.35, 0.8, [
+        { offset: 0, color: hexToRgba(color, 0.85) },
+        { offset: 1, color: color }
+    ]);
+}
+
+function glowShadow(color) {
+    return { shadowBlur: 10, shadowColor: hexToRgba(color, 0.35), shadowOffsetY: 4 };
+}
+
 const chartOptions = computed(() => {
     const type = props.type;
     const datasets = props.data?.datasets || [];
@@ -190,11 +244,14 @@ const chartOptions = computed(() => {
             ghost.push(v >= 0 ? cumulative : cumulative + v);
             cumulative += v;
         });
+        const upColor = '#34d399';
+        const downColor = '#fb7185';
         options.series = [
             {
                 name: 'ghost',
                 type: 'bar',
                 stack: 'waterfall',
+                barWidth: '55%',
                 itemStyle: { color: 'transparent', borderColor: 'transparent' },
                 emphasis: { itemStyle: { color: 'transparent' } },
                 data: ghost
@@ -203,11 +260,16 @@ const chartOptions = computed(() => {
                 name: datasets[0].label || 'Value',
                 type: 'bar',
                 stack: 'waterfall',
+                barWidth: '55%',
                 data: vals.map((v, i) => ({
                     value: Math.abs(v),
-                    itemStyle: { color: v >= 0 ? '#91cc75' : '#ee6666' }
+                    itemStyle: {
+                        color: barGradient(v >= 0 ? upColor : downColor),
+                        borderRadius: [6, 6, 0, 0],
+                        ...glowShadow(v >= 0 ? upColor : downColor)
+                    }
                 })),
-                label: { show: true, position: 'top', formatter: (p) => vals[p.dataIndex] >= 0 ? `+${vals[p.dataIndex]}` : `${vals[p.dataIndex]}` }
+                label: { show: true, position: 'top', color: textColor, formatter: (p) => vals[p.dataIndex] >= 0 ? `+${vals[p.dataIndex]}` : `${vals[p.dataIndex]}` }
             }
         ];
         return options;
@@ -227,14 +289,14 @@ const chartOptions = computed(() => {
             top: props.title ? '15%' : '5%',
             bottom: props.showLegend ? '15%' : '5%',
             sort: 'descending',
-            gap: 2,
-            label: { show: true, position: 'inside', color: '#fff' },
-            itemStyle: { borderColor: isDark ? '#18181b' : '#ffffff', borderWidth: 1 },
-            data: ds.data.map((val, i) => ({
-                value: Number(val) || 0,
-                name: labels[i] || `Category ${i + 1}`,
-                itemStyle: { color: Array.isArray(color) ? color[i % color.length] : activePalette[i % activePalette.length] }
-            }))
+            gap: 4,
+            label: { show: true, position: 'inside', color: '#fff', fontWeight: 600 },
+            itemStyle: { borderColor: isDark ? '#18181b' : '#ffffff', borderWidth: 2, borderRadius: 4 },
+            emphasis: { itemStyle: { shadowBlur: 14, shadowColor: 'rgba(0,0,0,0.25)' } },
+            data: ds.data.map((val, i) => {
+                const c = Array.isArray(color) ? color[i % color.length] : activePalette[i % activePalette.length];
+                return { value: Number(val) || 0, name: labels[i] || `Category ${i + 1}`, itemStyle: { color: radialGradient(c) } };
+            })
         }];
         return options;
     }
@@ -243,6 +305,7 @@ const chartOptions = computed(() => {
     // it works whether the query already aggregates to one row or returns many.
     if (type === 'gauge') {
         const ds = datasets[0];
+        const color = ds?.backgroundColor || activePalette[0];
         const value = (ds?.data || []).reduce((sum, v) => sum + (Number(v) || 0), 0);
         const max = props.options?.gaugeMax ?? Math.max(10, Math.ceil((value * 1.2) / 10) * 10);
         options.tooltip = undefined;
@@ -252,11 +315,17 @@ const chartOptions = computed(() => {
             min: 0,
             max,
             radius: '90%',
-            progress: { show: true, width: 14 },
-            axisLine: { lineStyle: { width: 14 } },
-            axisLabel: { color: textColor, fontSize: 10 },
-            pointer: { show: true },
-            detail: { valueAnimation: true, color: textColor, fontSize: 24, offsetCenter: [0, '70%'] },
+            startAngle: 210,
+            endAngle: -30,
+            progress: { show: true, width: 16, itemStyle: { color: barGradient(color), ...glowShadow(color) } },
+            axisLine: { lineStyle: { width: 16, color: [[1, hexToRgba(isDark ? '#3f3f46' : '#e4e4e7', 1)]] } },
+            axisTick: { distance: -16, length: 4, lineStyle: { color: isDark ? '#18181b' : '#ffffff', width: 1 } },
+            splitLine: { distance: -16, length: 16, lineStyle: { color: isDark ? '#18181b' : '#ffffff', width: 2 } },
+            axisLabel: { color: textColor, fontSize: 10, distance: 20 },
+            pointer: { show: true, itemStyle: { color } },
+            anchor: { show: true, size: 12, itemStyle: { color, borderColor: isDark ? '#18181b' : '#ffffff', borderWidth: 2 } },
+            title: { color: textColor, fontSize: 12, offsetCenter: [0, '92%'] },
+            detail: { valueAnimation: true, color: textColor, fontSize: 26, fontWeight: 700, offsetCenter: [0, '70%'] },
             data: [{ value, name: ds?.label || props.title || '' }]
         }];
         return options;
@@ -283,51 +352,61 @@ const chartOptions = computed(() => {
             left: 'center',
             bottom: 0,
             textStyle: { color: textColor },
-            inRange: { color: isDark ? ['#1e3a8a', '#60a5fa', '#fde047'] : ['#e0f2fe', '#0369a1'] }
+            inRange: { color: isDark ? ['#312e81', '#6366f1', '#f472b6', '#fde047'] : ['#e0e7ff', '#818cf8', '#4f46e5'] }
         };
         options.series = [{
             type: 'heatmap',
             data: cells.map(c => [labels.indexOf(String(c[0])), yLabels.indexOf(String(c[1])), c[2]]),
-            label: { show: true, color: textColor },
-            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.4)' } }
+            label: { show: true, color: isDark ? '#f4f4f5' : '#18181b', fontWeight: 600 },
+            itemStyle: { borderRadius: 6, borderColor: isDark ? '#18181b' : '#ffffff', borderWidth: 3 },
+            emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.4)' } }
         }];
         return options;
     }
+
+    const cardBg = isDark ? '#18181b' : '#ffffff';
 
     datasets.forEach((ds, idx) => {
         let dsType = ds.type || type;
         const color = ds.backgroundColor || activePalette[idx % activePalette.length];
         const lineColor = ds.borderColor || color;
         const pLabel = ds.label || `Series ${idx + 1}`;
+        const soloColor = Array.isArray(color) ? color[0] : color;
 
         let s = {
             name: pLabel,
-            type: dsType === 'area' ? 'line' : (dsType === 'bar-h' ? 'bar' : dsType),
+            type: dsType === 'area' ? 'line' : (['bar-h'].includes(dsType) ? 'bar' : dsType),
             data: ds.data,
             itemStyle: {}
         };
 
         if (['line', 'area'].includes(dsType) || (dsType === 'mixed' && !ds.type)) {
             s.type = 'line';
-            s.lineStyle = { color: lineColor, width: 2 };
-            s.itemStyle = { color: lineColor };
+            s.smooth = true;
+            s.symbol = 'circle';
+            s.symbolSize = 8;
+            s.lineStyle = { color: lineColor, width: 3, ...glowShadow(lineColor) };
+            s.itemStyle = { color: lineColor, borderColor: cardBg, borderWidth: 2 };
             if (dsType === 'area' || ds.fill) {
-                s.areaStyle = {
-                    color: Array.isArray(color) ? color[0] : color,
-                    opacity: 0.3
-                };
+                s.areaStyle = { color: areaGradient(soloColor) };
             }
-            s.symbolSize = 6;
-        } else if (dsType === 'bar') {
+        } else if (['bar', 'bar-h'].includes(dsType)) {
             s.type = 'bar';
+            const grad = dsType === 'bar-h' ? barGradientH : barGradient;
+            const radius = dsType === 'bar-h' ? [0, 8, 8, 0] : [8, 8, 0, 0];
             if (Array.isArray(color)) {
                 s.itemStyle = {
-                    color: (params) => color[params.dataIndex % color.length]
+                    color: (params) => grad(color[params.dataIndex % color.length]),
+                    borderRadius: radius,
+                    shadowBlur: 8,
+                    shadowOffsetY: dsType === 'bar-h' ? 0 : 4,
+                    shadowColor: 'rgba(0,0,0,0.15)'
                 };
             } else {
-                s.itemStyle = { color: color };
+                s.itemStyle = { color: grad(color), borderRadius: radius, ...glowShadow(color) };
             }
-            s.barWidth = '60%';
+            s.barWidth = '55%';
+            s.emphasis = { itemStyle: { shadowBlur: 16 } };
         } else if (['scatter', 'bubble'].includes(dsType)) {
             s.type = 'scatter';
             if (ds.data[0] && typeof ds.data[0] === 'object') {
@@ -337,39 +416,44 @@ const chartOptions = computed(() => {
                 s.data = ds.data.map((y, i) => [i, y]);
                 s.symbolSize = 10;
             }
-            s.itemStyle = { color: Array.isArray(color) ? color[0] : color, opacity: 0.6 };
-            if (lineColor) s.itemStyle.borderColor = lineColor;
+            s.itemStyle = {
+                color: radialGradient(soloColor),
+                borderColor: lineColor || soloColor,
+                borderWidth: 1.5,
+                ...glowShadow(soloColor)
+            };
         } else if (['pie', 'doughnut'].includes(dsType)) {
             s.type = 'pie';
-            s.radius = dsType === 'doughnut' ? ['40%', '70%'] : '50%';
-            s.data = ds.data.map((val, i) => ({
-                value: val,
-                name: labels[i] || `Category ${i + 1}`,
-                itemStyle: {
-                    color: Array.isArray(color) ? color[i % color.length] : color
-                }
-            }));
+            s.radius = dsType === 'doughnut' ? ['42%', '70%'] : '65%';
+            s.itemStyle = { borderColor: cardBg, borderWidth: 3, borderRadius: 8 };
+            s.emphasis = { scaleSize: 8, itemStyle: { shadowBlur: 16, shadowColor: 'rgba(0,0,0,0.3)' } };
+            s.data = ds.data.map((val, i) => {
+                const c = Array.isArray(color) ? color[i % color.length] : CATEGORICAL_PALETTE[i % CATEGORICAL_PALETTE.length];
+                return { value: val, name: labels[i] || `Category ${i + 1}`, itemStyle: { color: radialGradient(c) } };
+            });
             options.tooltip.trigger = 'item';
         } else if (dsType === 'polarArea') {
             s.type = 'pie';
             s.radius = [20, '70%'];
             s.roseType = 'area';
-            s.data = ds.data.map((val, i) => ({
-                value: val,
-                name: labels[i] || `Category ${i + 1}`,
-                itemStyle: {
-                    color: Array.isArray(color) ? color[i % color.length] : color
-                }
-            }));
+            s.itemStyle = { borderColor: cardBg, borderWidth: 2, borderRadius: 6 };
+            s.emphasis = { itemStyle: { shadowBlur: 16, shadowColor: 'rgba(0,0,0,0.3)' } };
+            s.data = ds.data.map((val, i) => {
+                const c = Array.isArray(color) ? color[i % color.length] : CATEGORICAL_PALETTE[i % CATEGORICAL_PALETTE.length];
+                return { value: val, name: labels[i] || `Category ${i + 1}`, itemStyle: { color: radialGradient(c) } };
+            });
             options.tooltip.trigger = 'item';
         } else if (dsType === 'radar') {
             s.type = 'radar';
+            s.symbol = 'circle';
+            s.symbolSize = 7;
             s.data = [
                 {
                     value: ds.data,
                     name: pLabel,
-                    itemStyle: { color: Array.isArray(color) ? color[0] : color },
-                    areaStyle: { color: Array.isArray(color) ? color[0] : color, opacity: 0.3 }
+                    lineStyle: { color: soloColor, width: 3, ...glowShadow(soloColor) },
+                    itemStyle: { color: soloColor, borderColor: cardBg, borderWidth: 2 },
+                    areaStyle: { color: areaGradient(soloColor) }
                 }
             ];
         }
